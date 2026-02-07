@@ -69,8 +69,9 @@ add_executable(smashedit ${SOURCES})
 # Static linking option for self-contained binaries
 option(STATIC_BUILD "Build a statically linked executable" OFF)
 
-if(STATIC_BUILD)
-    # Find static ncurses libraries
+if(STATIC_BUILD AND NOT WIN32 AND NOT MINGW)
+    # Static linking for Linux and macOS only
+    # Windows ncurses doesn't support static linking, must bundle DLLs instead
     if(APPLE)
         # macOS: use static libraries from homebrew
         find_library(NCURSES_STATIC NAMES libncursesw.a libncurses.a
@@ -81,10 +82,6 @@ if(STATIC_BUILD)
         else()
             target_link_libraries(smashedit ${NCURSES_LIBRARIES})
         endif()
-    elseif(WIN32 OR MINGW)
-        # Windows/MinGW: static linking
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-        target_link_libraries(smashedit ${NCURSES_LIBRARIES})
     else()
         # Linux: link statically
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
@@ -102,7 +99,7 @@ if(STATIC_BUILD)
         endif()
     endif()
 else()
-    # Dynamic linking (default)
+    # Dynamic linking (default, and required for Windows)
     target_link_libraries(smashedit ${NCURSES_LIBRARIES})
 endif()
 

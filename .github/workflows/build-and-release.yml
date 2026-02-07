@@ -80,29 +80,26 @@ jobs:
           mingw-w64-x86_64-ncurses
           make
 
-    - name: Build static binary
+    - name: Build
       run: |
-        cmake -B bin -S . -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DSTATIC_BUILD=ON
+        cmake -B bin -S . -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
         cmake --build bin
 
-    - name: Verify and prepare artifact
+    - name: Bundle with DLLs
       run: |
         mkdir -p dist
         cp bin/smashedit.exe dist/
 
-        # Check if static linking worked by looking for DLL dependencies
-        echo "Checking dependencies..."
-        ldd bin/smashedit.exe 2>/dev/null || echo "Checking with file..."
-        file bin/smashedit.exe
-
-        # If static linking didn't fully work, bundle necessary DLLs
+        # Bundle required MinGW runtime DLLs for self-contained distribution
         MINGW_BIN="/mingw64/bin"
-        for dll in libncursesw6.dll libgcc_s_seh-1.dll libwinpthread-1.dll libstdc++-6.dll libintl-8.dll libiconv-2.dll; do
+        for dll in libncursesw6.dll libgcc_s_seh-1.dll libwinpthread-1.dll; do
           if [ -f "$MINGW_BIN/$dll" ]; then
-            cp "$MINGW_BIN/$dll" dist/ 2>/dev/null || true
+            cp "$MINGW_BIN/$dll" dist/
+            echo "Bundled: $dll"
           fi
         done
 
+        echo "Contents of dist/:"
         ls -la dist/
 
     - name: Upload artifact
