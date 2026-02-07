@@ -20,7 +20,10 @@ if(WIN32 OR MINGW)
         PATHS ${MINGW_PREFIX}/lib
         NO_DEFAULT_PATH)
     find_path(CURSES_INCLUDE_DIRS curses.h
-        PATHS ${MINGW_PREFIX}/include
+        PATHS
+            ${MINGW_PREFIX}/include
+            ${MINGW_PREFIX}/include/pdcurses
+            ${MINGW_PREFIX}/include/ncurses
         NO_DEFAULT_PATH)
 
     if(NOT CURSES_LIBRARIES)

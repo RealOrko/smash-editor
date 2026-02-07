@@ -80,6 +80,15 @@ jobs:
           mingw-w64-x86_64-pdcurses
           make
 
+    - name: Debug PDCurses installation
+      run: |
+        echo "=== PDCurses package files ==="
+        pacman -Ql mingw-w64-x86_64-pdcurses | head -30
+        echo "=== Looking for curses.h ==="
+        find /mingw64/include -name "curses.h" -o -name "pdcurses.h" 2>/dev/null || true
+        echo "=== Looking for libpdcurses ==="
+        find /mingw64/lib -name "*pdcurses*" 2>/dev/null || true
+
     - name: Build
       run: |
         cmake -B bin -S . -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
