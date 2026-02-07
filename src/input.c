@@ -344,6 +344,7 @@ void input_handle(Editor *ed, MenuState *menu) {
             break;
 
         case KEY_CTRL('z'):  /* Undo */
+        case KEY_CTRL('u'):  /* Undo (alternative - Ctrl+Z may not work on some terminals) */
             editor_undo(ed);
             break;
         case KEY_CTRL('y'):  /* Redo */

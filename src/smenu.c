@@ -14,7 +14,7 @@ static MenuItem file_items[] = {
 };
 
 static MenuItem edit_items[] = {
-    {"Undo",       "Ctrl+Z", ACTION_UNDO, false, 0},       /* U */
+    {"Undo",       "Ctrl+U", ACTION_UNDO, false, 0},       /* U */
     {"Redo",       "Ctrl+Y", ACTION_REDO, false, 0},       /* R */
     {"",           "",       0, true, -1},                 /* Separator */
     {"Cut",        "Ctrl+X", ACTION_CUT, false, 2},        /* t */
