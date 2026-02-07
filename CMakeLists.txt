@@ -19,12 +19,16 @@ if(WIN32 OR MINGW)
     find_library(CURSES_LIBRARIES NAMES pdcurses
         PATHS ${MINGW_PREFIX}/lib
         NO_DEFAULT_PATH)
-    find_path(CURSES_INCLUDE_DIRS curses.h
-        PATHS
-            ${MINGW_PREFIX}/include
-            ${MINGW_PREFIX}/include/pdcurses
-            ${MINGW_PREFIX}/include/ncurses
-        NO_DEFAULT_PATH)
+
+    # PDCurses puts curses.h in pdcurses subdirectory
+    if(EXISTS "${MINGW_PREFIX}/include/pdcurses/curses.h")
+        set(CURSES_INCLUDE_DIRS "${MINGW_PREFIX}/include/pdcurses")
+    elseif(EXISTS "${MINGW_PREFIX}/include/curses.h")
+        set(CURSES_INCLUDE_DIRS "${MINGW_PREFIX}/include")
+    else()
+        find_path(CURSES_INCLUDE_DIRS curses.h
+            PATHS ${MINGW_PREFIX}/include ${MINGW_PREFIX}/include/pdcurses)
+    endif()
 
     if(NOT CURSES_LIBRARIES)
         message(STATUS "PDCurses not found, trying system paths")
