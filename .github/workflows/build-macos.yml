@@ -1,0 +1,31 @@
+name: Build macOS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: brew install cmake ncurses
+
+    - name: Build
+      run: |
+        export PKG_CONFIG_PATH="/opt/homebrew/opt/ncurses/lib/pkgconfig:$PKG_CONFIG_PATH"
+        export LDFLAGS="-L/opt/homebrew/opt/ncurses/lib"
+        export CPPFLAGS="-I/opt/homebrew/opt/ncurses/include"
+        make build
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: smashedit-macos
+        path: bin/smashedit
