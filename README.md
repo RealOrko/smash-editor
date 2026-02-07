@@ -191,7 +191,7 @@ smashedit/
 SmashEdit can be configured at compile-time by modifying `include/smashedit.h`:
 
 ```c
-#define TAB_WIDTH 4           // Tab width in spaces
+#define TAB_WIDTH 2           // Tab width in spaces
 #define MAX_UNDO_LEVELS 100   // Maximum undo history
 #define MAX_SELECTIONS 1024   // Maximum multi-select ranges
 #define MAX_LINE_LENGTH 4096  // Maximum line length

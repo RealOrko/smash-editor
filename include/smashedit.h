@@ -18,7 +18,7 @@
 #define GAP_INCREMENT 1024
 #define MAX_LINE_LENGTH 4096
 #define MAX_FILENAME 256
-#define TAB_WIDTH 4
+#define TAB_WIDTH 2
 
 /* Undo stack size */
 #define MAX_UNDO_LEVELS 100
