@@ -1,32 +1,11 @@
 #include "smashedit.h"
 
-/* Windows/PDCurses extended key definitions */
-#ifdef _WIN32
-/* Windows ncurses may use different key codes */
-#ifndef KEY_SLEFT
-#define KEY_SLEFT 0x189
-#endif
-#ifndef KEY_SRIGHT
-#define KEY_SRIGHT 0x18C
-#endif
-#ifndef KEY_SUP
-#define KEY_SUP 0x18D
-#endif
-#ifndef KEY_SDOWN
-#define KEY_SDOWN 0x18E
-#endif
+/* Extended key definitions for platforms that don't define them */
 #ifndef CTL_LEFT
 #define CTL_LEFT 0x1BB
 #endif
 #ifndef CTL_RIGHT
 #define CTL_RIGHT 0x1BC
-#endif
-#ifndef CTL_UP
-#define CTL_UP 0x1BD
-#endif
-#ifndef CTL_DOWN
-#define CTL_DOWN 0x1BE
-#endif
 #endif
 
 /* Debug mode - set to 1 to show key codes in status bar */
@@ -215,7 +194,6 @@ void input_handle(Editor *ed, MenuState *menu) {
         case 554:
 #ifdef _WIN32
         case CTL_LEFT:
-        case 0x21D:  /* Windows Terminal Ctrl+Left */
 #endif
             editor_clear_selection(ed);
             editor_move_word_left(ed);
@@ -224,7 +202,6 @@ void input_handle(Editor *ed, MenuState *menu) {
         case 569:
 #ifdef _WIN32
         case CTL_RIGHT:
-        case 0x22C:  /* Windows Terminal Ctrl+Right */
 #endif
             editor_clear_selection(ed);
             editor_move_word_right(ed);
@@ -314,40 +291,24 @@ void input_handle(Editor *ed, MenuState *menu) {
 
         /* Shift+Arrow for selection */
         case KEY_SLEFT:
-#ifdef _WIN32
-        case 0x189:  /* Windows Shift+Left */
-        case 0x223:  /* Windows Terminal Shift+Left */
-#endif
             if (!ed->selection.active) {
                 editor_start_selection(ed);
             }
             editor_move_left(ed);
             break;
         case KEY_SRIGHT:
-#ifdef _WIN32
-        case 0x18C:  /* Windows Shift+Right */
-        case 0x232:  /* Windows Terminal Shift+Right */
-#endif
             if (!ed->selection.active) {
                 editor_start_selection(ed);
             }
             editor_move_right(ed);
             break;
         case KEY_SR:  /* Shift+Up */
-#ifdef _WIN32
-        case KEY_SUP:
-        case 0x233:  /* Windows Terminal Shift+Up */
-#endif
             if (!ed->selection.active) {
                 editor_start_selection(ed);
             }
             editor_move_up(ed);
             break;
         case KEY_SF:  /* Shift+Down */
-#ifdef _WIN32
-        case KEY_SDOWN:
-        case 0x20A:  /* Windows Terminal Shift+Down */
-#endif
             if (!ed->selection.active) {
                 editor_start_selection(ed);
             }
