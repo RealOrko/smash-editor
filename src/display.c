@@ -69,8 +69,8 @@ static int wchar_width(wchar_t wc) {
     if (wc == L'\0') return 0;
     if (wc < 32) return 0;  /* Control characters */
 
-    /* Use wcwidth if available, otherwise estimate */
-#ifdef _XOPEN_SOURCE
+    /* Use wcwidth if available (POSIX only, not on Windows) */
+#if defined(_XOPEN_SOURCE) && !defined(PDCURSES) && !defined(_WIN32)
     int w = wcwidth(wc);
     if (w >= 0) return w;
 #endif
