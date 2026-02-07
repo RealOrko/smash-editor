@@ -1,5 +1,6 @@
 #include "smashedit.h"
 #include <wctype.h>
+#include <signal.h>
 
 /* UTF-8 helper functions for cursor positioning */
 
@@ -154,6 +155,11 @@ void editor_init_screen(Editor *ed) {
 
     /* Set locale for Unicode support */
     setlocale(LC_ALL, "");
+
+    /* Ignore SIGTSTP so Ctrl+Z can be used for undo instead of backgrounding */
+#ifndef _WIN32
+    signal(SIGTSTP, SIG_IGN);
+#endif
 
     /* Initialize ncurses */
     initscr();
