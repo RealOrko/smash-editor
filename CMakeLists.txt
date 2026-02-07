@@ -66,8 +66,45 @@ set(SOURCES
 # Executable
 add_executable(smashedit ${SOURCES})
 
-# Link ncurses
-target_link_libraries(smashedit ${NCURSES_LIBRARIES})
+# Static linking option for self-contained binaries
+option(STATIC_BUILD "Build a statically linked executable" OFF)
+
+if(STATIC_BUILD)
+    # Find static ncurses libraries
+    if(APPLE)
+        # macOS: use static libraries from homebrew
+        find_library(NCURSES_STATIC NAMES libncursesw.a libncurses.a
+            PATHS /opt/homebrew/opt/ncurses/lib /usr/local/opt/ncurses/lib
+            NO_DEFAULT_PATH)
+        if(NCURSES_STATIC)
+            target_link_libraries(smashedit ${NCURSES_STATIC})
+        else()
+            target_link_libraries(smashedit ${NCURSES_LIBRARIES})
+        endif()
+    elseif(WIN32 OR MINGW)
+        # Windows/MinGW: static linking
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+        target_link_libraries(smashedit ${NCURSES_LIBRARIES})
+    else()
+        # Linux: link statically
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+        find_library(NCURSES_STATIC NAMES libncursesw.a libncurses.a
+            PATHS /usr/lib/x86_64-linux-gnu /usr/lib /usr/local/lib)
+        find_library(TINFO_STATIC NAMES libtinfo.a
+            PATHS /usr/lib/x86_64-linux-gnu /usr/lib /usr/local/lib)
+        if(NCURSES_STATIC)
+            target_link_libraries(smashedit ${NCURSES_STATIC})
+            if(TINFO_STATIC)
+                target_link_libraries(smashedit ${TINFO_STATIC})
+            endif()
+        else()
+            target_link_libraries(smashedit ${NCURSES_LIBRARIES})
+        endif()
+    endif()
+else()
+    # Dynamic linking (default)
+    target_link_libraries(smashedit ${NCURSES_LIBRARIES})
+endif()
 
 # Add required definitions for wide character support and signals
 target_compile_definitions(smashedit PRIVATE _XOPEN_SOURCE=700 _XOPEN_SOURCE_EXTENDED)

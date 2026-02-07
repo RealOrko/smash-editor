@@ -14,10 +14,19 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y cmake libncursesw5-dev
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake libncursesw5-dev libncurses-dev
 
-    - name: Build
-      run: make build
+    - name: Build static binary
+      run: |
+        cmake -B bin -S . -DCMAKE_BUILD_TYPE=Release -DSTATIC_BUILD=ON
+        cmake --build bin
+
+    - name: Verify static linking
+      run: |
+        file bin/smashedit
+        ldd bin/smashedit || echo "Static binary - no dynamic dependencies"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -34,11 +43,16 @@ jobs:
     - name: Install dependencies
       run: brew install cmake ncurses
 
-    - name: Build
+    - name: Build static binary
       run: |
         export PKG_CONFIG_PATH="/opt/homebrew/opt/ncurses/lib/pkgconfig:$PKG_CONFIG_PATH"
-        cmake -B bin -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="/opt/homebrew/opt/ncurses"
+        cmake -B bin -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="/opt/homebrew/opt/ncurses" -DSTATIC_BUILD=ON
         cmake --build bin
+
+    - name: Verify linking
+      run: |
+        file bin/smashedit
+        otool -L bin/smashedit || true
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -66,26 +80,29 @@ jobs:
           mingw-w64-x86_64-ncurses
           make
 
-    - name: Build
+    - name: Build static binary
       run: |
-        cmake -B bin -S . -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+        cmake -B bin -S . -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DSTATIC_BUILD=ON
         cmake --build bin
 
-    - name: Bundle DLLs
+    - name: Verify and prepare artifact
       run: |
         mkdir -p dist
         cp bin/smashedit.exe dist/
 
-        # Copy required MinGW runtime DLLs
-        MINGW_BIN="/mingw64/bin"
-        cp $MINGW_BIN/libncursesw6.dll dist/ || true
-        cp $MINGW_BIN/libgcc_s_seh-1.dll dist/ || true
-        cp $MINGW_BIN/libwinpthread-1.dll dist/ || true
-        cp $MINGW_BIN/libstdc++-6.dll dist/ || true
-        cp $MINGW_BIN/libintl-8.dll dist/ || true
-        cp $MINGW_BIN/libiconv-2.dll dist/ || true
+        # Check if static linking worked by looking for DLL dependencies
+        echo "Checking dependencies..."
+        ldd bin/smashedit.exe 2>/dev/null || echo "Checking with file..."
+        file bin/smashedit.exe
 
-        # List what we bundled
+        # If static linking didn't fully work, bundle necessary DLLs
+        MINGW_BIN="/mingw64/bin"
+        for dll in libncursesw6.dll libgcc_s_seh-1.dll libwinpthread-1.dll libstdc++-6.dll libintl-8.dll libiconv-2.dll; do
+          if [ -f "$MINGW_BIN/$dll" ]; then
+            cp "$MINGW_BIN/$dll" dist/ 2>/dev/null || true
+          fi
+        done
+
         ls -la dist/
 
     - name: Upload artifact
