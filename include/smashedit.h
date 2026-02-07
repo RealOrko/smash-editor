@@ -85,5 +85,6 @@ struct Dialog;
 #include "search.h"
 #include "file.h"
 #include "input.h"
+#include "explorer.h"
 
 #endif /* SMASHEDIT_H */

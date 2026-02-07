@@ -188,6 +188,12 @@ void input_handle(Editor *ed, MenuState *menu) {
         return;
     }
 
+    /* Check for Ctrl+Alt+E to open file explorer (ncurses) */
+    if (is_alt && key == KEY_CTRL('e')) {
+        explorer_open(ed);
+        return;
+    }
+
     /* Check for Alt+key to open menus */
     if (is_alt) {
         int menu_idx = menu_check_hotkey(menu, key);
@@ -199,6 +205,12 @@ void input_handle(Editor *ed, MenuState *menu) {
     }
 
 #ifdef PDCURSES
+    /* PDCurses: Alt+D opens file explorer (D not used for menu) */
+    if (key == ALT_D) {
+        explorer_open(ed);
+        return;
+    }
+
     /* PDCurses sends Alt+key as special key codes */
     if (key >= ALT_A && key <= ALT_Z) {
         int letter = 'a' + (key - ALT_A);
