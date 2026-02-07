@@ -73,8 +73,10 @@ void editor_init_screen(Editor *ed) {
     noecho();
     keypad(stdscr, TRUE);
 
-    /* Enable function key detection */
+    /* Enable function key detection (ncurses only, not PDCurses) */
+#ifndef PDCURSES
     ESCDELAY = 25;
+#endif
 
     /* Initialize color pairs */
     init_pair(COLOR_EDITOR, COLOR_WHITE, COLOR_BLUE);
