@@ -1,0 +1,166 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y cmake libncursesw5-dev
+
+    - name: Build
+      run: make build
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: smashedit-linux
+        path: bin/smashedit
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: brew install cmake ncurses
+
+    - name: Build
+      run: |
+        export PKG_CONFIG_PATH="/opt/homebrew/opt/ncurses/lib/pkgconfig:$PKG_CONFIG_PATH"
+        cmake -B bin -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="/opt/homebrew/opt/ncurses"
+        cmake --build bin
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: smashedit-macos
+        path: bin/smashedit
+
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: >-
+          mingw-w64-x86_64-gcc
+          mingw-w64-x86_64-cmake
+          mingw-w64-x86_64-ncurses
+          make
+
+    - name: Build
+      run: |
+        cmake -B bin -S . -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+        cmake --build bin
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: smashedit-windows
+        path: bin/smashedit.exe
+
+  release:
+    needs: [build-ubuntu, build-macos, build-windows]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get next version
+      id: version
+      run: |
+        # Get the latest tag
+        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+        echo "Latest tag: $LATEST_TAG"
+
+        # Extract version numbers
+        VERSION=${LATEST_TAG#v}
+        MAJOR=$(echo $VERSION | cut -d. -f1)
+        MINOR=$(echo $VERSION | cut -d. -f2)
+        PATCH=$(echo $VERSION | cut -d. -f3)
+
+        # Increment patch version
+        PATCH=$((PATCH + 1))
+
+        # If starting fresh (v0.0.0 -> v1.0.0)
+        if [ "$LATEST_TAG" = "v0.0.0" ]; then
+          NEW_VERSION="v1.0.0"
+        else
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+        fi
+
+        echo "New version: $NEW_VERSION"
+        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Package releases
+      run: |
+        mkdir -p releases
+
+        # Linux tar.gz
+        cd artifacts/smashedit-linux
+        chmod +x smashedit
+        tar -czvf ../../releases/smashedit-linux-${{ steps.version.outputs.version }}.tar.gz smashedit
+        cd ../..
+
+        # macOS tar.gz
+        cd artifacts/smashedit-macos
+        chmod +x smashedit
+        tar -czvf ../../releases/smashedit-macos-${{ steps.version.outputs.version }}.tar.gz smashedit
+        cd ../..
+
+        # Windows zip
+        cd artifacts/smashedit-windows
+        zip ../../releases/smashedit-windows-${{ steps.version.outputs.version }}.zip smashedit.exe
+        cd ../..
+
+        ls -la releases/
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.version.outputs.version }}
+        name: Release ${{ steps.version.outputs.version }}
+        body: |
+          ## Smash Editor ${{ steps.version.outputs.version }}
+
+          ### Downloads
+          - **Linux**: `smashedit-linux-${{ steps.version.outputs.version }}.tar.gz`
+          - **macOS**: `smashedit-macos-${{ steps.version.outputs.version }}.tar.gz`
+          - **Windows**: `smashedit-windows-${{ steps.version.outputs.version }}.zip`
+
+          ### Installation
+          Extract the archive and run the `smashedit` executable.
+        files: |
+          releases/smashedit-linux-${{ steps.version.outputs.version }}.tar.gz
+          releases/smashedit-macos-${{ steps.version.outputs.version }}.tar.gz
+          releases/smashedit-windows-${{ steps.version.outputs.version }}.zip
+        draft: false
+        prerelease: false
