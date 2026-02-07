@@ -10,9 +10,10 @@ build:
 	@cmake --build bin
 
 install: build
-	@mkdir -p ~/.smashedit
-	@cp bin/smashedit ~/.smashedit/
-	@echo "Installed to ~/.smashedit/smashedit"
+	@mkdir -p ~/.smash
+	@cp bin/smashedit ~/.smash/
+	@echo "Installed to ~/.smash/smashedit"
+	@echo "Add ~/.smash to your PATH to run 'smashedit' from anywhere"
 
 clean:
 	@rm -rf bin
