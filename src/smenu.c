@@ -5,6 +5,8 @@
 static MenuItem file_items[] = {
     {"New",      "Ctrl+N", ACTION_NEW, false, 0},      /* N */
     {"Open",     "Ctrl+O", ACTION_OPEN, false, 0},     /* O */
+    {"Explorer", "Ctrl+E", ACTION_EXPLORER, false, 0}, /* E */
+    {"",         "",       0, true, -1},               /* Separator */
     {"Save",     "Ctrl+S", ACTION_SAVE, false, 0},     /* S */
     {"Save As",  "",       ACTION_SAVE_AS, false, 5},  /* A */
     {"",         "",       0, true, -1},               /* Separator */

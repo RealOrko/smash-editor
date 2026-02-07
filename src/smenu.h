@@ -39,6 +39,7 @@ typedef enum {
     /* File menu */
     ACTION_NEW,
     ACTION_OPEN,
+    ACTION_EXPLORER,
     ACTION_SAVE,
     ACTION_SAVE_AS,
     ACTION_EXIT,

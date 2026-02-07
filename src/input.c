@@ -127,6 +127,9 @@ void input_handle(Editor *ed, MenuState *menu) {
                 case ACTION_OPEN:
                     file_open_dialog(ed);
                     break;
+                case ACTION_EXPLORER:
+                    explorer_open(ed);
+                    break;
                 case ACTION_SAVE:
                     file_save(ed);
                     break;
@@ -335,6 +338,9 @@ void input_handle(Editor *ed, MenuState *menu) {
             if (file_check_modified(ed)) {
                 ed->running = false;
             }
+            break;
+        case KEY_CTRL('e'):  /* Explorer */
+            explorer_open(ed);
             break;
 
         case KEY_CTRL('z'):  /* Undo */
