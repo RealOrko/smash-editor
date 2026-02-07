@@ -44,6 +44,9 @@ Editor *editor_create(void) {
     ed->replace_term[0] = '\0';
     ed->search_case_sensitive = false;
 
+    ed->status_message[0] = '\0';
+    ed->status_message_time = 0;
+
     return ed;
 }
 
@@ -65,7 +68,7 @@ void editor_init_screen(Editor *ed) {
     /* Initialize ncurses */
     initscr();
     start_color();
-    cbreak();
+    raw();
     noecho();
     keypad(stdscr, TRUE);
 
@@ -76,7 +79,7 @@ void editor_init_screen(Editor *ed) {
     init_pair(COLOR_EDITOR, COLOR_WHITE, COLOR_BLUE);
     init_pair(COLOR_MENUBAR, COLOR_BLACK, COLOR_CYAN);
     init_pair(COLOR_MENUSEL, COLOR_WHITE, COLOR_BLACK);
-    init_pair(COLOR_HIGHLIGHT, COLOR_YELLOW, COLOR_BLUE);
+    init_pair(COLOR_HIGHLIGHT, COLOR_WHITE, COLOR_BLACK);
     init_pair(COLOR_DIALOG, COLOR_WHITE, COLOR_BLUE);
     init_pair(COLOR_DIALOGBTN, COLOR_BLACK, COLOR_CYAN);
     init_pair(COLOR_STATUS, COLOR_BLACK, COLOR_CYAN);
@@ -336,14 +339,34 @@ void editor_move_doc_end(Editor *ed) {
 void editor_move_word_left(Editor *ed) {
     if (!ed || !ed->buffer || ed->cursor_pos == 0) return;
 
-    /* Skip whitespace */
-    while (ed->cursor_pos > 0 && isspace(buffer_get_char(ed->buffer, ed->cursor_pos - 1))) {
-        ed->cursor_pos--;
-    }
+    size_t pos = ed->cursor_pos;
 
-    /* Skip word characters */
-    while (ed->cursor_pos > 0 && !isspace(buffer_get_char(ed->buffer, ed->cursor_pos - 1))) {
-        ed->cursor_pos--;
+    /* Check if we're at the start of a word (previous char is whitespace or we're at position 0) */
+    bool at_word_start = (pos == 0) ||
+                         isspace(buffer_get_char(ed->buffer, pos - 1)) ||
+                         (pos < buffer_get_length(ed->buffer) &&
+                          !isspace(buffer_get_char(ed->buffer, pos)) &&
+                          isspace(buffer_get_char(ed->buffer, pos - 1)));
+
+    /* Check if we're in whitespace */
+    bool in_whitespace = (pos > 0 && pos <= buffer_get_length(ed->buffer) &&
+                          (pos == buffer_get_length(ed->buffer) ||
+                           isspace(buffer_get_char(ed->buffer, pos))));
+
+    if (at_word_start || in_whitespace) {
+        /* Skip whitespace backwards */
+        while (ed->cursor_pos > 0 && isspace(buffer_get_char(ed->buffer, ed->cursor_pos - 1))) {
+            ed->cursor_pos--;
+        }
+        /* Skip word characters backwards to get to start of previous word */
+        while (ed->cursor_pos > 0 && !isspace(buffer_get_char(ed->buffer, ed->cursor_pos - 1))) {
+            ed->cursor_pos--;
+        }
+    } else {
+        /* We're in the middle of a word - go to start of current word */
+        while (ed->cursor_pos > 0 && !isspace(buffer_get_char(ed->buffer, ed->cursor_pos - 1))) {
+            ed->cursor_pos--;
+        }
     }
 
     if (ed->selection.active) {
@@ -356,14 +379,25 @@ void editor_move_word_right(Editor *ed) {
     if (!ed || !ed->buffer) return;
     size_t len = buffer_get_length(ed->buffer);
 
-    /* Skip current word */
-    while (ed->cursor_pos < len && !isspace(buffer_get_char(ed->buffer, ed->cursor_pos))) {
-        ed->cursor_pos++;
-    }
+    if (ed->cursor_pos >= len) return;
 
-    /* Skip whitespace */
-    while (ed->cursor_pos < len && isspace(buffer_get_char(ed->buffer, ed->cursor_pos))) {
-        ed->cursor_pos++;
+    /* Check if we're in a word (current char is not whitespace) */
+    bool in_word = !isspace(buffer_get_char(ed->buffer, ed->cursor_pos));
+
+    if (in_word) {
+        /* Move to end of current word */
+        while (ed->cursor_pos < len && !isspace(buffer_get_char(ed->buffer, ed->cursor_pos))) {
+            ed->cursor_pos++;
+        }
+    } else {
+        /* We're in whitespace - skip whitespace then go to end of next word */
+        while (ed->cursor_pos < len && isspace(buffer_get_char(ed->buffer, ed->cursor_pos))) {
+            ed->cursor_pos++;
+        }
+        /* Now skip the word to get to end */
+        while (ed->cursor_pos < len && !isspace(buffer_get_char(ed->buffer, ed->cursor_pos))) {
+            ed->cursor_pos++;
+        }
     }
 
     if (ed->selection.active) {
@@ -633,4 +667,17 @@ void editor_redo(Editor *ed) {
     editor_clear_selection(ed);
     editor_scroll_to_cursor(ed);
     undo_op_free(op);
+}
+
+void editor_set_status_message(Editor *ed, const char *msg) {
+    if (!ed) return;
+
+    if (msg) {
+        strncpy(ed->status_message, msg, sizeof(ed->status_message) - 1);
+        ed->status_message[sizeof(ed->status_message) - 1] = '\0';
+        ed->status_message_time = time(NULL);
+    } else {
+        ed->status_message[0] = '\0';
+        ed->status_message_time = 0;
+    }
 }

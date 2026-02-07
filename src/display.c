@@ -1,5 +1,6 @@
 #include "smashedit.h"
 #include <wchar.h>
+#include <time.h>
 
 void display_init(void) {
     /* ncurses initialization is done in editor_init_screen */
@@ -65,20 +66,35 @@ void display_draw_border(Editor *ed) {
 
     attron(COLOR_PAIR(COLOR_BORDER));
 
-    /* Draw outer border with double lines */
-    display_draw_box(1, 0, ed->screen_rows - 1, ed->screen_cols, true);
+    /*
+     * Layout:
+     * Row 0: Menu bar (no border)
+     * Row 1: Top border ╔═══════════════════════════════════════╗
+     * Rows 2 to bottom-1: Side borders ║ content ║
+     * Row bottom: Bottom border ╚═══════════════════════════════╝
+     * Row bottom+1: Status bar if shown (no border, just cyan background)
+     */
 
-    /* Draw horizontal separator under menu bar */
-    draw_wchar(1, 0, DBOX_LTEE);
-    draw_wchar(1, ed->screen_cols - 1, DBOX_RTEE);
-    display_draw_hline(1, 1, ed->screen_cols - 2, true);
+    int bottom_border_y = ed->show_status_bar ? ed->screen_rows - 2 : ed->screen_rows - 1;
 
-    /* Draw horizontal separator above status bar if shown */
-    if (ed->show_status_bar) {
-        int status_y = ed->screen_rows - 2;
-        draw_wchar(status_y, 0, DBOX_LTEE);
-        draw_wchar(status_y, ed->screen_cols - 1, DBOX_RTEE);
-        display_draw_hline(status_y, 1, ed->screen_cols - 2, true);
+    /* Top border */
+    draw_wchar(1, 0, DBOX_TL);
+    draw_wchar(1, ed->screen_cols - 1, DBOX_TR);
+    for (int i = 1; i < ed->screen_cols - 1; i++) {
+        draw_wchar(1, i, DBOX_HORZ);
+    }
+
+    /* Side borders */
+    for (int y = 2; y < bottom_border_y; y++) {
+        draw_wchar(y, 0, DBOX_VERT);
+        draw_wchar(y, ed->screen_cols - 1, DBOX_VERT);
+    }
+
+    /* Bottom border */
+    draw_wchar(bottom_border_y, 0, DBOX_BL);
+    draw_wchar(bottom_border_y, ed->screen_cols - 1, DBOX_BR);
+    for (int i = 1; i < ed->screen_cols - 1; i++) {
+        draw_wchar(bottom_border_y, i, DBOX_HORZ);
     }
 
     attroff(COLOR_PAIR(COLOR_BORDER));
@@ -93,16 +109,29 @@ void display_draw_menubar(Editor *ed) {
         addch(' ');
     }
 
-    mvprintw(0, 2, " File  Edit  Search  View  Help ");
+    /* Draw menu titles with underlined hotkeys */
+    int pos = 2;
+    const char *menus[] = {"File", "Edit", "Search", "View", "Help"};
 
-    /* Highlight hotkeys */
-    attron(COLOR_PAIR(COLOR_MENUBAR) | A_BOLD);
-    mvaddch(0, 3, 'F');
-    mvaddch(0, 9, 'E');
-    mvaddch(0, 15, 'S');
-    mvaddch(0, 23, 'V');
-    mvaddch(0, 29, 'H');
-    attroff(A_BOLD);
+    for (int m = 0; m < 5; m++) {
+        mvaddch(0, pos, ' ');
+        pos++;
+
+        /* First character is the hotkey - underline it */
+        attron(A_UNDERLINE);
+        mvaddch(0, pos, menus[m][0]);
+        attroff(A_UNDERLINE);
+        pos++;
+
+        /* Rest of the title */
+        for (int j = 1; menus[m][j]; j++) {
+            mvaddch(0, pos, menus[m][j]);
+            pos++;
+        }
+
+        mvaddch(0, pos, ' ');
+        pos++;
+    }
 
     attroff(COLOR_PAIR(COLOR_MENUBAR));
 }
@@ -131,9 +160,21 @@ void display_draw_statusbar(Editor *ed) {
     mvprintw(status_y, fname_x, "%s", fname);
     draw_wchar(status_y, fname_x + fname_len + 1, BOX_VERT);
 
-    /* Modified indicator */
-    if (ed->modified) {
-        mvprintw(status_y, ed->screen_cols - 12, " Modified ");
+    /* Status message or modified indicator on the right */
+    time_t now = time(NULL);
+    if (ed->status_message[0] && (now - ed->status_message_time) < 3) {
+        /* Show status message for 3 seconds */
+        int msg_len = strlen(ed->status_message);
+        mvprintw(status_y, ed->screen_cols - msg_len - 2, " %s ", ed->status_message);
+    } else {
+        /* Clear expired message */
+        if (ed->status_message[0] && (now - ed->status_message_time) >= 3) {
+            ed->status_message[0] = '\0';
+        }
+        /* Modified indicator */
+        if (ed->modified) {
+            mvprintw(status_y, ed->screen_cols - 12, " Modified ");
+        }
     }
 
     attroff(COLOR_PAIR(COLOR_STATUS));
@@ -292,41 +333,17 @@ void display_refresh(Editor *ed) {
     display_draw_editor(ed);
     display_draw_statusbar(ed);
 
-    refresh();
-}
+    /* Position cursor after all drawing is complete */
+    int cursor_screen_row = ed->cursor_row - ed->scroll_row - 1;
+    int cursor_screen_col = ed->cursor_col - ed->scroll_col - 1;
 
-void display_message(const char *msg) {
-    if (!msg) return;
-
-    int rows, cols;
-    getmaxyx(stdscr, rows, cols);
-
-    int msg_len = strlen(msg);
-    int x = (cols - msg_len - 4) / 2;
-    int y = rows / 2;
-
-    attron(COLOR_PAIR(COLOR_DIALOG));
-    mvprintw(y, x, "  %s  ", msg);
-    attroff(COLOR_PAIR(COLOR_DIALOG));
+    if (cursor_screen_row >= 0 && cursor_screen_row < ed->edit_height &&
+        cursor_screen_col >= 0 && cursor_screen_col < ed->edit_width) {
+        move(ed->edit_top + cursor_screen_row, ed->edit_left + cursor_screen_col);
+        curs_set(2);  /* High visibility cursor */
+    } else {
+        curs_set(0);
+    }
 
     refresh();
-    napms(1500);
-}
-
-void display_error(const char *msg) {
-    if (!msg) return;
-
-    int rows, cols;
-    getmaxyx(stdscr, rows, cols);
-
-    int msg_len = strlen(msg);
-    int x = (cols - msg_len - 10) / 2;
-    int y = rows / 2;
-
-    attron(COLOR_PAIR(COLOR_DIALOG) | A_BOLD);
-    mvprintw(y, x, "  Error: %s  ", msg);
-    attroff(COLOR_PAIR(COLOR_DIALOG) | A_BOLD);
-
-    refresh();
-    napms(2000);
 }

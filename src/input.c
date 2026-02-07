@@ -111,47 +111,67 @@ void input_handle(Editor *ed, MenuState *menu) {
 
     /* Handle normal mode keys */
     switch (key) {
-        /* Navigation */
+        /* Navigation - clear selection on regular movement */
         case KEY_UP:
+            editor_clear_selection(ed);
             editor_move_up(ed);
             break;
         case KEY_DOWN:
+            editor_clear_selection(ed);
             editor_move_down(ed);
             break;
         case KEY_LEFT:
+            editor_clear_selection(ed);
             editor_move_left(ed);
             break;
         case KEY_RIGHT:
+            editor_clear_selection(ed);
             editor_move_right(ed);
             break;
         case KEY_HOME:
+            editor_clear_selection(ed);
             editor_move_home(ed);
             break;
         case KEY_END:
+            editor_clear_selection(ed);
             editor_move_end(ed);
             break;
         case KEY_PPAGE:  /* Page Up */
+            editor_clear_selection(ed);
             editor_move_page_up(ed);
             break;
         case KEY_NPAGE:  /* Page Down */
+            editor_clear_selection(ed);
             editor_move_page_down(ed);
             break;
 
-        /* Ctrl+Home / Ctrl+End - may not work on all terminals */
-        case 535:  /* Ctrl+Home */
+        /* Ctrl+Home / Ctrl+End - multiple codes for different terminals */
+        case 535:  /* Ctrl+Home xterm */
+        case 536:
+        case 537:
+        case 543:
+        case 1068: /* kHOM5 */
+            editor_clear_selection(ed);
             editor_move_doc_start(ed);
             break;
-        case 530:  /* Ctrl+End */
+        case 530:  /* Ctrl+End xterm */
+        case 531:
+        case 532:
+        case 538:
+        case 1064: /* kEND5 */
+            editor_clear_selection(ed);
             editor_move_doc_end(ed);
             break;
 
         /* Ctrl+Left / Ctrl+Right */
         case 545:  /* Ctrl+Left */
         case 554:
+            editor_clear_selection(ed);
             editor_move_word_left(ed);
             break;
         case 560:  /* Ctrl+Right */
         case 569:
+            editor_clear_selection(ed);
             editor_move_word_right(ed);
             break;
 
@@ -208,6 +228,15 @@ void input_handle(Editor *ed, MenuState *menu) {
             editor_select_all(ed);
             break;
 
+        case KEY_CTRL('t'):  /* Top of document (alternative to Ctrl+Home) */
+            editor_clear_selection(ed);
+            editor_move_doc_start(ed);
+            break;
+        case KEY_CTRL('b'):  /* Bottom of document (alternative to Ctrl+End) */
+            editor_clear_selection(ed);
+            editor_move_doc_end(ed);
+            break;
+
         case KEY_CTRL('f'):  /* Find */
             search_find_dialog(ed);
             break;
@@ -257,6 +286,42 @@ void input_handle(Editor *ed, MenuState *menu) {
                 editor_start_selection(ed);
             }
             editor_move_end(ed);
+            break;
+
+        /* Ctrl+Shift+Arrow for word/line selection */
+        case 546:  /* Ctrl+Shift+Left */
+        case 547:
+        case 555:
+        case 1039:
+            if (!ed->selection.active) {
+                editor_start_selection(ed);
+            }
+            editor_move_word_left(ed);
+            break;
+        case 561:  /* Ctrl+Shift+Right */
+        case 562:
+        case 570:
+        case 1054:
+            if (!ed->selection.active) {
+                editor_start_selection(ed);
+            }
+            editor_move_word_right(ed);
+            break;
+        case 567:  /* Ctrl+Shift+Up */
+        case 568:
+        case 1040:
+            if (!ed->selection.active) {
+                editor_start_selection(ed);
+            }
+            editor_move_up(ed);
+            break;
+        case 526:  /* Ctrl+Shift+Down */
+        case 527:
+        case 1025:
+            if (!ed->selection.active) {
+                editor_start_selection(ed);
+            }
+            editor_move_down(ed);
             break;
 
         /* F10 for menu */

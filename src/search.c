@@ -67,7 +67,7 @@ bool search_find(Editor *ed, const char *term, size_t start_pos) {
 
 bool search_find_next(Editor *ed) {
     if (!ed || !ed->search_term[0]) {
-        display_message("No search term");
+        editor_set_status_message(ed, "No search term");
         return false;
     }
 
@@ -77,7 +77,7 @@ bool search_find_next(Editor *ed) {
     }
 
     if (!search_find(ed, ed->search_term, start)) {
-        display_message("Not found");
+        editor_set_status_message(ed, "Not found");
         return false;
     }
 
@@ -140,8 +140,14 @@ void search_find_dialog(Editor *ed) {
     if (!ed) return;
 
     if (dialog_find(ed, ed->search_term, sizeof(ed->search_term)) == DIALOG_OK) {
-        if (!search_find(ed, ed->search_term, ed->cursor_pos)) {
-            display_message("Not found");
+        /* Start from end of selection if active (to find next match) */
+        size_t start = ed->cursor_pos;
+        if (ed->selection.active) {
+            start = ed->selection.end;
+        }
+
+        if (!search_find(ed, ed->search_term, start)) {
+            editor_set_status_message(ed, "Not found");
         }
     }
 }
@@ -155,9 +161,9 @@ void search_replace_dialog(Editor *ed) {
         if (count > 0) {
             char msg[64];
             snprintf(msg, sizeof(msg), "Replaced %d occurrence%s", count, count == 1 ? "" : "s");
-            display_message(msg);
+            editor_set_status_message(ed, msg);
         } else {
-            display_message("Not found");
+            editor_set_status_message(ed, "Not found");
         }
     }
 }

@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <time.h>
 
 /* Forward declarations */
 typedef struct Buffer Buffer;
@@ -67,6 +68,10 @@ typedef struct Editor {
     char search_term[256];
     char replace_term[256];
     bool search_case_sensitive;
+
+    /* Status bar message */
+    char status_message[128];
+    time_t status_message_time;
 } Editor;
 
 /* Editor lifecycle */
@@ -126,5 +131,8 @@ void editor_update_cursor_position(Editor *ed);
 size_t editor_pos_to_row(Editor *ed, size_t pos);
 size_t editor_pos_to_col(Editor *ed, size_t pos);
 size_t editor_row_col_to_pos(Editor *ed, size_t row, size_t col);
+
+/* Status message */
+void editor_set_status_message(Editor *ed, const char *msg);
 
 #endif /* EDITOR_H */

@@ -12,6 +12,7 @@ typedef struct MenuItem {
     const char *shortcut;   /* Keyboard shortcut text */
     int action;             /* Action ID */
     bool separator;         /* Is this a separator line? */
+    int hotkey_index;       /* Index of hotkey character in label (-1 for none) */
 } MenuItem;
 
 /* Menu */

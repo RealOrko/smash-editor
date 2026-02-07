@@ -7,9 +7,9 @@ bool file_load(Editor *ed, const char *filename) {
 
     FILE *fp = fopen(filename, "r");
     if (!fp) {
-        char msg[256];
+        char msg[128];
         snprintf(msg, sizeof(msg), "Cannot open: %s", strerror(errno));
-        display_error(msg);
+        editor_set_status_message(ed, msg);
         return false;
     }
 
@@ -47,9 +47,9 @@ bool file_save_to(Editor *ed, const char *filename) {
 
     FILE *fp = fopen(filename, "w");
     if (!fp) {
-        char msg[256];
+        char msg[128];
         snprintf(msg, sizeof(msg), "Cannot save: %s", strerror(errno));
-        display_error(msg);
+        editor_set_status_message(ed, msg);
         return false;
     }
 
@@ -67,7 +67,7 @@ bool file_save_to(Editor *ed, const char *filename) {
     ed->filename[MAX_FILENAME - 1] = '\0';
     ed->modified = false;
 
-    display_message("File saved");
+    editor_set_status_message(ed, "File saved");
     return true;
 }
 

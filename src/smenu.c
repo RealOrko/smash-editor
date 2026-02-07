@@ -3,42 +3,42 @@
 
 /* Menu item definitions */
 static MenuItem file_items[] = {
-    {"New",      "Ctrl+N", ACTION_NEW, false},
-    {"Open",     "Ctrl+O", ACTION_OPEN, false},
-    {"Save",     "Ctrl+S", ACTION_SAVE, false},
-    {"Save As",  "",       ACTION_SAVE_AS, false},
-    {"",         "",       0, true},  /* Separator */
-    {"Exit",     "Ctrl+Q", ACTION_EXIT, false}
+    {"New",      "Ctrl+N", ACTION_NEW, false, 0},      /* N */
+    {"Open",     "Ctrl+O", ACTION_OPEN, false, 0},     /* O */
+    {"Save",     "Ctrl+S", ACTION_SAVE, false, 0},     /* S */
+    {"Save As",  "",       ACTION_SAVE_AS, false, 5},  /* A */
+    {"",         "",       0, true, -1},               /* Separator */
+    {"Exit",     "Ctrl+Q", ACTION_EXIT, false, 1}      /* x */
 };
 
 static MenuItem edit_items[] = {
-    {"Undo",       "Ctrl+Z", ACTION_UNDO, false},
-    {"Redo",       "Ctrl+Y", ACTION_REDO, false},
-    {"",           "",       0, true},  /* Separator */
-    {"Cut",        "Ctrl+X", ACTION_CUT, false},
-    {"Copy",       "Ctrl+C", ACTION_COPY, false},
-    {"Paste",      "Ctrl+V", ACTION_PASTE, false},
-    {"",           "",       0, true},  /* Separator */
-    {"Select All", "Ctrl+A", ACTION_SELECT_ALL, false}
+    {"Undo",       "Ctrl+Z", ACTION_UNDO, false, 0},       /* U */
+    {"Redo",       "Ctrl+Y", ACTION_REDO, false, 0},       /* R */
+    {"",           "",       0, true, -1},                 /* Separator */
+    {"Cut",        "Ctrl+X", ACTION_CUT, false, 2},        /* t */
+    {"Copy",       "Ctrl+C", ACTION_COPY, false, 0},       /* C */
+    {"Paste",      "Ctrl+V", ACTION_PASTE, false, 0},      /* P */
+    {"",           "",       0, true, -1},                 /* Separator */
+    {"Select All", "Ctrl+A", ACTION_SELECT_ALL, false, 7}  /* A */
 };
 
 static MenuItem search_items[] = {
-    {"Find",       "Ctrl+F", ACTION_FIND, false},
-    {"Find Next",  "F3",     ACTION_FIND_NEXT, false},
-    {"Replace",    "Ctrl+H", ACTION_REPLACE, false},
-    {"",           "",       0, true},  /* Separator */
-    {"Go to Line", "Ctrl+G", ACTION_GOTO_LINE, false}
+    {"Find",       "Ctrl+F", ACTION_FIND, false, 0},       /* F */
+    {"Find Next",  "F3",     ACTION_FIND_NEXT, false, 5},  /* N */
+    {"Replace",    "Ctrl+H", ACTION_REPLACE, false, 0},    /* R */
+    {"",           "",       0, true, -1},                 /* Separator */
+    {"Go to Line", "Ctrl+G", ACTION_GOTO_LINE, false, 0}   /* G */
 };
 
 static MenuItem view_items[] = {
-    {"Line Numbers", "", ACTION_TOGGLE_LINE_NUMBERS, false},
-    {"Status Bar",   "", ACTION_TOGGLE_STATUS_BAR, false}
+    {"Line Numbers", "", ACTION_TOGGLE_LINE_NUMBERS, false, 0},  /* L */
+    {"Status Bar",   "", ACTION_TOGGLE_STATUS_BAR, false, 0}     /* S */
 };
 
 static MenuItem help_items[] = {
-    {"Keyboard Shortcuts", "", ACTION_SHORTCUTS, false},
-    {"",                   "", 0, true},  /* Separator */
-    {"About SmashEdit",    "", ACTION_ABOUT, false}
+    {"Keyboard Shortcuts", "", ACTION_SHORTCUTS, false, 0},  /* K */
+    {"",                   "", 0, true, -1},                 /* Separator */
+    {"About SmashEdit",    "", ACTION_ABOUT, false, 0}       /* A */
 };
 
 MenuState *menu_create(void) {
@@ -278,8 +278,20 @@ void menu_draw(MenuState *state, Editor *ed) {
                 addch(' ');
             }
 
-            /* Draw label */
-            mvprintw(item_y, dropdown_x + 2, "%s", menu->items[i].label);
+            /* Draw label with underlined hotkey */
+            const char *label = menu->items[i].label;
+            int hotkey_idx = menu->items[i].hotkey_index;
+            int label_x = dropdown_x + 2;
+
+            for (int j = 0; label[j]; j++) {
+                if (j == hotkey_idx) {
+                    attron(A_UNDERLINE);
+                    mvaddch(item_y, label_x + j, label[j]);
+                    attroff(A_UNDERLINE);
+                } else {
+                    mvaddch(item_y, label_x + j, label[j]);
+                }
+            }
 
             /* Draw shortcut right-aligned */
             if (menu->items[i].shortcut[0]) {
@@ -348,10 +360,12 @@ int menu_handle_key(MenuState *state, int key) {
                 Menu *menu = &state->menus[state->current_menu];
                 char upper_key = toupper(key);
                 for (int i = 0; i < menu->item_count; i++) {
-                    if (!menu->items[i].separator &&
-                        toupper(menu->items[i].label[0]) == upper_key) {
-                        state->current_item = i;
-                        return menu_select(state);
+                    if (!menu->items[i].separator && menu->items[i].hotkey_index >= 0) {
+                        int idx = menu->items[i].hotkey_index;
+                        if (toupper(menu->items[i].label[idx]) == upper_key) {
+                            state->current_item = i;
+                            return menu_select(state);
+                        }
                     }
                 }
             }

@@ -130,7 +130,16 @@ DialogResult dialog_input(Editor *ed, const char *title, const char *prompt,
         draw_button(btn_y, ok_x, "OK", !in_input && button_selected == 0);
         draw_button(btn_y, cancel_x, "Cancel", !in_input && button_selected == 1);
 
-        if (!in_input) {
+        if (in_input) {
+            /* Reposition cursor in input field after drawing buttons */
+            int start = 0;
+            if (cursor_pos >= input_width - 1) {
+                start = cursor_pos - input_width + 2;
+            }
+            int screen_cursor = cursor_pos - start;
+            move(dialog_y + 3, dialog_x + 3 + screen_cursor);
+            curs_set(2);
+        } else {
             curs_set(0);
         }
 
@@ -358,7 +367,18 @@ DialogResult dialog_replace(Editor *ed, char *search_term, size_t search_size,
         draw_button(btn_y, replace_x, "Replace All", active_field == 2 && button_selected == 0);
         draw_button(btn_y, cancel_x, "Cancel", active_field == 2 && button_selected == 1);
 
-        if (active_field == 2) {
+        if (active_field < 2) {
+            /* Reposition cursor in active input field after drawing buttons */
+            int *current_cursor = (active_field == 0) ? &search_cursor : &replace_cursor;
+            int field_y = (active_field == 0) ? dialog_y + 2 : dialog_y + 4;
+            int start = 0;
+            if (*current_cursor >= input_width - 1) {
+                start = *current_cursor - input_width + 2;
+            }
+            int screen_cursor = *current_cursor - start;
+            move(field_y, dialog_x + 15 + screen_cursor);
+            curs_set(2);
+        } else {
             curs_set(0);
         }
 
@@ -451,43 +471,120 @@ void dialog_about(Editor *ed) {
 void dialog_shortcuts(Editor *ed) {
     if (!ed) return;
 
+    /* Define all shortcut lines */
+    static const char *shortcuts[] = {
+        "File Operations:",
+        "  Ctrl+N  New file",
+        "  Ctrl+O  Open file",
+        "  Ctrl+S  Save file",
+        "  Ctrl+Q  Exit",
+        "",
+        "Editing:",
+        "  Ctrl+Z  Undo",
+        "  Ctrl+Y  Redo",
+        "  Ctrl+X  Cut",
+        "  Ctrl+C  Copy",
+        "  Ctrl+V  Paste",
+        "  Ctrl+A  Select all",
+        "",
+        "Search:",
+        "  Ctrl+F  Find",
+        "  F3      Find next",
+        "  Ctrl+H  Replace",
+        "  Ctrl+G  Go to line",
+        "",
+        "Navigation:",
+        "  Arrows      Move cursor",
+        "  Home/End    Start/end of line",
+        "  PgUp/PgDn   Page up/down",
+        "  Ctrl+T      Start of file",
+        "  Ctrl+B      End of file",
+        "",
+        "Selection:",
+        "  Shift+Arrows       Select text",
+        "  Ctrl+Shift+Left    Select word left",
+        "  Ctrl+Shift+Right   Select word right",
+        "  Shift+Home         Select to line start",
+        "  Shift+End          Select to line end",
+        "",
+        "Menus:",
+        "  Alt+F/E/S/V/H  Open menu",
+        "  F10            Open File menu",
+        "  Escape         Close menu"
+    };
+    int total_lines = sizeof(shortcuts) / sizeof(shortcuts[0]);
+
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
 
     int dialog_width = 50;
-    int dialog_height = 20;
+    int max_content_height = rows - 6;  /* Leave room for borders and button */
+    int content_height = total_lines < max_content_height ? total_lines : max_content_height;
+    int dialog_height = content_height + 4;  /* +4 for borders and button row */
     int dialog_x = (cols - dialog_width) / 2;
     int dialog_y = (rows - dialog_height) / 2;
 
+    int scroll_offset = 0;
+    int max_scroll = total_lines - content_height;
+    if (max_scroll < 0) max_scroll = 0;
+
     curs_set(0);
 
-    dialog_draw_box(dialog_y, dialog_x, dialog_height, dialog_width, "Keyboard Shortcuts");
+    while (1) {
+        dialog_draw_box(dialog_y, dialog_x, dialog_height, dialog_width, "Keyboard Shortcuts");
 
-    attron(COLOR_PAIR(COLOR_DIALOG));
+        attron(COLOR_PAIR(COLOR_DIALOG));
 
-    int y = dialog_y + 2;
-    mvprintw(y++, dialog_x + 3, "File Operations:");
-    mvprintw(y++, dialog_x + 5, "Ctrl+N  New file");
-    mvprintw(y++, dialog_x + 5, "Ctrl+O  Open file");
-    mvprintw(y++, dialog_x + 5, "Ctrl+S  Save file");
-    mvprintw(y++, dialog_x + 5, "Ctrl+Q  Exit");
-    y++;
-    mvprintw(y++, dialog_x + 3, "Editing:");
-    mvprintw(y++, dialog_x + 5, "Ctrl+Z  Undo");
-    mvprintw(y++, dialog_x + 5, "Ctrl+Y  Redo");
-    mvprintw(y++, dialog_x + 5, "Ctrl+X  Cut");
-    mvprintw(y++, dialog_x + 5, "Ctrl+C  Copy");
-    mvprintw(y++, dialog_x + 5, "Ctrl+V  Paste");
-    mvprintw(y++, dialog_x + 5, "Ctrl+A  Select all");
-    y++;
-    mvprintw(y++, dialog_x + 3, "Search:");
-    mvprintw(y++, dialog_x + 5, "Ctrl+F  Find");
-    mvprintw(y++, dialog_x + 5, "F3      Find next");
-    mvprintw(y++, dialog_x + 5, "Ctrl+H  Replace");
-    mvprintw(y++, dialog_x + 5, "Ctrl+G  Go to line");
+        /* Draw visible lines */
+        for (int i = 0; i < content_height; i++) {
+            int line_idx = scroll_offset + i;
+            int y = dialog_y + 1 + i;
 
-    attroff(COLOR_PAIR(COLOR_DIALOG));
+            /* Clear line first */
+            move(y, dialog_x + 1);
+            for (int x = 1; x < dialog_width - 1; x++) {
+                addch(' ');
+            }
 
-    refresh();
-    getch();
+            if (line_idx < total_lines) {
+                mvprintw(y, dialog_x + 3, "%s", shortcuts[line_idx]);
+            }
+        }
+
+        /* Draw scroll indicators */
+        if (scroll_offset > 0) {
+            mvprintw(dialog_y + 1, dialog_x + dialog_width - 4, "(+)");
+        }
+        if (scroll_offset < max_scroll) {
+            mvprintw(dialog_y + content_height, dialog_x + dialog_width - 4, "(+)");
+        }
+
+        attroff(COLOR_PAIR(COLOR_DIALOG));
+
+        /* Draw close button */
+        int btn_x = dialog_x + (dialog_width - 10) / 2;
+        draw_button(dialog_y + dialog_height - 2, btn_x, "Close", true);
+
+        refresh();
+
+        int key = getch();
+
+        if (key == '\n' || key == '\r' || key == KEY_ENTER || key == 27 || key == ' ') {
+            break;
+        } else if (key == KEY_UP || key == 'k') {
+            if (scroll_offset > 0) scroll_offset--;
+        } else if (key == KEY_DOWN || key == 'j') {
+            if (scroll_offset < max_scroll) scroll_offset++;
+        } else if (key == KEY_PPAGE) {
+            scroll_offset -= content_height;
+            if (scroll_offset < 0) scroll_offset = 0;
+        } else if (key == KEY_NPAGE) {
+            scroll_offset += content_height;
+            if (scroll_offset > max_scroll) scroll_offset = max_scroll;
+        } else if (key == KEY_HOME) {
+            scroll_offset = 0;
+        } else if (key == KEY_END) {
+            scroll_offset = max_scroll;
+        }
+    }
 }

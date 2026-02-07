@@ -22,8 +22,4 @@ void display_draw_box(int y, int x, int height, int width, bool double_line);
 void display_draw_hline(int y, int x, int width, bool double_line);
 void display_draw_vline(int y, int x, int height, bool double_line);
 
-/* Message display */
-void display_message(const char *msg);
-void display_error(const char *msg);
-
 #endif /* DISPLAY_H */
