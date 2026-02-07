@@ -3,7 +3,10 @@
 .PHONY: build install clean
 
 build:
-	@cmake -B bin -S . -DCMAKE_BUILD_TYPE=Release
+	@if [ -f bin/CMakeCache.txt ] && ! grep -q "$(CURDIR)" bin/CMakeCache.txt 2>/dev/null; then \
+		rm -rf bin; \
+	fi
+	@cmake -B bin -S . -DCMAKE_BUILD_TYPE=Release 2>/dev/null || (rm -rf bin && cmake -B bin -S . -DCMAKE_BUILD_TYPE=Release)
 	@cmake --build bin
 
 install: build
@@ -14,3 +17,4 @@ install: build
 clean:
 	@rm -rf bin
 	@echo "Cleaned build artifacts"
+

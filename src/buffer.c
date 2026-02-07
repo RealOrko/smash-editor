@@ -35,10 +35,11 @@ void buffer_clear(Buffer *buf) {
 void buffer_move_gap(Buffer *buf, size_t pos) {
     if (!buf || pos > buf->length) return;
 
+    size_t gap_size = buf->gap_end - buf->gap_start;
+
     if (pos < buf->gap_start) {
         /* Move gap left */
         size_t move_len = buf->gap_start - pos;
-        size_t gap_size = buf->gap_end - buf->gap_start;
         memmove(buf->data + pos + gap_size, buf->data + pos, move_len);
         buf->gap_start = pos;
         buf->gap_end = pos + gap_size;
@@ -47,8 +48,7 @@ void buffer_move_gap(Buffer *buf, size_t pos) {
         size_t move_len = pos - buf->gap_start;
         memmove(buf->data + buf->gap_start, buf->data + buf->gap_end, move_len);
         buf->gap_start = pos;
-        buf->gap_end = pos + (buf->gap_end - buf->gap_start + move_len) - move_len;
-        buf->gap_end = buf->gap_start + (buf->gap_end - buf->gap_start);
+        buf->gap_end = pos + gap_size;
     }
 }
 

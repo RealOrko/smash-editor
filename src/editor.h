@@ -18,11 +18,23 @@ typedef enum {
     MODE_SELECT     /* Text selection active */
 } EditorMode;
 
-/* Selection state */
+/* Selection range */
+typedef struct SelectionRange {
+    size_t start;
+    size_t end;
+    size_t cursor;  /* Cursor position for this selection */
+} SelectionRange;
+
+/* Selection state - supports multiple selections */
+#define MAX_SELECTIONS 64
+
 typedef struct Selection {
     bool active;
     size_t start;
     size_t end;
+    /* Multi-select support */
+    SelectionRange ranges[MAX_SELECTIONS];
+    int count;  /* Number of active selections (0 = use legacy start/end) */
 } Selection;
 
 /* Editor state */
@@ -108,9 +120,15 @@ void editor_start_selection(Editor *ed);
 void editor_update_selection(Editor *ed);
 void editor_clear_selection(Editor *ed);
 void editor_select_all(Editor *ed);
+void editor_select_word(Editor *ed);
 bool editor_has_selection(Editor *ed);
 char *editor_get_selection(Editor *ed);
 void editor_delete_selection(Editor *ed);
+
+/* Multi-select operations */
+bool editor_add_next_occurrence(Editor *ed);
+bool editor_has_multi_selection(Editor *ed);
+void editor_clear_multi_selection(Editor *ed);
 
 /* Clipboard operations */
 void editor_cut(Editor *ed);

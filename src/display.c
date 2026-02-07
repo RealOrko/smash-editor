@@ -180,22 +180,47 @@ void display_draw_statusbar(Editor *ed) {
     attroff(COLOR_PAIR(COLOR_STATUS));
 }
 
+/* Helper to check if position is in any selection */
+static bool pos_in_selection(Editor *ed, size_t pos) {
+    if (!ed) return false;
+
+    /* Check multi-selections first */
+    if (ed->selection.count > 0) {
+        for (int i = 0; i < ed->selection.count; i++) {
+            size_t start = ed->selection.ranges[i].start;
+            size_t end = ed->selection.ranges[i].end;
+            if (start > end) {
+                size_t tmp = start;
+                start = end;
+                end = tmp;
+            }
+            if (pos >= start && pos < end) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /* Check single selection */
+    if (ed->selection.active) {
+        size_t start = ed->selection.start;
+        size_t end = ed->selection.end;
+        if (start > end) {
+            size_t tmp = start;
+            start = end;
+            end = tmp;
+        }
+        return pos >= start && pos < end;
+    }
+
+    return false;
+}
+
 void display_draw_editor(Editor *ed) {
     if (!ed || !ed->buffer) return;
 
     size_t buf_len = buffer_get_length(ed->buffer);
-    size_t sel_start = 0, sel_end = 0;
-    bool has_sel = editor_has_selection(ed);
-
-    if (has_sel) {
-        sel_start = ed->selection.start;
-        sel_end = ed->selection.end;
-        if (sel_start > sel_end) {
-            size_t tmp = sel_start;
-            sel_start = sel_end;
-            sel_end = tmp;
-        }
-    }
+    bool has_sel = editor_has_selection(ed) || editor_has_multi_selection(ed);
 
     /* Fill background */
     attron(COLOR_PAIR(COLOR_EDITOR));
@@ -247,7 +272,7 @@ void display_draw_editor(Editor *ed) {
             }
 
             /* Check if character is in selection */
-            if (has_sel && pos >= sel_start && pos < sel_end) {
+            if (has_sel && pos_in_selection(ed, pos)) {
                 attron(COLOR_PAIR(COLOR_HIGHLIGHT));
             } else {
                 attron(COLOR_PAIR(COLOR_EDITOR));

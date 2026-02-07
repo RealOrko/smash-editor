@@ -191,7 +191,7 @@ DialogResult dialog_input(Editor *ed, const char *title, const char *prompt,
                 button_selected = 0;
             } else if (key == KEY_RIGHT) {
                 button_selected = 1;
-            } else if (key == '\n' || key == '\r' || key == KEY_ENTER) {
+            } else if (key == '\n' || key == '\r' || key == KEY_ENTER || key == ' ') {
                 return button_selected == 0 ? DIALOG_OK : DIALOG_CANCEL;
             } else if (key == 27) {
                 return DIALOG_CANCEL;
@@ -246,7 +246,7 @@ DialogResult dialog_confirm(Editor *ed, const char *title, const char *message) 
             if (button_selected > 0) button_selected--;
         } else if (key == KEY_RIGHT || key == '\t') {
             if (button_selected < 2) button_selected++;
-        } else if (key == '\n' || key == '\r' || key == KEY_ENTER) {
+        } else if (key == '\n' || key == '\r' || key == KEY_ENTER || key == ' ') {
             switch (button_selected) {
                 case 0: return DIALOG_YES;
                 case 1: return DIALOG_NO;
@@ -394,7 +394,7 @@ DialogResult dialog_replace(Editor *ed, char *search_term, size_t search_size,
             if (active_field == 2) button_selected = 0;
         } else if (key == 27) {
             return DIALOG_CANCEL;
-        } else if (key == '\n' || key == '\r' || key == KEY_ENTER) {
+        } else if (key == '\n' || key == '\r' || key == KEY_ENTER || (key == ' ' && active_field == 2)) {
             if (active_field == 2) {
                 return button_selected == 0 ? DIALOG_OK : DIALOG_CANCEL;
             } else {
@@ -506,6 +506,7 @@ void dialog_shortcuts(Editor *ed) {
         "  Ctrl+Shift+Right   Select word right",
         "  Shift+Home         Select to line start",
         "  Shift+End          Select to line end",
+        "  Ctrl+D             Multi-select next match",
         "",
         "Menus:",
         "  Alt+F/E/S/V/H  Open menu",

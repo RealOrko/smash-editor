@@ -227,6 +227,9 @@ void input_handle(Editor *ed, MenuState *menu) {
         case KEY_CTRL('a'):  /* Select All */
             editor_select_all(ed);
             break;
+        case KEY_CTRL('d'):  /* Add next occurrence to multi-select */
+            editor_add_next_occurrence(ed);
+            break;
 
         case KEY_CTRL('t'):  /* Top of document (alternative to Ctrl+Home) */
             editor_clear_selection(ed);
@@ -332,7 +335,7 @@ void input_handle(Editor *ed, MenuState *menu) {
 
         /* Escape - clear selection or open menu */
         case 27:
-            if (ed->selection.active) {
+            if (ed->selection.active || editor_has_multi_selection(ed)) {
                 editor_clear_selection(ed);
             } else {
                 /* Escape alone (not Alt+key) could open menu */
@@ -348,7 +351,25 @@ void input_handle(Editor *ed, MenuState *menu) {
                 if (ed->selection.active && !editor_has_selection(ed)) {
                     editor_clear_selection(ed);
                 }
+                {
+                    FILE *dbg = fopen("/tmp/insert_debug.log", "a");
+                    if (dbg) {
+                        fprintf(dbg, "[INPUT] BEFORE editor_insert_char key='%c'\n", (char)key);
+                        fprintf(dbg, "[INPUT]   selection.count=%d active=%d\n", ed->selection.count, ed->selection.active);
+                        fflush(dbg);
+                        fclose(dbg);
+                    }
+                }
                 editor_insert_char(ed, (char)key);
+                {
+                    FILE *dbg = fopen("/tmp/insert_debug.log", "a");
+                    if (dbg) {
+                        fprintf(dbg, "[INPUT] AFTER editor_insert_char\n");
+                        fprintf(dbg, "[INPUT]   selection.count=%d active=%d\n", ed->selection.count, ed->selection.active);
+                        fflush(dbg);
+                        fclose(dbg);
+                    }
+                }
             }
             break;
     }

@@ -8,6 +8,8 @@ UndoStack *undo_create(void) {
     stack->redo_top = NULL;
     stack->undo_count = 0;
     stack->redo_count = 0;
+    stack->current_group = 0;
+    stack->next_group_id = 1;
 
     return stack;
 }
@@ -40,7 +42,7 @@ void undo_clear(UndoStack *stack) {
     stack->redo_count = 0;
 }
 
-static UndoOp *create_op(UndoType type, size_t pos, const char *text, size_t len, size_t cursor_pos) {
+static UndoOp *create_op(UndoType type, size_t pos, const char *text, size_t len, size_t cursor_pos, int group_id) {
     UndoOp *op = malloc(sizeof(UndoOp));
     if (!op) return NULL;
 
@@ -48,6 +50,7 @@ static UndoOp *create_op(UndoType type, size_t pos, const char *text, size_t len
     op->pos = pos;
     op->length = len;
     op->cursor_pos = cursor_pos;
+    op->group_id = group_id;
     op->next = NULL;
 
     if (text && len > 0) {
@@ -104,17 +107,29 @@ static void push_redo(UndoStack *stack, UndoOp *op) {
 }
 
 void undo_record_insert(UndoStack *stack, size_t pos, const char *text, size_t len, size_t cursor_pos) {
-    UndoOp *op = create_op(UNDO_INSERT, pos, text, len, cursor_pos);
+    if (!stack) return;
+    UndoOp *op = create_op(UNDO_INSERT, pos, text, len, cursor_pos, stack->current_group);
     if (op) {
         push_undo(stack, op);
     }
 }
 
 void undo_record_delete(UndoStack *stack, size_t pos, const char *text, size_t len, size_t cursor_pos) {
-    UndoOp *op = create_op(UNDO_DELETE, pos, text, len, cursor_pos);
+    if (!stack) return;
+    UndoOp *op = create_op(UNDO_DELETE, pos, text, len, cursor_pos, stack->current_group);
     if (op) {
         push_undo(stack, op);
     }
+}
+
+void undo_begin_group(UndoStack *stack) {
+    if (!stack) return;
+    stack->current_group = stack->next_group_id++;
+}
+
+void undo_end_group(UndoStack *stack) {
+    if (!stack) return;
+    stack->current_group = 0;
 }
 
 UndoOp *undo_pop(UndoStack *stack) {
@@ -131,13 +146,19 @@ UndoOp *undo_pop(UndoStack *stack) {
         op->pos,
         op->text,
         op->length,
-        op->cursor_pos
+        op->cursor_pos,
+        op->group_id
     );
     if (redo_op) {
         push_redo(stack, redo_op);
     }
 
     return op;
+}
+
+int undo_peek_group(UndoStack *stack) {
+    if (!stack || !stack->undo_top) return 0;
+    return stack->undo_top->group_id;
 }
 
 UndoOp *redo_pop(UndoStack *stack) {
@@ -154,7 +175,8 @@ UndoOp *redo_pop(UndoStack *stack) {
         op->pos,
         op->text,
         op->length,
-        op->cursor_pos
+        op->cursor_pos,
+        op->group_id
     );
     if (undo_op) {
         undo_op->next = stack->undo_top;
@@ -171,6 +193,11 @@ bool undo_can_undo(UndoStack *stack) {
 
 bool undo_can_redo(UndoStack *stack) {
     return stack && stack->redo_top != NULL;
+}
+
+int redo_peek_group(UndoStack *stack) {
+    if (!stack || !stack->redo_top) return 0;
+    return stack->redo_top->group_id;
 }
 
 void undo_op_free(UndoOp *op) {

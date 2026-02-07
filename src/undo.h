@@ -18,6 +18,7 @@ typedef struct UndoOp {
     char *text;         /* Text that was inserted or deleted */
     size_t length;      /* Length of text */
     size_t cursor_pos;  /* Cursor position before operation */
+    int group_id;       /* Group ID for multi-edit undo (0 = no group) */
     struct UndoOp *next;
 } UndoOp;
 
@@ -27,6 +28,8 @@ typedef struct UndoStack {
     UndoOp *redo_top;   /* Top of redo stack */
     int undo_count;     /* Number of undo operations */
     int redo_count;     /* Number of redo operations */
+    int current_group;  /* Current group ID (0 = not grouping) */
+    int next_group_id;  /* Next group ID to use */
 } UndoStack;
 
 /* Stack operations */
@@ -38,11 +41,17 @@ void undo_clear(UndoStack *stack);
 void undo_record_insert(UndoStack *stack, size_t pos, const char *text, size_t len, size_t cursor_pos);
 void undo_record_delete(UndoStack *stack, size_t pos, const char *text, size_t len, size_t cursor_pos);
 
+/* Group operations (for multi-edit) */
+void undo_begin_group(UndoStack *stack);
+void undo_end_group(UndoStack *stack);
+
 /* Undo/Redo */
 UndoOp *undo_pop(UndoStack *stack);
 UndoOp *redo_pop(UndoStack *stack);
 bool undo_can_undo(UndoStack *stack);
 bool undo_can_redo(UndoStack *stack);
+int undo_peek_group(UndoStack *stack);
+int redo_peek_group(UndoStack *stack);
 
 /* Free single operation */
 void undo_op_free(UndoOp *op);
