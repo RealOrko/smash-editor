@@ -1,7 +1,54 @@
 #include "smashedit.h"
 
+/* Windows/PDCurses extended key definitions */
+#ifdef _WIN32
+/* Windows ncurses may use different key codes */
+#ifndef KEY_SLEFT
+#define KEY_SLEFT 0x189
+#endif
+#ifndef KEY_SRIGHT
+#define KEY_SRIGHT 0x18C
+#endif
+#ifndef KEY_SUP
+#define KEY_SUP 0x18D
+#endif
+#ifndef KEY_SDOWN
+#define KEY_SDOWN 0x18E
+#endif
+#ifndef CTL_LEFT
+#define CTL_LEFT 0x1BB
+#endif
+#ifndef CTL_RIGHT
+#define CTL_RIGHT 0x1BC
+#endif
+#ifndef CTL_UP
+#define CTL_UP 0x1BD
+#endif
+#ifndef CTL_DOWN
+#define CTL_DOWN 0x1BE
+#endif
+#endif
+
+/* Debug mode - set to 1 to show key codes in status bar */
+static int debug_key_mode = 0;
+static int last_key_code = 0;
+
 int input_get_key(void) {
-    return getch();
+    int key = getch();
+    last_key_code = key;
+    return key;
+}
+
+int input_get_last_key_code(void) {
+    return last_key_code;
+}
+
+void input_toggle_debug_mode(void) {
+    debug_key_mode = !debug_key_mode;
+}
+
+int input_is_debug_mode(void) {
+    return debug_key_mode;
 }
 
 bool input_is_alt_key(int *key) {
@@ -164,13 +211,21 @@ void input_handle(Editor *ed, MenuState *menu) {
             break;
 
         /* Ctrl+Left / Ctrl+Right */
-        case 545:  /* Ctrl+Left */
+        case 545:  /* Ctrl+Left xterm */
         case 554:
+#ifdef _WIN32
+        case CTL_LEFT:
+        case 0x21D:  /* Windows Terminal Ctrl+Left */
+#endif
             editor_clear_selection(ed);
             editor_move_word_left(ed);
             break;
-        case 560:  /* Ctrl+Right */
+        case 560:  /* Ctrl+Right xterm */
         case 569:
+#ifdef _WIN32
+        case CTL_RIGHT:
+        case 0x22C:  /* Windows Terminal Ctrl+Right */
+#endif
             editor_clear_selection(ed);
             editor_move_word_right(ed);
             break;
@@ -253,26 +308,46 @@ void input_handle(Editor *ed, MenuState *menu) {
             search_goto_line_dialog(ed);
             break;
 
+        case KEY_CTRL('k'):  /* Toggle key debug mode */
+            input_toggle_debug_mode();
+            break;
+
         /* Shift+Arrow for selection */
         case KEY_SLEFT:
+#ifdef _WIN32
+        case 0x189:  /* Windows Shift+Left */
+        case 0x223:  /* Windows Terminal Shift+Left */
+#endif
             if (!ed->selection.active) {
                 editor_start_selection(ed);
             }
             editor_move_left(ed);
             break;
         case KEY_SRIGHT:
+#ifdef _WIN32
+        case 0x18C:  /* Windows Shift+Right */
+        case 0x232:  /* Windows Terminal Shift+Right */
+#endif
             if (!ed->selection.active) {
                 editor_start_selection(ed);
             }
             editor_move_right(ed);
             break;
         case KEY_SR:  /* Shift+Up */
+#ifdef _WIN32
+        case KEY_SUP:
+        case 0x233:  /* Windows Terminal Shift+Up */
+#endif
             if (!ed->selection.active) {
                 editor_start_selection(ed);
             }
             editor_move_up(ed);
             break;
         case KEY_SF:  /* Shift+Down */
+#ifdef _WIN32
+        case KEY_SDOWN:
+        case 0x20A:  /* Windows Terminal Shift+Down */
+#endif
             if (!ed->selection.active) {
                 editor_start_selection(ed);
             }

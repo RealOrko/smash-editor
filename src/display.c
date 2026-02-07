@@ -162,7 +162,11 @@ void display_draw_statusbar(Editor *ed) {
 
     /* Status message or modified indicator on the right */
     time_t now = time(NULL);
-    if (ed->status_message[0] && (now - ed->status_message_time) < 3) {
+    /* Key debug mode - show key code */
+    if (input_is_debug_mode()) {
+        int key_code = input_get_last_key_code();
+        mvprintw(status_y, ed->screen_cols - 30, " Key: 0x%03X (%d) ", key_code, key_code);
+    } else if (ed->status_message[0] && (now - ed->status_message_time) < 3) {
         /* Show status message for 3 seconds */
         int msg_len = strlen(ed->status_message);
         mvprintw(status_y, ed->screen_cols - msg_len - 2, " %s ", ed->status_message);
