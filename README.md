@@ -167,7 +167,6 @@ make install
 smashedit/
 ├── 📄 CMakeLists.txt      # CMake build configuration
 ├── 📄 Makefile            # Build wrapper
-├── 📄 Dockerfile          # Container environment
 ├── 📁 include/
 │   └── 📄 smashedit.h     # Main header file
 ├── 📁 src/
@@ -235,20 +234,6 @@ cmake -B bin -S . -DCMAKE_BUILD_TYPE=Release
 cmake --build bin
 
 # The binary will be at bin/smashedit
-```
-
----
-
-## 🐳 Docker
-
-A Dockerfile is provided for a complete development environment:
-
-```bash
-# Build the Docker image
-docker build -t smashedit-dev .
-
-# Run the container
-docker run -it smashedit-dev
 ```
 
 ---
