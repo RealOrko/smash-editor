@@ -1,4 +1,93 @@
 #include "smashedit.h"
+#include <wctype.h>
+
+/* UTF-8 helper functions for cursor positioning */
+
+/* Get the number of bytes in a UTF-8 character based on the first byte */
+static int utf8_char_len(unsigned char c) {
+    if ((c & 0x80) == 0) return 1;        /* 0xxxxxxx - ASCII */
+    if ((c & 0xE0) == 0xC0) return 2;     /* 110xxxxx */
+    if ((c & 0xF0) == 0xE0) return 3;     /* 1110xxxx */
+    if ((c & 0xF8) == 0xF0) return 4;     /* 11110xxx */
+    return 1; /* Invalid, treat as single byte */
+}
+
+/* Check if byte is a UTF-8 continuation byte */
+static bool is_utf8_cont(unsigned char c) {
+    return (c & 0xC0) == 0x80;  /* 10xxxxxx */
+}
+
+/* Decode a UTF-8 sequence from buffer to a wide character. Returns bytes consumed */
+static int utf8_decode_at(Buffer *buf, size_t pos, size_t buf_len, wchar_t *wc) {
+    if (pos >= buf_len) return 0;
+
+    unsigned char c = (unsigned char)buffer_get_char(buf, pos);
+    int len = utf8_char_len(c);
+
+    /* Check if we have enough bytes */
+    if (pos + len > buf_len) {
+        *wc = L'?';
+        return 1;
+    }
+
+    /* Validate continuation bytes and decode */
+    wchar_t result = 0;
+    if (len == 1) {
+        result = c;
+    } else if (len == 2) {
+        unsigned char c1 = (unsigned char)buffer_get_char(buf, pos + 1);
+        if (!is_utf8_cont(c1)) {
+            *wc = L'?';
+            return 1;
+        }
+        result = ((c & 0x1F) << 6) | (c1 & 0x3F);
+    } else if (len == 3) {
+        unsigned char c1 = (unsigned char)buffer_get_char(buf, pos + 1);
+        unsigned char c2 = (unsigned char)buffer_get_char(buf, pos + 2);
+        if (!is_utf8_cont(c1) || !is_utf8_cont(c2)) {
+            *wc = L'?';
+            return 1;
+        }
+        result = ((c & 0x0F) << 12) | ((c1 & 0x3F) << 6) | (c2 & 0x3F);
+    } else if (len == 4) {
+        unsigned char c1 = (unsigned char)buffer_get_char(buf, pos + 1);
+        unsigned char c2 = (unsigned char)buffer_get_char(buf, pos + 2);
+        unsigned char c3 = (unsigned char)buffer_get_char(buf, pos + 3);
+        if (!is_utf8_cont(c1) || !is_utf8_cont(c2) || !is_utf8_cont(c3)) {
+            *wc = L'?';
+            return 1;
+        }
+        result = ((c & 0x07) << 18) | ((c1 & 0x3F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F);
+    }
+
+    *wc = result;
+    return len;
+}
+
+/* Get the display width of a wide character (1 or 2 columns) */
+static int wchar_display_width(wchar_t wc) {
+    if (wc == L'\0') return 0;
+    if (wc < 32) return 0;  /* Control characters */
+
+    /* Use wcwidth if available */
+#ifdef _XOPEN_SOURCE
+    int w = wcwidth(wc);
+    if (w >= 0) return w;
+#endif
+
+    /* Fallback: Common wide character ranges */
+    if (wc >= 0x1100 && wc <= 0x115F) return 2;  /* Hangul Jamo */
+    if (wc >= 0x2E80 && wc <= 0x9FFF) return 2;  /* CJK */
+    if (wc >= 0xAC00 && wc <= 0xD7AF) return 2;  /* Hangul Syllables */
+    if (wc >= 0xF900 && wc <= 0xFAFF) return 2;  /* CJK Compatibility */
+    if (wc >= 0xFE10 && wc <= 0xFE1F) return 2;  /* Vertical Forms */
+    if (wc >= 0xFE30 && wc <= 0xFE6F) return 2;  /* CJK Compatibility Forms */
+    if (wc >= 0xFF00 && wc <= 0xFF60) return 2;  /* Fullwidth Forms */
+    if (wc >= 0xFFE0 && wc <= 0xFFE6) return 2;  /* Fullwidth Signs */
+    if (wc >= 0x20000 && wc <= 0x2FFFF) return 2; /* CJK Extension B+ */
+
+    return 1;
+}
 
 Editor *editor_create(void) {
     Editor *ed = malloc(sizeof(Editor));
@@ -122,14 +211,20 @@ void editor_update_cursor_position(Editor *ed) {
     ed->cursor_row = buffer_get_line_number(ed->buffer, ed->cursor_pos);
 
     size_t line_start = buffer_line_start(ed->buffer, ed->cursor_pos);
+    size_t buf_len = buffer_get_length(ed->buffer);
     ed->cursor_col = 1;
 
-    for (size_t i = line_start; i < ed->cursor_pos; i++) {
+    size_t i = line_start;
+    while (i < ed->cursor_pos && i < buf_len) {
         char c = buffer_get_char(ed->buffer, i);
         if (c == '\t') {
             ed->cursor_col += TAB_WIDTH - ((ed->cursor_col - 1) % TAB_WIDTH);
+            i++;
         } else {
-            ed->cursor_col++;
+            wchar_t wc;
+            int char_bytes = utf8_decode_at(ed->buffer, i, buf_len, &wc);
+            ed->cursor_col += wchar_display_width(wc);
+            i += char_bytes;
         }
     }
 }
@@ -143,14 +238,20 @@ size_t editor_pos_to_col(Editor *ed, size_t pos) {
     if (!ed || !ed->buffer) return 1;
 
     size_t line_start = buffer_line_start(ed->buffer, pos);
+    size_t buf_len = buffer_get_length(ed->buffer);
     size_t col = 1;
 
-    for (size_t i = line_start; i < pos; i++) {
+    size_t i = line_start;
+    while (i < pos && i < buf_len) {
         char c = buffer_get_char(ed->buffer, i);
         if (c == '\t') {
             col += TAB_WIDTH - ((col - 1) % TAB_WIDTH);
+            i++;
         } else {
-            col++;
+            wchar_t wc;
+            int char_bytes = utf8_decode_at(ed->buffer, i, buf_len, &wc);
+            col += wchar_display_width(wc);
+            i += char_bytes;
         }
     }
 
@@ -162,16 +263,20 @@ size_t editor_row_col_to_pos(Editor *ed, size_t row, size_t col) {
 
     size_t pos = buffer_get_line_start(ed->buffer, row);
     size_t line_end = buffer_line_end(ed->buffer, pos);
+    size_t buf_len = buffer_get_length(ed->buffer);
     size_t current_col = 1;
 
     while (pos < line_end && current_col < col) {
         char c = buffer_get_char(ed->buffer, pos);
         if (c == '\t') {
             current_col += TAB_WIDTH - ((current_col - 1) % TAB_WIDTH);
+            pos++;
         } else {
-            current_col++;
+            wchar_t wc;
+            int char_bytes = utf8_decode_at(ed->buffer, pos, buf_len, &wc);
+            current_col += wchar_display_width(wc);
+            pos += char_bytes;
         }
-        pos++;
     }
 
     return pos;
@@ -223,8 +328,15 @@ void editor_scroll_down(Editor *ed, int lines) {
 
 /* Cursor movement */
 void editor_move_left(Editor *ed) {
-    if (!ed || ed->cursor_pos == 0) return;
+    if (!ed || !ed->buffer || ed->cursor_pos == 0) return;
+
+    /* Move back to the start of the previous UTF-8 character */
     ed->cursor_pos--;
+    /* Skip continuation bytes (10xxxxxx) */
+    while (ed->cursor_pos > 0 && is_utf8_cont((unsigned char)buffer_get_char(ed->buffer, ed->cursor_pos))) {
+        ed->cursor_pos--;
+    }
+
     if (ed->selection.active) {
         editor_update_selection(ed);
     }
@@ -233,8 +345,15 @@ void editor_move_left(Editor *ed) {
 
 void editor_move_right(Editor *ed) {
     if (!ed || !ed->buffer) return;
-    if (ed->cursor_pos < buffer_get_length(ed->buffer)) {
-        ed->cursor_pos++;
+    size_t buf_len = buffer_get_length(ed->buffer);
+    if (ed->cursor_pos < buf_len) {
+        /* Get the length of the current UTF-8 character and skip it */
+        unsigned char c = (unsigned char)buffer_get_char(ed->buffer, ed->cursor_pos);
+        int char_bytes = utf8_char_len(c);
+        ed->cursor_pos += char_bytes;
+        if (ed->cursor_pos > buf_len) {
+            ed->cursor_pos = buf_len;
+        }
         if (ed->selection.active) {
             editor_update_selection(ed);
         }
@@ -712,12 +831,23 @@ void editor_delete_char(Editor *ed) {
         return;
     }
 
-    if (ed->cursor_pos < buffer_get_length(ed->buffer)) {
-        char c = buffer_get_char(ed->buffer, ed->cursor_pos);
-        char str[2] = {c, '\0'};
-        undo_record_delete(ed->undo, ed->cursor_pos, str, 1, ed->cursor_pos);
+    size_t buf_len = buffer_get_length(ed->buffer);
+    if (ed->cursor_pos < buf_len) {
+        /* Get the length of the current UTF-8 character */
+        unsigned char c = (unsigned char)buffer_get_char(ed->buffer, ed->cursor_pos);
+        int char_bytes = utf8_char_len(c);
+        size_t end_pos = ed->cursor_pos + char_bytes;
+        if (end_pos > buf_len) {
+            end_pos = buf_len;
+        }
 
-        buffer_delete_char(ed->buffer, ed->cursor_pos);
+        char *deleted = buffer_get_range(ed->buffer, ed->cursor_pos, end_pos);
+        if (deleted) {
+            undo_record_delete(ed->undo, ed->cursor_pos, deleted, end_pos - ed->cursor_pos, ed->cursor_pos);
+            free(deleted);
+        }
+
+        buffer_delete_range(ed->buffer, ed->cursor_pos, end_pos);
         ed->modified = true;
     }
 }
@@ -807,12 +937,22 @@ void editor_backspace(Editor *ed) {
     }
 
     if (ed->cursor_pos > 0) {
+        /* Find the start of the previous UTF-8 character */
+        size_t orig_pos = ed->cursor_pos;
         ed->cursor_pos--;
-        char c = buffer_get_char(ed->buffer, ed->cursor_pos);
-        char str[2] = {c, '\0'};
-        undo_record_delete(ed->undo, ed->cursor_pos, str, 1, ed->cursor_pos + 1);
+        while (ed->cursor_pos > 0 && is_utf8_cont((unsigned char)buffer_get_char(ed->buffer, ed->cursor_pos))) {
+            ed->cursor_pos--;
+        }
 
-        buffer_delete_char(ed->buffer, ed->cursor_pos);
+        /* Delete the entire UTF-8 character */
+        size_t char_len = orig_pos - ed->cursor_pos;
+        char *deleted = buffer_get_range(ed->buffer, ed->cursor_pos, orig_pos);
+        if (deleted) {
+            undo_record_delete(ed->undo, ed->cursor_pos, deleted, char_len, orig_pos);
+            free(deleted);
+        }
+
+        buffer_delete_range(ed->buffer, ed->cursor_pos, orig_pos);
         ed->modified = true;
         editor_scroll_to_cursor(ed);
     }

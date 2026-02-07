@@ -21,10 +21,27 @@ bool file_load(Editor *ed, const char *filename) {
     char buf[4096];
     size_t n;
     size_t pos = 0;
+    bool first_chunk = true;
 
     while ((n = fread(buf, 1, sizeof(buf), fp)) > 0) {
-        buffer_insert_string(ed->buffer, pos, buf, n);
-        pos += n;
+        char *data = buf;
+        size_t len = n;
+
+        /* Skip UTF-8 BOM if present at start of file */
+        if (first_chunk && len >= 3) {
+            if ((unsigned char)buf[0] == 0xEF &&
+                (unsigned char)buf[1] == 0xBB &&
+                (unsigned char)buf[2] == 0xBF) {
+                data += 3;
+                len -= 3;
+            }
+        }
+        first_chunk = false;
+
+        if (len > 0) {
+            buffer_insert_string(ed->buffer, pos, data, len);
+            pos += len;
+        }
     }
 
     fclose(fp);

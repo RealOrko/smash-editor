@@ -1,6 +1,94 @@
 #include "smashedit.h"
 #include <wchar.h>
 #include <time.h>
+#include <wctype.h>
+
+/* Get the number of bytes in a UTF-8 character based on the first byte */
+static int utf8_char_length(unsigned char c) {
+    if ((c & 0x80) == 0) return 1;        /* 0xxxxxxx - ASCII */
+    if ((c & 0xE0) == 0xC0) return 2;     /* 110xxxxx */
+    if ((c & 0xF0) == 0xE0) return 3;     /* 1110xxxx */
+    if ((c & 0xF8) == 0xF0) return 4;     /* 11110xxx */
+    return 1; /* Invalid, treat as single byte */
+}
+
+/* Check if byte is a UTF-8 continuation byte */
+static bool is_utf8_continuation(unsigned char c) {
+    return (c & 0xC0) == 0x80;  /* 10xxxxxx */
+}
+
+/* Decode a UTF-8 sequence to a wide character. Returns bytes consumed, or 0 on error */
+static int utf8_decode(Buffer *buf, size_t pos, size_t buf_len, wchar_t *wc) {
+    if (pos >= buf_len) return 0;
+
+    unsigned char c = (unsigned char)buffer_get_char(buf, pos);
+    int len = utf8_char_length(c);
+
+    /* Check if we have enough bytes */
+    if (pos + len > buf_len) {
+        *wc = L'?';
+        return 1;
+    }
+
+    /* Validate continuation bytes and decode */
+    wchar_t result = 0;
+    if (len == 1) {
+        result = c;
+    } else if (len == 2) {
+        unsigned char c1 = (unsigned char)buffer_get_char(buf, pos + 1);
+        if (!is_utf8_continuation(c1)) {
+            *wc = L'?';
+            return 1;
+        }
+        result = ((c & 0x1F) << 6) | (c1 & 0x3F);
+    } else if (len == 3) {
+        unsigned char c1 = (unsigned char)buffer_get_char(buf, pos + 1);
+        unsigned char c2 = (unsigned char)buffer_get_char(buf, pos + 2);
+        if (!is_utf8_continuation(c1) || !is_utf8_continuation(c2)) {
+            *wc = L'?';
+            return 1;
+        }
+        result = ((c & 0x0F) << 12) | ((c1 & 0x3F) << 6) | (c2 & 0x3F);
+    } else if (len == 4) {
+        unsigned char c1 = (unsigned char)buffer_get_char(buf, pos + 1);
+        unsigned char c2 = (unsigned char)buffer_get_char(buf, pos + 2);
+        unsigned char c3 = (unsigned char)buffer_get_char(buf, pos + 3);
+        if (!is_utf8_continuation(c1) || !is_utf8_continuation(c2) || !is_utf8_continuation(c3)) {
+            *wc = L'?';
+            return 1;
+        }
+        result = ((c & 0x07) << 18) | ((c1 & 0x3F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F);
+    }
+
+    *wc = result;
+    return len;
+}
+
+/* Get the display width of a wide character (1 or 2 columns) */
+static int wchar_width(wchar_t wc) {
+    if (wc == L'\0') return 0;
+    if (wc < 32) return 0;  /* Control characters */
+
+    /* Use wcwidth if available, otherwise estimate */
+#ifdef _XOPEN_SOURCE
+    int w = wcwidth(wc);
+    if (w >= 0) return w;
+#endif
+
+    /* Fallback: CJK and other wide characters are typically > U+1100 */
+    /* Common wide character ranges */
+    if (wc >= 0x1100 && wc <= 0x115F) return 2;  /* Hangul Jamo */
+    if (wc >= 0x2E80 && wc <= 0x9FFF) return 2;  /* CJK */
+    if (wc >= 0xAC00 && wc <= 0xD7AF) return 2;  /* Hangul Syllables */
+    if (wc >= 0xF900 && wc <= 0xFAFF) return 2;  /* CJK Compatibility */
+    if (wc >= 0xFE10 && wc <= 0xFE1F) return 2;  /* Vertical Forms */
+    if (wc >= 0xFE30 && wc <= 0xFE6F) return 2;  /* CJK Compatibility Forms */
+    if (wc >= 0xFF00 && wc <= 0xFF60) return 2;  /* Fullwidth Forms */
+    if (wc >= 0xFFE0 && wc <= 0xFFE6) return 2;  /* Fullwidth Signs */
+    if (wc >= 0x20000 && wc <= 0x2FFFF) return 2; /* CJK Extension B+ */
+
+    return 1;
+}
 
 void display_init(void) {
     /* ncurses initialization is done in editor_init_screen */
@@ -282,37 +370,39 @@ void display_draw_editor(Editor *ed) {
                 attron(COLOR_PAIR(COLOR_EDITOR));
             }
 
+            /* Decode UTF-8 character */
+            wchar_t wc;
+            int char_bytes = utf8_decode(ed->buffer, pos, buf_len, &wc);
+            int char_width = (c == '\t') ? (TAB_WIDTH - ((visual_col - 1) % TAB_WIDTH)) : wchar_width(wc);
+
             /* Handle horizontal scroll */
             if (visual_col > ed->scroll_col) {
                 int draw_col = visual_col - ed->scroll_col - 1;
 
                 if (draw_col < ed->edit_width) {
                     if (c == '\t') {
-                        int tab_width = TAB_WIDTH - ((visual_col - 1) % TAB_WIDTH);
-                        for (int t = 0; t < tab_width && draw_col + t < ed->edit_width; t++) {
+                        for (int t = 0; t < char_width && draw_col + t < ed->edit_width; t++) {
                             mvaddch(ed->edit_top + screen_row, ed->edit_left + draw_col + t, ' ');
                         }
-                        visual_col += tab_width;
-                    } else if (c >= 32 && c < 127) {
-                        mvaddch(ed->edit_top + screen_row, ed->edit_left + draw_col, c);
-                        visual_col++;
+                    } else if (wc >= 32 && wc < 127) {
+                        /* Plain ASCII - use simple addch */
+                        mvaddch(ed->edit_top + screen_row, ed->edit_left + draw_col, (char)wc);
+                    } else if (wc >= 127 && iswprint(wc)) {
+                        /* Printable Unicode character - use wide char function */
+                        draw_wchar(ed->edit_top + screen_row, ed->edit_left + draw_col, wc);
+                    } else if (wc < 32) {
+                        /* Control character - show as ^X notation or ? */
+                        mvaddch(ed->edit_top + screen_row, ed->edit_left + draw_col, '?');
                     } else {
                         /* Non-printable character */
                         mvaddch(ed->edit_top + screen_row, ed->edit_left + draw_col, '?');
-                        visual_col++;
                     }
-                } else {
-                    visual_col++;
-                }
-            } else {
-                if (c == '\t') {
-                    visual_col += TAB_WIDTH - ((visual_col - 1) % TAB_WIDTH);
-                } else {
-                    visual_col++;
                 }
             }
 
-            pos++;
+            visual_col += char_width;
+            pos += char_bytes;
+
             screen_col = visual_col - ed->scroll_col - 1;
             if (screen_col >= ed->edit_width) {
                 /* Skip rest of line (horizontal scroll) */
