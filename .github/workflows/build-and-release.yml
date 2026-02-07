@@ -85,7 +85,7 @@ jobs:
       run: |
         cd external/PDCurses/wincon
         make WIDE=Y
-        ls -la ../pdcurses.a
+        ls -la pdcurses.a
 
     - name: Build
       run: |

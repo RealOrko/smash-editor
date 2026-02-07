@@ -17,6 +17,8 @@ if(USE_PDCURSES)
     set(CURSES_LIBRARIES "${PDCURSES_DIR}/wincon/pdcurses.a")
     add_definitions(-DPDC_WIDE)
     add_definitions(-DPDCURSES)
+    # PDCurses wincon backend needs user32 for Windows APIs
+    list(APPEND CURSES_LIBRARIES user32)
     message(STATUS "Using PDCurses from: ${PDCURSES_DIR}")
 else()
     # Use pkg-config to find ncurses if available
