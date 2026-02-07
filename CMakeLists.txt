@@ -43,6 +43,11 @@ endif()
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
+# Link directories (needed for keg-only homebrew packages on macOS)
+if(NCURSES_LIBRARY_DIRS)
+    link_directories(${NCURSES_LIBRARY_DIRS})
+endif()
+
 # Source files
 set(SOURCES
     src/main.c
