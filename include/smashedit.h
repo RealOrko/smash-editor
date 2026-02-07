@@ -2,12 +2,7 @@
 #define SMASHEDIT_H
 
 #define _XOPEN_SOURCE_EXTENDED 1
-
-#ifdef PDCURSES
-#include <curses.h>
-#else
 #include <ncurses.h>
-#endif
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>

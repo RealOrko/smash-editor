@@ -7,70 +7,33 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # Set output directory to bin/
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-# Platform-specific curses library detection
-if(WIN32 OR MINGW)
-    # Windows: Use PDCurses for proper modifier key support
-    # PDCurses on MSYS2 MinGW64 is installed to /mingw64
-    set(MINGW_PREFIX "$ENV{MINGW_PREFIX}")
-    if(NOT MINGW_PREFIX)
-        set(MINGW_PREFIX "/mingw64")
-    endif()
-
-    find_library(CURSES_LIBRARIES NAMES pdcurses
-        PATHS ${MINGW_PREFIX}/lib
-        NO_DEFAULT_PATH)
-
-    # PDCurses puts curses.h in pdcurses subdirectory
-    if(EXISTS "${MINGW_PREFIX}/include/pdcurses/curses.h")
-        set(CURSES_INCLUDE_DIRS "${MINGW_PREFIX}/include/pdcurses")
-    elseif(EXISTS "${MINGW_PREFIX}/include/curses.h")
-        set(CURSES_INCLUDE_DIRS "${MINGW_PREFIX}/include")
-    else()
-        find_path(CURSES_INCLUDE_DIRS curses.h
-            PATHS ${MINGW_PREFIX}/include ${MINGW_PREFIX}/include/pdcurses)
-    endif()
-
-    if(NOT CURSES_LIBRARIES)
-        message(STATUS "PDCurses not found, trying system paths")
-        find_library(CURSES_LIBRARIES NAMES pdcurses curses)
-        find_path(CURSES_INCLUDE_DIRS curses.h)
-    endif()
-
-    # PDCurses needs PDC_WIDE for wide character support
-    add_definitions(-DPDC_WIDE)
-    add_definitions(-DPDCURSES)
-
-    message(STATUS "PDCurses library: ${CURSES_LIBRARIES}")
-    message(STATUS "PDCurses include: ${CURSES_INCLUDE_DIRS}")
-else()
-    # Unix: Use ncurses
-    find_package(PkgConfig QUIET)
-    if(PKG_CONFIG_FOUND)
-        pkg_check_modules(CURSES ncursesw)
-        if(NOT CURSES_FOUND)
-            pkg_check_modules(CURSES ncurses)
-        endif()
-    endif()
-
-    # Find ncursesw library (fallback if pkg-config didn't work)
+# Use pkg-config to find ncurses if available
+find_package(PkgConfig QUIET)
+if(PKG_CONFIG_FOUND)
+    pkg_check_modules(CURSES ncursesw)
     if(NOT CURSES_FOUND)
-        find_library(NCURSESW_LIBRARY NAMES ncursesw ncurses
-            PATHS
-                /usr/lib
-                /usr/local/lib
-                /opt/homebrew/opt/ncurses/lib
-        )
-        find_path(CURSES_INCLUDE_DIR ncurses.h
-            PATHS
-                /usr/include/ncursesw
-                /usr/include/ncurses
-                /usr/include
-                /usr/local/include
-                /opt/homebrew/opt/ncurses/include
-        )
-        set(CURSES_LIBRARIES ${NCURSESW_LIBRARY})
-        set(CURSES_INCLUDE_DIRS ${CURSES_INCLUDE_DIR})
+        pkg_check_modules(CURSES ncurses)
     endif()
+endif()
+
+# Find ncursesw library (fallback if pkg-config didn't work)
+if(NOT CURSES_FOUND)
+    find_library(NCURSESW_LIBRARY NAMES ncursesw ncurses
+        PATHS
+            /usr/lib
+            /usr/local/lib
+            /opt/homebrew/opt/ncurses/lib
+    )
+    find_path(CURSES_INCLUDE_DIR ncurses.h
+        PATHS
+            /usr/include/ncursesw
+            /usr/include/ncurses
+            /usr/include
+            /usr/local/include
+            /opt/homebrew/opt/ncurses/include
+    )
+    set(CURSES_LIBRARIES ${NCURSESW_LIBRARY})
+    set(CURSES_INCLUDE_DIRS ${CURSES_INCLUDE_DIR})
 endif()
 
 # Include directories

@@ -1,27 +1,5 @@
 #include "smashedit.h"
 
-/* PDCurses key definitions for Ctrl+Arrow keys */
-#ifdef PDCURSES
-#ifndef CTL_LEFT
-#define CTL_LEFT    0x1bb
-#endif
-#ifndef CTL_RIGHT
-#define CTL_RIGHT   0x1bc
-#endif
-#ifndef CTL_UP
-#define CTL_UP      0x1bd
-#endif
-#ifndef CTL_DOWN
-#define CTL_DOWN    0x1be
-#endif
-#ifndef SHF_UP
-#define SHF_UP      0x1c1
-#endif
-#ifndef SHF_DOWN
-#define SHF_DOWN    0x1c2
-#endif
-#endif
-
 /* Debug mode - set to 1 to show key codes in status bar */
 static int debug_key_mode = 0;
 static int last_key_code = 0;
@@ -206,17 +184,11 @@ void input_handle(Editor *ed, MenuState *menu) {
         /* Ctrl+Left / Ctrl+Right */
         case 545:  /* Ctrl+Left xterm */
         case 554:
-#ifdef PDCURSES
-        case CTL_LEFT:
-#endif
             editor_clear_selection(ed);
             editor_move_word_left(ed);
             break;
         case 560:  /* Ctrl+Right xterm */
         case 569:
-#ifdef PDCURSES
-        case CTL_RIGHT:
-#endif
             editor_clear_selection(ed);
             editor_move_word_right(ed);
             break;
@@ -316,21 +288,13 @@ void input_handle(Editor *ed, MenuState *menu) {
             }
             editor_move_right(ed);
             break;
-        case KEY_SR:  /* Shift+Up (ncurses) */
-#ifdef PDCURSES
-        case KEY_SUP:
-        case SHF_UP:
-#endif
+        case KEY_SR:  /* Shift+Up */
             if (!ed->selection.active) {
                 editor_start_selection(ed);
             }
             editor_move_up(ed);
             break;
-        case KEY_SF:  /* Shift+Down (ncurses) */
-#ifdef PDCURSES
-        case KEY_SDOWN:
-        case SHF_DOWN:
-#endif
+        case KEY_SF:  /* Shift+Down */
             if (!ed->selection.active) {
                 editor_start_selection(ed);
             }
