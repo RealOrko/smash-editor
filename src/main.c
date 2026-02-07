@@ -35,7 +35,9 @@ int main(int argc, char *argv[]) {
     /* Set up signal handlers */
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
+#ifdef SIGWINCH
     signal(SIGWINCH, handle_resize);
+#endif
 
     /* Create editor */
     g_editor = editor_create();
