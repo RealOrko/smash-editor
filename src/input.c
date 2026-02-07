@@ -2,6 +2,7 @@
 
 /* PDCurses extended key codes for Windows */
 #ifdef PDCURSES
+/* Ctrl+Arrow keys */
 #ifndef CTL_LEFT
 #define CTL_LEFT    0x1bb
 #endif
@@ -13,6 +14,42 @@
 #endif
 #ifndef CTL_DOWN
 #define CTL_DOWN    0x1be
+#endif
+/* Alt+letter keys (ALT_A=0x1a1, ALT_B=0x1a2, etc.) */
+#ifndef ALT_A
+#define ALT_A       0x1a1
+#define ALT_B       0x1a2
+#define ALT_C       0x1a3
+#define ALT_D       0x1a4
+#define ALT_E       0x1a5
+#define ALT_F       0x1a6
+#define ALT_G       0x1a7
+#define ALT_H       0x1a8
+#define ALT_I       0x1a9
+#define ALT_J       0x1aa
+#define ALT_K       0x1ab
+#define ALT_L       0x1ac
+#define ALT_M       0x1ad
+#define ALT_N       0x1ae
+#define ALT_O       0x1af
+#define ALT_P       0x1b0
+#define ALT_Q       0x1b1
+#define ALT_R       0x1b2
+#define ALT_S       0x1b3
+#define ALT_T       0x1b4
+#define ALT_U       0x1b5
+#define ALT_V       0x1b6
+#define ALT_W       0x1b7
+#define ALT_X       0x1b8
+#define ALT_Y       0x1b9
+#define ALT_Z       0x1ba
+#endif
+/* Ctrl+Shift+End/Home */
+#ifndef CTL_END
+#define CTL_END     0x1bf
+#endif
+#ifndef CTL_HOME
+#define CTL_HOME    0x1c0
 #endif
 #endif
 
@@ -142,6 +179,19 @@ void input_handle(Editor *ed, MenuState *menu) {
             return;
         }
     }
+
+#ifdef PDCURSES
+    /* PDCurses sends Alt+key as special key codes */
+    if (key >= ALT_A && key <= ALT_Z) {
+        int letter = 'a' + (key - ALT_A);
+        int menu_idx = menu_check_hotkey(menu, letter);
+        if (menu_idx >= 0) {
+            menu_open(menu, menu_idx);
+            ed->mode = MODE_MENU;
+            return;
+        }
+    }
+#endif
 
     /* Handle normal mode keys */
     switch (key) {
@@ -395,25 +445,7 @@ void input_handle(Editor *ed, MenuState *menu) {
                 if (ed->selection.active && !editor_has_selection(ed)) {
                     editor_clear_selection(ed);
                 }
-                {
-                    FILE *dbg = fopen("/tmp/insert_debug.log", "a");
-                    if (dbg) {
-                        fprintf(dbg, "[INPUT] BEFORE editor_insert_char key='%c'\n", (char)key);
-                        fprintf(dbg, "[INPUT]   selection.count=%d active=%d\n", ed->selection.count, ed->selection.active);
-                        fflush(dbg);
-                        fclose(dbg);
-                    }
-                }
                 editor_insert_char(ed, (char)key);
-                {
-                    FILE *dbg = fopen("/tmp/insert_debug.log", "a");
-                    if (dbg) {
-                        fprintf(dbg, "[INPUT] AFTER editor_insert_char\n");
-                        fprintf(dbg, "[INPUT]   selection.count=%d active=%d\n", ed->selection.count, ed->selection.active);
-                        fflush(dbg);
-                        fclose(dbg);
-                    }
-                }
             }
             break;
     }
