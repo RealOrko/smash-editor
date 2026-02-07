@@ -363,8 +363,10 @@ void input_handle(Editor *ed, MenuState *menu) {
         case KEY_F(3):  /* Find Next */
             search_find_next(ed);
             break;
-        case KEY_CTRL('h'):  /* Replace */
+#ifndef PDCURSES
+        case KEY_CTRL('h'):  /* Replace - skip on PDCurses where 8=backspace */
             search_replace_dialog(ed);
+#endif
             break;
         case KEY_CTRL('g'):  /* Go to Line */
             search_goto_line_dialog(ed);
@@ -418,9 +420,10 @@ void input_handle(Editor *ed, MenuState *menu) {
             editor_move_end(ed);
             break;
 
-        /* Ctrl+Shift+Arrow for word/line selection */
+        /* Ctrl+Shift+Arrow for word/line selection (xterm codes - not on PDCurses) */
+#ifndef PDCURSES
         case 546:  /* Ctrl+Shift+Left */
-        case 547:
+        case 547:  /* conflicts with KEY_SUP on PDCurses */
         case 555:
         case 1039:
             if (!ed->selection.active) {
@@ -453,6 +456,7 @@ void input_handle(Editor *ed, MenuState *menu) {
             }
             editor_move_down(ed);
             break;
+#endif /* !PDCURSES - Ctrl+Shift combos not supported on Windows */
 
         /* F10 for menu */
         case KEY_F(10):
