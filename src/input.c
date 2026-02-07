@@ -1,21 +1,46 @@
 #include "smashedit.h"
 
-/* PDCurses extended key codes for Windows */
+/* PDCurses extended key codes for Windows - from curses.h */
 #ifdef PDCURSES
-/* Ctrl+Arrow keys */
+/* Navigation keys */
 #ifndef CTL_LEFT
-#define CTL_LEFT    0x1bb
+#define CTL_LEFT    0x1bb  /* Ctrl+Left */
 #endif
 #ifndef CTL_RIGHT
-#define CTL_RIGHT   0x1bc
+#define CTL_RIGHT   0x1bc  /* Ctrl+Right */
+#endif
+#ifndef CTL_PGUP
+#define CTL_PGUP    0x1bd  /* Ctrl+PageUp */
+#endif
+#ifndef CTL_PGDN
+#define CTL_PGDN    0x1be  /* Ctrl+PageDown */
+#endif
+#ifndef CTL_HOME
+#define CTL_HOME    0x1bf  /* Ctrl+Home */
+#endif
+#ifndef CTL_END
+#define CTL_END     0x1c0  /* Ctrl+End */
 #endif
 #ifndef CTL_UP
-#define CTL_UP      0x1bd
+#define CTL_UP      0x1e0  /* Ctrl+Up */
 #endif
 #ifndef CTL_DOWN
-#define CTL_DOWN    0x1be
+#define CTL_DOWN    0x1e1  /* Ctrl+Down */
 #endif
-/* Alt+letter keys (ALT_A=0x1a1, ALT_B=0x1a2, etc.) */
+#ifndef CTL_BKSP
+#define CTL_BKSP    0x1f9  /* Ctrl+Backspace */
+#endif
+#ifndef CTL_DEL
+#define CTL_DEL     0x20f  /* Ctrl+Delete */
+#endif
+/* Shift+Arrow (PDCurses specific - different from ncurses KEY_SR/SF) */
+#ifndef KEY_SUP
+#define KEY_SUP     0x223  /* Shift+Up */
+#endif
+#ifndef KEY_SDOWN
+#define KEY_SDOWN   0x224  /* Shift+Down */
+#endif
+/* Alt+letter keys */
 #ifndef ALT_A
 #define ALT_A       0x1a1
 #define ALT_B       0x1a2
@@ -43,13 +68,6 @@
 #define ALT_X       0x1b8
 #define ALT_Y       0x1b9
 #define ALT_Z       0x1ba
-#endif
-/* Ctrl+Shift+End/Home */
-#ifndef CTL_END
-#define CTL_END     0x1bf
-#endif
-#ifndef CTL_HOME
-#define CTL_HOME    0x1c0
 #endif
 #endif
 
@@ -235,6 +253,9 @@ void input_handle(Editor *ed, MenuState *menu) {
         case 537:
         case 543:
         case 1068: /* kHOM5 */
+#ifdef PDCURSES
+        case CTL_HOME:
+#endif
             editor_clear_selection(ed);
             editor_move_doc_start(ed);
             break;
@@ -243,6 +264,9 @@ void input_handle(Editor *ed, MenuState *menu) {
         case 532:
         case 538:
         case 1064: /* kEND5 */
+#ifdef PDCURSES
+        case CTL_END:
+#endif
             editor_clear_selection(ed);
             editor_move_doc_end(ed);
             break;
@@ -268,6 +292,9 @@ void input_handle(Editor *ed, MenuState *menu) {
         /* Text editing */
         case KEY_BACKSPACE:
         case 127:
+#ifdef PDCURSES
+        case 8:  /* ASCII backspace on Windows (conflicts with Ctrl+H on Unix) */
+#endif
             editor_backspace(ed);
             break;
         case KEY_DC:  /* Delete */
@@ -360,13 +387,19 @@ void input_handle(Editor *ed, MenuState *menu) {
             }
             editor_move_right(ed);
             break;
-        case KEY_SR:  /* Shift+Up */
+        case KEY_SR:  /* Shift+Up (ncurses) */
+#ifdef PDCURSES
+        case KEY_SUP:  /* Shift+Up (PDCurses) */
+#endif
             if (!ed->selection.active) {
                 editor_start_selection(ed);
             }
             editor_move_up(ed);
             break;
-        case KEY_SF:  /* Shift+Down */
+        case KEY_SF:  /* Shift+Down (ncurses) */
+#ifdef PDCURSES
+        case KEY_SDOWN:  /* Shift+Down (PDCurses) */
+#endif
             if (!ed->selection.active) {
                 editor_start_selection(ed);
             }
