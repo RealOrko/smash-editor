@@ -10,15 +10,15 @@
 
 ## ✨ Features
 
-🚀 **Lightning Fast** — Written in C for maximum performance
-📝 **Modal Editing** — Intuitive keyboard-driven interface
-🎨 **Beautiful TUI** — Colorful terminal interface with Unicode box-drawing
-↩️ **Undo/Redo** — Full history with up to 100 levels
-🔍 **Search & Replace** — Find text with case-sensitive toggle
-📋 **Clipboard Support** — Cut, copy, and paste with ease
-🔢 **Line Numbers** — Toggle-able line number display
-📑 **Multi-Select** — Select multiple occurrences with Ctrl+D
-🌐 **Unicode Support** — Full UTF-8 and wide character support
+- 🚀 **Lightning Fast** — Written in C for maximum performance
+- 📝 **Modal Editing** — Intuitive keyboard-driven interface
+- 🎨 **Beautiful TUI** — Colorful terminal interface with Unicode box-drawing
+- ↩️ **Undo/Redo** — Full history with up to 100 levels
+- 🔍 **Search & Replace** — Find text with case-sensitive toggle
+- 📋 **Clipboard Support** — Cut, copy, and paste with ease
+- 🔢 **Line Numbers** — Toggle-able line number display
+- 📑 **Multi-Select** — Select multiple occurrences with Ctrl+D
+- 🌐 **Unicode Support** — Full UTF-8 and wide character support
 
 ---
 
