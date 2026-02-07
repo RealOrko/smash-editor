@@ -10,19 +10,31 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 # Platform-specific curses library detection
 if(WIN32 OR MINGW)
     # Windows: Use PDCurses for proper modifier key support
-    find_package(PkgConfig QUIET)
-    if(PKG_CONFIG_FOUND)
-        pkg_check_modules(CURSES pdcurses)
+    # PDCurses on MSYS2 MinGW64 is installed to /mingw64
+    set(MINGW_PREFIX "$ENV{MINGW_PREFIX}")
+    if(NOT MINGW_PREFIX)
+        set(MINGW_PREFIX "/mingw64")
     endif()
-    if(NOT CURSES_FOUND)
-        find_library(CURSES_LIBRARIES NAMES pdcurses
-            PATHS /mingw64/lib /usr/lib)
-        find_path(CURSES_INCLUDE_DIRS curses.h
-            PATHS /mingw64/include /usr/include)
+
+    find_library(CURSES_LIBRARIES NAMES pdcurses
+        PATHS ${MINGW_PREFIX}/lib
+        NO_DEFAULT_PATH)
+    find_path(CURSES_INCLUDE_DIRS curses.h
+        PATHS ${MINGW_PREFIX}/include
+        NO_DEFAULT_PATH)
+
+    if(NOT CURSES_LIBRARIES)
+        message(STATUS "PDCurses not found, trying system paths")
+        find_library(CURSES_LIBRARIES NAMES pdcurses curses)
+        find_path(CURSES_INCLUDE_DIRS curses.h)
     endif()
+
     # PDCurses needs PDC_WIDE for wide character support
     add_definitions(-DPDC_WIDE)
     add_definitions(-DPDCURSES)
+
+    message(STATUS "PDCurses library: ${CURSES_LIBRARIES}")
+    message(STATUS "PDCurses include: ${CURSES_INCLUDE_DIRS}")
 else()
     # Unix: Use ncurses
     find_package(PkgConfig QUIET)
