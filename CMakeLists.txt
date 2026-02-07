@@ -7,45 +7,63 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # Set output directory to bin/
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-# Use pkg-config to find ncurses if available
-find_package(PkgConfig QUIET)
-if(PKG_CONFIG_FOUND)
-    pkg_check_modules(NCURSES ncursesw)
-    if(NOT NCURSES_FOUND)
-        pkg_check_modules(NCURSES ncurses)
+# Platform-specific curses library detection
+if(WIN32 OR MINGW)
+    # Windows: Use PDCurses for proper modifier key support
+    find_package(PkgConfig QUIET)
+    if(PKG_CONFIG_FOUND)
+        pkg_check_modules(CURSES pdcurses)
+    endif()
+    if(NOT CURSES_FOUND)
+        find_library(CURSES_LIBRARIES NAMES pdcurses
+            PATHS /mingw64/lib /usr/lib)
+        find_path(CURSES_INCLUDE_DIRS curses.h
+            PATHS /mingw64/include /usr/include)
+    endif()
+    # PDCurses needs PDC_WIDE for wide character support
+    add_definitions(-DPDC_WIDE)
+    add_definitions(-DPDCURSES)
+else()
+    # Unix: Use ncurses
+    find_package(PkgConfig QUIET)
+    if(PKG_CONFIG_FOUND)
+        pkg_check_modules(CURSES ncursesw)
+        if(NOT CURSES_FOUND)
+            pkg_check_modules(CURSES ncurses)
+        endif()
+    endif()
+
+    # Find ncursesw library (fallback if pkg-config didn't work)
+    if(NOT CURSES_FOUND)
+        find_library(NCURSESW_LIBRARY NAMES ncursesw ncurses
+            PATHS
+                /usr/lib
+                /usr/local/lib
+                /opt/homebrew/opt/ncurses/lib
+        )
+        find_path(CURSES_INCLUDE_DIR ncurses.h
+            PATHS
+                /usr/include/ncursesw
+                /usr/include/ncurses
+                /usr/include
+                /usr/local/include
+                /opt/homebrew/opt/ncurses/include
+        )
+        set(CURSES_LIBRARIES ${NCURSESW_LIBRARY})
+        set(CURSES_INCLUDE_DIRS ${CURSES_INCLUDE_DIR})
     endif()
 endif()
 
-# Find ncursesw library (fallback if pkg-config didn't work)
-if(NOT NCURSES_FOUND)
-    find_library(NCURSESW_LIBRARY NAMES ncursesw ncurses
-        PATHS
-            /usr/lib
-            /usr/local/lib
-            /opt/homebrew/opt/ncurses/lib
-    )
-    find_path(NCURSES_INCLUDE_DIR ncurses.h
-        PATHS
-            /usr/include/ncursesw
-            /usr/include/ncurses
-            /usr/include
-            /usr/local/include
-            /opt/homebrew/opt/ncurses/include
-    )
-    set(NCURSES_LIBRARIES ${NCURSESW_LIBRARY})
-    set(NCURSES_INCLUDE_DIRS ${NCURSES_INCLUDE_DIR})
-endif()
-
 # Include directories
-if(NCURSES_INCLUDE_DIRS)
-    include_directories(${NCURSES_INCLUDE_DIRS})
+if(CURSES_INCLUDE_DIRS)
+    include_directories(${CURSES_INCLUDE_DIRS})
 endif()
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
 # Link directories (needed for keg-only homebrew packages on macOS)
-if(NCURSES_LIBRARY_DIRS)
-    link_directories(${NCURSES_LIBRARY_DIRS})
+if(CURSES_LIBRARY_DIRS)
+    link_directories(${CURSES_LIBRARY_DIRS})
 endif()
 
 # Source files
@@ -71,36 +89,36 @@ option(STATIC_BUILD "Build a statically linked executable" OFF)
 
 if(STATIC_BUILD AND NOT WIN32 AND NOT MINGW)
     # Static linking for Linux and macOS only
-    # Windows ncurses doesn't support static linking, must bundle DLLs instead
+    # Windows PDCurses doesn't support static linking easily, bundle DLLs instead
     if(APPLE)
         # macOS: use static libraries from homebrew
-        find_library(NCURSES_STATIC NAMES libncursesw.a libncurses.a
+        find_library(CURSES_STATIC NAMES libncursesw.a libncurses.a
             PATHS /opt/homebrew/opt/ncurses/lib /usr/local/opt/ncurses/lib
             NO_DEFAULT_PATH)
-        if(NCURSES_STATIC)
-            target_link_libraries(smashedit ${NCURSES_STATIC})
+        if(CURSES_STATIC)
+            target_link_libraries(smashedit ${CURSES_STATIC})
         else()
-            target_link_libraries(smashedit ${NCURSES_LIBRARIES})
+            target_link_libraries(smashedit ${CURSES_LIBRARIES})
         endif()
     else()
         # Linux: link statically
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
-        find_library(NCURSES_STATIC NAMES libncursesw.a libncurses.a
+        find_library(CURSES_STATIC NAMES libncursesw.a libncurses.a
             PATHS /usr/lib/x86_64-linux-gnu /usr/lib /usr/local/lib)
         find_library(TINFO_STATIC NAMES libtinfo.a
             PATHS /usr/lib/x86_64-linux-gnu /usr/lib /usr/local/lib)
-        if(NCURSES_STATIC)
-            target_link_libraries(smashedit ${NCURSES_STATIC})
+        if(CURSES_STATIC)
+            target_link_libraries(smashedit ${CURSES_STATIC})
             if(TINFO_STATIC)
                 target_link_libraries(smashedit ${TINFO_STATIC})
             endif()
         else()
-            target_link_libraries(smashedit ${NCURSES_LIBRARIES})
+            target_link_libraries(smashedit ${CURSES_LIBRARIES})
         endif()
     endif()
 else()
     # Dynamic linking (default, and required for Windows)
-    target_link_libraries(smashedit ${NCURSES_LIBRARIES})
+    target_link_libraries(smashedit ${CURSES_LIBRARIES})
 endif()
 
 # Add required definitions for wide character support and signals
