@@ -1,0 +1,3 @@
+[submodule "external/PDCurses"]
+	path = external/PDCurses
+	url = https://github.com/wmcbrine/PDCurses.git

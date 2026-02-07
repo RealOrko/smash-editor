@@ -73,8 +73,10 @@ void editor_init_screen(Editor *ed) {
     noecho();
     keypad(stdscr, TRUE);
 
-    /* Reduce escape key delay for faster response */
+    /* Reduce escape key delay for faster response (ncurses only) */
+#ifndef PDCURSES
     ESCDELAY = 25;
+#endif
 
     /* Initialize color pairs */
     init_pair(COLOR_EDITOR, COLOR_WHITE, COLOR_BLUE);

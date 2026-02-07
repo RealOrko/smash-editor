@@ -1,5 +1,21 @@
 #include "smashedit.h"
 
+/* PDCurses extended key codes for Windows */
+#ifdef PDCURSES
+#ifndef CTL_LEFT
+#define CTL_LEFT    0x1bb
+#endif
+#ifndef CTL_RIGHT
+#define CTL_RIGHT   0x1bc
+#endif
+#ifndef CTL_UP
+#define CTL_UP      0x1bd
+#endif
+#ifndef CTL_DOWN
+#define CTL_DOWN    0x1be
+#endif
+#endif
+
 /* Debug mode - set to 1 to show key codes in status bar */
 static int debug_key_mode = 0;
 static int last_key_code = 0;
@@ -184,11 +200,17 @@ void input_handle(Editor *ed, MenuState *menu) {
         /* Ctrl+Left / Ctrl+Right */
         case 545:  /* Ctrl+Left xterm */
         case 554:
+#ifdef PDCURSES
+        case CTL_LEFT:
+#endif
             editor_clear_selection(ed);
             editor_move_word_left(ed);
             break;
         case 560:  /* Ctrl+Right xterm */
         case 569:
+#ifdef PDCURSES
+        case CTL_RIGHT:
+#endif
             editor_clear_selection(ed);
             editor_move_word_right(ed);
             break;

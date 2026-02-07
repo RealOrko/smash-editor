@@ -68,6 +68,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        submodules: true
 
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
@@ -77,12 +79,17 @@ jobs:
         install: >-
           mingw-w64-x86_64-gcc
           mingw-w64-x86_64-cmake
-          mingw-w64-x86_64-ncurses
           make
+
+    - name: Build PDCurses from source
+      run: |
+        cd external/PDCurses/wincon
+        make WIDE=Y
+        ls -la ../pdcurses.a
 
     - name: Build
       run: |
-        cmake -B bin -S . -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+        cmake -B bin -S . -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DUSE_PDCURSES=ON
         cmake --build bin
 
     - name: Bundle with DLLs
@@ -91,8 +98,9 @@ jobs:
         cp bin/smashedit.exe dist/
 
         # Bundle required MinGW runtime DLLs for self-contained distribution
+        # PDCurses is statically linked, so we only need MinGW runtime
         MINGW_BIN="/mingw64/bin"
-        for dll in libncursesw6.dll libgcc_s_seh-1.dll libwinpthread-1.dll; do
+        for dll in libgcc_s_seh-1.dll libwinpthread-1.dll; do
           if [ -f "$MINGW_BIN/$dll" ]; then
             cp "$MINGW_BIN/$dll" dist/
             echo "Bundled: $dll"

@@ -7,33 +7,46 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # Set output directory to bin/
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
-# Use pkg-config to find ncurses if available
-find_package(PkgConfig QUIET)
-if(PKG_CONFIG_FOUND)
-    pkg_check_modules(CURSES ncursesw)
-    if(NOT CURSES_FOUND)
-        pkg_check_modules(CURSES ncurses)
-    endif()
-endif()
+# Option to use PDCurses (for Windows)
+option(USE_PDCURSES "Use PDCurses instead of ncurses" OFF)
 
-# Find ncursesw library (fallback if pkg-config didn't work)
-if(NOT CURSES_FOUND)
-    find_library(NCURSESW_LIBRARY NAMES ncursesw ncurses
-        PATHS
-            /usr/lib
-            /usr/local/lib
-            /opt/homebrew/opt/ncurses/lib
-    )
-    find_path(CURSES_INCLUDE_DIR ncurses.h
-        PATHS
-            /usr/include/ncursesw
-            /usr/include/ncurses
-            /usr/include
-            /usr/local/include
-            /opt/homebrew/opt/ncurses/include
-    )
-    set(CURSES_LIBRARIES ${NCURSESW_LIBRARY})
-    set(CURSES_INCLUDE_DIRS ${CURSES_INCLUDE_DIR})
+if(USE_PDCURSES)
+    # Use PDCurses built from source
+    set(PDCURSES_DIR "${CMAKE_SOURCE_DIR}/external/PDCurses")
+    set(CURSES_INCLUDE_DIRS "${PDCURSES_DIR}")
+    set(CURSES_LIBRARIES "${PDCURSES_DIR}/wincon/pdcurses.a")
+    add_definitions(-DPDC_WIDE)
+    add_definitions(-DPDCURSES)
+    message(STATUS "Using PDCurses from: ${PDCURSES_DIR}")
+else()
+    # Use pkg-config to find ncurses if available
+    find_package(PkgConfig QUIET)
+    if(PKG_CONFIG_FOUND)
+        pkg_check_modules(CURSES ncursesw)
+        if(NOT CURSES_FOUND)
+            pkg_check_modules(CURSES ncurses)
+        endif()
+    endif()
+
+    # Find ncursesw library (fallback if pkg-config didn't work)
+    if(NOT CURSES_FOUND)
+        find_library(NCURSESW_LIBRARY NAMES ncursesw ncurses
+            PATHS
+                /usr/lib
+                /usr/local/lib
+                /opt/homebrew/opt/ncurses/lib
+        )
+        find_path(CURSES_INCLUDE_DIR ncurses.h
+            PATHS
+                /usr/include/ncursesw
+                /usr/include/ncurses
+                /usr/include
+                /usr/local/include
+                /opt/homebrew/opt/ncurses/include
+        )
+        set(CURSES_LIBRARIES ${NCURSESW_LIBRARY})
+        set(CURSES_INCLUDE_DIRS ${CURSES_INCLUDE_DIR})
+    endif()
 endif()
 
 # Include directories
