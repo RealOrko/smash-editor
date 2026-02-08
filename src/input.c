@@ -143,6 +143,183 @@ bool input_is_alt_key(int *key) {
     return false;
 }
 
+/* Handle input in hex editing mode */
+static void input_handle_hex(Editor *ed, int key) {
+    size_t buf_len = buffer_get_length(ed->buffer);
+
+    switch (key) {
+        /* Exit hex mode */
+        case KEY_F(4):
+        case 27:  /* Escape */
+            ed->hex_mode = false;
+            break;
+
+        /* Navigation */
+        case KEY_UP:
+            if (ed->cursor_pos >= 16) {
+                ed->cursor_pos -= 16;
+                ed->hex_nibble = 0;
+            }
+            editor_hex_update_scroll(ed);
+            break;
+
+        case KEY_DOWN:
+            if (ed->cursor_pos + 16 < buf_len) {
+                ed->cursor_pos += 16;
+            } else if (ed->cursor_pos < buf_len) {
+                ed->cursor_pos = buf_len > 0 ? buf_len - 1 : 0;
+            }
+            ed->hex_nibble = 0;
+            editor_hex_update_scroll(ed);
+            break;
+
+        case KEY_LEFT:
+            if (ed->hex_cursor_in_ascii) {
+                /* In ASCII panel, move one byte */
+                if (ed->cursor_pos > 0) {
+                    ed->cursor_pos--;
+                }
+            } else {
+                /* In hex panel, move one nibble */
+                if (ed->hex_nibble == 1) {
+                    ed->hex_nibble = 0;
+                } else if (ed->cursor_pos > 0) {
+                    ed->cursor_pos--;
+                    ed->hex_nibble = 1;
+                }
+            }
+            editor_hex_update_scroll(ed);
+            break;
+
+        case KEY_RIGHT:
+            if (ed->hex_cursor_in_ascii) {
+                /* In ASCII panel, move one byte */
+                if (ed->cursor_pos + 1 < buf_len) {
+                    ed->cursor_pos++;
+                }
+            } else {
+                /* In hex panel, move one nibble */
+                if (ed->hex_nibble == 0) {
+                    ed->hex_nibble = 1;
+                } else if (ed->cursor_pos + 1 < buf_len) {
+                    ed->cursor_pos++;
+                    ed->hex_nibble = 0;
+                }
+            }
+            editor_hex_update_scroll(ed);
+            break;
+
+        case KEY_PPAGE:  /* Page Up */
+            {
+                size_t page_bytes = (size_t)(ed->edit_height - 2) * 16;
+                if (ed->cursor_pos >= page_bytes) {
+                    ed->cursor_pos -= page_bytes;
+                } else {
+                    ed->cursor_pos = 0;
+                }
+                ed->hex_nibble = 0;
+                editor_hex_update_scroll(ed);
+            }
+            break;
+
+        case KEY_NPAGE:  /* Page Down */
+            {
+                size_t page_bytes = (size_t)(ed->edit_height - 2) * 16;
+                ed->cursor_pos += page_bytes;
+                if (ed->cursor_pos >= buf_len && buf_len > 0) {
+                    ed->cursor_pos = buf_len - 1;
+                }
+                ed->hex_nibble = 0;
+                editor_hex_update_scroll(ed);
+            }
+            break;
+
+        case KEY_HOME:
+            /* Move to start of current row */
+            ed->cursor_pos = (ed->cursor_pos / 16) * 16;
+            ed->hex_nibble = 0;
+            break;
+
+        case KEY_END:
+            /* Move to end of current row */
+            {
+                size_t row_start = (ed->cursor_pos / 16) * 16;
+                size_t row_end = row_start + 15;
+                if (row_end >= buf_len && buf_len > 0) {
+                    row_end = buf_len - 1;
+                }
+                ed->cursor_pos = row_end;
+                ed->hex_nibble = 1;
+            }
+            break;
+
+        case '\t':
+            /* Toggle between hex and ASCII panels */
+            ed->hex_cursor_in_ascii = !ed->hex_cursor_in_ascii;
+            ed->hex_nibble = 0;
+            break;
+
+        /* Undo/Redo */
+        case KEY_CTRL('z'):
+        case KEY_CTRL('u'):
+            editor_undo(ed);
+            break;
+
+        case KEY_CTRL('y'):
+            editor_redo(ed);
+            break;
+
+        default:
+            if (buf_len == 0) break;
+
+            if (ed->hex_cursor_in_ascii) {
+                /* ASCII panel: insert printable characters */
+                if (key >= 32 && key < 127) {
+                    editor_hex_set_byte(ed, (unsigned char)key);
+                    if (ed->cursor_pos + 1 < buf_len) {
+                        ed->cursor_pos++;
+                    }
+                }
+            } else {
+                /* Hex panel: accept hex digits */
+                int hex_val = -1;
+                if (key >= '0' && key <= '9') {
+                    hex_val = key - '0';
+                } else if (key >= 'a' && key <= 'f') {
+                    hex_val = 10 + (key - 'a');
+                } else if (key >= 'A' && key <= 'F') {
+                    hex_val = 10 + (key - 'A');
+                }
+
+                if (hex_val >= 0) {
+                    unsigned char current = (unsigned char)buffer_get_char(ed->buffer, ed->cursor_pos);
+                    unsigned char new_val;
+
+                    if (ed->hex_nibble == 0) {
+                        /* High nibble */
+                        new_val = (unsigned char)((hex_val << 4) | (current & 0x0F));
+                    } else {
+                        /* Low nibble */
+                        new_val = (unsigned char)((current & 0xF0) | hex_val);
+                    }
+
+                    editor_hex_set_byte(ed, new_val);
+
+                    /* Advance cursor */
+                    if (ed->hex_nibble == 0) {
+                        ed->hex_nibble = 1;
+                    } else {
+                        ed->hex_nibble = 0;
+                        if (ed->cursor_pos + 1 < buf_len) {
+                            ed->cursor_pos++;
+                        }
+                    }
+                }
+            }
+            break;
+    }
+}
+
 void input_handle(Editor *ed, MenuState *menu) {
     if (!ed || !menu) return;
 
@@ -215,6 +392,15 @@ void input_handle(Editor *ed, MenuState *menu) {
                     ed->show_status_bar = !ed->show_status_bar;
                     editor_update_dimensions(ed);
                     break;
+                case ACTION_HEX_MODE:
+                    ed->hex_mode = !ed->hex_mode;
+                    if (ed->hex_mode) {
+                        ed->hex_nibble = 0;
+                        ed->hex_cursor_in_ascii = false;
+                        ed->hex_scroll = (ed->cursor_pos / 16) * 16;
+                        editor_clear_selection(ed);
+                    }
+                    break;
                 case ACTION_ABOUT:
                     dialog_about(ed);
                     break;
@@ -261,6 +447,12 @@ void input_handle(Editor *ed, MenuState *menu) {
         }
     }
 #endif
+
+    /* Handle hex mode input */
+    if (ed->hex_mode) {
+        input_handle_hex(ed, key);
+        return;
+    }
 
     /* Handle normal mode keys */
     switch (key) {
@@ -429,6 +621,16 @@ void input_handle(Editor *ed, MenuState *menu) {
 
         case KEY_CTRL('k'):  /* Toggle key debug mode */
             input_toggle_debug_mode();
+            break;
+
+        case KEY_F(4):  /* Toggle hex mode */
+            ed->hex_mode = !ed->hex_mode;
+            if (ed->hex_mode) {
+                ed->hex_nibble = 0;
+                ed->hex_cursor_in_ascii = false;
+                ed->hex_scroll = (ed->cursor_pos / 16) * 16;
+                editor_clear_selection(ed);
+            }
             break;
 
         /* Shift+Arrow for selection */

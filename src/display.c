@@ -238,11 +238,16 @@ void display_draw_statusbar(Editor *ed) {
     /* Line and column */
     mvprintw(status_y, 1, " Line: %-5zu Col: %-4zu", ed->cursor_row, ed->cursor_col);
 
+    /* Hex mode indicator */
+    if (ed->hex_mode) {
+        mvprintw(status_y, 24, "[HEX]");
+    }
+
     /* Filename in center */
     const char *fname = ed->filename[0] ? ed->filename : "[Untitled]";
     int fname_len = strlen(fname);
     int fname_x = (ed->screen_cols - fname_len) / 2;
-    if (fname_x < 25) fname_x = 25;
+    if (fname_x < 30) fname_x = 30;
 
     draw_wchar(status_y, fname_x - 2, BOX_VERT);
     mvprintw(status_y, fname_x, "%s", fname);
@@ -308,8 +313,164 @@ static bool pos_in_selection(Editor *ed, size_t pos) {
     return false;
 }
 
+/* Draw hex editor view */
+static void display_draw_hex_editor(Editor *ed) {
+    if (!ed || !ed->buffer) return;
+
+    size_t buf_len = buffer_get_length(ed->buffer);
+
+    /* Fill background */
+    attron(COLOR_PAIR(COLOR_EDITOR));
+    for (int row = 0; row < ed->edit_height; row++) {
+        move(ed->edit_top + row, ed->edit_left);
+        for (int col = 0; col < ed->edit_width; col++) {
+            addch(' ');
+        }
+    }
+
+    /* Draw header */
+    attron(COLOR_PAIR(COLOR_STATUS));
+    move(ed->edit_top, ed->edit_left);
+    printw("Offset   ");
+    for (int i = 0; i < 16; i++) {
+        if (i == 8) printw(" ");
+        printw("%02X ", i);
+    }
+    printw("| ASCII");
+
+    /* Clear to end of line */
+    int header_len = 9 + (16 * 3) + 1 + 7;
+    for (int i = header_len; i < ed->edit_width; i++) {
+        addch(' ');
+    }
+    attroff(COLOR_PAIR(COLOR_STATUS));
+
+    /* Calculate visible rows */
+    int data_rows = ed->edit_height - 1;  /* Minus header row */
+    size_t scroll_row = ed->hex_scroll / 16;
+
+    /* Draw hex data */
+    for (int row = 0; row < data_rows; row++) {
+        size_t offset = (scroll_row + (size_t)row) * 16;
+
+        move(ed->edit_top + 1 + row, ed->edit_left);
+
+        if (offset >= buf_len && buf_len > 0) {
+            /* Empty row below data */
+            attron(COLOR_PAIR(COLOR_EDITOR));
+            for (int col = 0; col < ed->edit_width; col++) {
+                addch(' ');
+            }
+            continue;
+        }
+
+        /* Draw offset */
+        attron(COLOR_PAIR(COLOR_SYN_NUMBER));
+        printw("%08zX ", offset);
+
+        /* Draw hex bytes */
+        for (int col = 0; col < 16; col++) {
+            size_t pos = offset + (size_t)col;
+
+            if (col == 8) {
+                attron(COLOR_PAIR(COLOR_EDITOR));
+                addch(' ');
+            }
+
+            if (pos < buf_len) {
+                unsigned char byte = (unsigned char)buffer_get_char(ed->buffer, pos);
+
+                /* Check if this is the cursor position */
+                bool is_cursor = (pos == ed->cursor_pos) && !ed->hex_cursor_in_ascii;
+
+                if (is_cursor) {
+                    attron(COLOR_PAIR(COLOR_MENUSEL));
+                } else {
+                    attron(COLOR_PAIR(COLOR_EDITOR));
+                }
+
+                /* Draw hex digits with nibble highlighting */
+                char hex[3];
+                snprintf(hex, sizeof(hex), "%02X", byte);
+
+                if (is_cursor && ed->hex_nibble == 0) {
+                    attron(A_REVERSE);
+                    addch(hex[0]);
+                    attroff(A_REVERSE);
+                    addch(hex[1]);
+                } else if (is_cursor && ed->hex_nibble == 1) {
+                    addch(hex[0]);
+                    attron(A_REVERSE);
+                    addch(hex[1]);
+                    attroff(A_REVERSE);
+                } else {
+                    addch(hex[0]);
+                    addch(hex[1]);
+                }
+
+                if (is_cursor) {
+                    attroff(COLOR_PAIR(COLOR_MENUSEL));
+                }
+
+                attron(COLOR_PAIR(COLOR_EDITOR));
+                addch(' ');
+            } else {
+                attron(COLOR_PAIR(COLOR_EDITOR));
+                printw("   ");
+            }
+        }
+
+        /* Draw separator */
+        attron(COLOR_PAIR(COLOR_EDITOR));
+        printw("| ");
+
+        /* Draw ASCII representation */
+        for (int col = 0; col < 16; col++) {
+            size_t pos = offset + (size_t)col;
+
+            if (pos < buf_len) {
+                unsigned char byte = (unsigned char)buffer_get_char(ed->buffer, pos);
+                bool is_cursor = (pos == ed->cursor_pos) && ed->hex_cursor_in_ascii;
+
+                if (is_cursor) {
+                    attron(COLOR_PAIR(COLOR_MENUSEL) | A_REVERSE);
+                } else {
+                    attron(COLOR_PAIR(COLOR_SYN_STRING));
+                }
+
+                /* Print printable char or dot for non-printable */
+                if (byte >= 32 && byte < 127) {
+                    addch(byte);
+                } else {
+                    addch('.');
+                }
+
+                if (is_cursor) {
+                    attroff(COLOR_PAIR(COLOR_MENUSEL) | A_REVERSE);
+                } else {
+                    attroff(COLOR_PAIR(COLOR_SYN_STRING));
+                }
+            } else {
+                attron(COLOR_PAIR(COLOR_EDITOR));
+                addch(' ');
+            }
+        }
+
+        /* Clear rest of line */
+        attron(COLOR_PAIR(COLOR_EDITOR));
+    }
+
+    attroff(COLOR_PAIR(COLOR_EDITOR));
+}
+
 void display_draw_editor(Editor *ed) {
     if (!ed || !ed->buffer) return;
+
+    /* Check for hex mode */
+    if (ed->hex_mode) {
+        display_draw_hex_editor(ed);
+        return;
+    }
 
     size_t buf_len = buffer_get_length(ed->buffer);
     bool has_sel = editor_has_selection(ed) || editor_has_multi_selection(ed);

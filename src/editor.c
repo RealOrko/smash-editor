@@ -1455,3 +1455,54 @@ void editor_set_status_message(Editor *ed, const char *msg) {
         ed->status_message_time = 0;
     }
 }
+
+/* Hex editing helpers */
+
+void editor_hex_update_scroll(Editor *ed) {
+    if (!ed) return;
+
+    /* Calculate which row the cursor is on (16 bytes per row) */
+    size_t cursor_row = ed->cursor_pos / 16;
+
+    /* Calculate visible rows (minus header) */
+    int visible_rows = ed->edit_height - 2;
+    if (visible_rows < 1) visible_rows = 1;
+
+    /* Scroll row (in terms of 16-byte rows) */
+    size_t scroll_row = ed->hex_scroll / 16;
+
+    /* Scroll up if cursor above visible area */
+    if (cursor_row < scroll_row) {
+        ed->hex_scroll = cursor_row * 16;
+    }
+
+    /* Scroll down if cursor below visible area */
+    if (cursor_row >= scroll_row + (size_t)visible_rows) {
+        ed->hex_scroll = (cursor_row - (size_t)visible_rows + 1) * 16;
+    }
+}
+
+void editor_hex_set_byte(Editor *ed, unsigned char value) {
+    if (!ed || !ed->buffer) return;
+
+    size_t buf_len = buffer_get_length(ed->buffer);
+    if (ed->cursor_pos >= buf_len) return;
+
+    /* Get current byte for undo */
+    char old_char = buffer_get_char(ed->buffer, ed->cursor_pos);
+
+    /* Only modify if value changed */
+    if ((unsigned char)old_char == value) return;
+
+    /* Record undo: delete old byte */
+    char old_str[2] = {old_char, '\0'};
+    undo_record_delete(ed->undo, ed->cursor_pos, old_str, 1, ed->cursor_pos);
+    buffer_delete_char(ed->buffer, ed->cursor_pos);
+
+    /* Record undo: insert new byte */
+    char new_str[2] = {(char)value, '\0'};
+    undo_record_insert(ed->undo, ed->cursor_pos, new_str, 1, ed->cursor_pos);
+    buffer_insert_string(ed->buffer, ed->cursor_pos, new_str, 1);
+
+    ed->modified = true;
+}

@@ -15,7 +15,8 @@ typedef enum {
     MODE_NORMAL,    /* Normal editing */
     MODE_MENU,      /* Menu active */
     MODE_DIALOG,    /* Dialog active */
-    MODE_SELECT     /* Text selection active */
+    MODE_SELECT,    /* Text selection active */
+    MODE_HEX        /* Hex editing mode */
 } EditorMode;
 
 /* Selection range */
@@ -88,6 +89,12 @@ typedef struct Editor {
     /* Syntax highlighting */
     LanguageType syntax_lang;
     bool syntax_enabled;
+
+    /* Hex editing mode */
+    bool hex_mode;              /* Hex view enabled */
+    int hex_nibble;             /* 0=high nibble, 1=low nibble */
+    bool hex_cursor_in_ascii;   /* Cursor in ASCII panel */
+    size_t hex_scroll;          /* Scroll offset in bytes (multiple of 16) */
 } Editor;
 
 /* Editor lifecycle */
@@ -156,5 +163,9 @@ size_t editor_row_col_to_pos(Editor *ed, size_t row, size_t col);
 
 /* Status message */
 void editor_set_status_message(Editor *ed, const char *msg);
+
+/* Hex editing */
+void editor_hex_update_scroll(Editor *ed);
+void editor_hex_set_byte(Editor *ed, unsigned char value);
 
 #endif /* EDITOR_H */
