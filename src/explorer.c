@@ -202,15 +202,7 @@ static void explorer_draw(ExplorerState *state, int rows, int cols) {
     int status_y = box_y + box_height - 3;
     attron(COLOR_PAIR(COLOR_STATUS));
 
-    /* First status line - navigation hints */
-    move(status_y, box_x + 1);
-    for (int i = 1; i < box_width - 1; i++) {
-        addch(' ');
-    }
-    mvprintw(status_y, box_x + 2, "Arrows=Navigate  Enter=Open  Backspace=Parent  Esc=Cancel");
-
-    /* Second status line - filter info or type hint */
-    status_y++;
+    /* First status line */
     move(status_y, box_x + 1);
     for (int i = 1; i < box_width - 1; i++) {
         addch(' ');
@@ -220,6 +212,17 @@ static void explorer_draw(ExplorerState *state, int rows, int cols) {
     } else {
         mvprintw(status_y, box_x + 2, "Type to search");
     }
+    const char *hints1 = "Enter=Open  Esc=Cancel";
+    mvprintw(status_y, box_x + box_width - (int)strlen(hints1) - 2, "%s", hints1);
+
+    /* Second status line */
+    status_y++;
+    move(status_y, box_x + 1);
+    for (int i = 1; i < box_width - 1; i++) {
+        addch(' ');
+    }
+    const char *hints2 = "Arrows=Navigate  Backspace=Parent";
+    mvprintw(status_y, box_x + box_width - (int)strlen(hints2) - 2, "%s", hints2);
 
     attroff(COLOR_PAIR(COLOR_STATUS));
 
