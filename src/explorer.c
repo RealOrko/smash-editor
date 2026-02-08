@@ -355,18 +355,36 @@ bool explorer_open(Editor *ed) {
                         state.filter_buffer[0] = '\0';
                         state.filter_length = 0;
                     } else {
-                        /* Open file */
-                        char full_path[MAX_PATH_LENGTH];
-                        size_t path_len = strlen(state.current_path);
-                        if (path_len > 1) {
-                            snprintf(full_path, sizeof(full_path), "%s/%s",
-                                     state.current_path, entry->name);
-                        } else {
-                            snprintf(full_path, sizeof(full_path), "/%s", entry->name);
+                        /* Check if current file is modified */
+                        bool should_open = true;
+                        if (ed->modified) {
+                            DialogResult result = dialog_confirm(ed, "Open File",
+                                                                 "Save changes to current file?");
+                            if (result == DIALOG_YES) {
+                                if (!file_save(ed)) {
+                                    should_open = false;
+                                }
+                            } else if (result == DIALOG_CANCEL) {
+                                should_open = false;
+                            }
                         }
-                        file_load(ed, full_path);
-                        file_opened = true;
-                        running = false;
+
+                        if (should_open) {
+                            /* Open file */
+                            char full_path[MAX_PATH_LENGTH];
+                            size_t path_len = strlen(state.current_path);
+                            if (path_len > 1) {
+                                snprintf(full_path, sizeof(full_path), "%s/%s",
+                                         state.current_path, entry->name);
+                            } else {
+                                snprintf(full_path, sizeof(full_path), "/%s", entry->name);
+                            }
+                            if (file_load(ed, full_path)) {
+                                file_opened = true;
+                                running = false;
+                            }
+                            /* If file_load fails, stay in explorer */
+                        }
                     }
                 }
                 break;
