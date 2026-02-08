@@ -31,6 +31,7 @@ static const char *json_extensions[] = {".json", ".jsonc", NULL};
 static const char *docker_extensions[] = {NULL}; /* Dockerfile detected by name */
 static const char *html_extensions[] = {".html", ".htm", ".xhtml", ".xml", ".svg", NULL};
 static const char *typescript_extensions[] = {".ts", ".tsx", ".mts", ".cts", NULL};
+static const char *terraform_extensions[] = {".tf", ".tfvars", ".hcl", NULL};
 
 /* Keyword structure */
 typedef struct {
@@ -727,6 +728,35 @@ static const Keyword typescript_keywords[] = {
     {NULL, TOKEN_NORMAL}
 };
 
+/* Terraform/HCL keywords */
+static const Keyword terraform_keywords[] = {
+    /* Block types */
+    {"resource", TOKEN_KEYWORD}, {"variable", TOKEN_KEYWORD}, {"output", TOKEN_KEYWORD},
+    {"module", TOKEN_KEYWORD}, {"data", TOKEN_KEYWORD}, {"provider", TOKEN_KEYWORD},
+    {"locals", TOKEN_KEYWORD}, {"terraform", TOKEN_KEYWORD}, {"backend", TOKEN_KEYWORD},
+    {"required_providers", TOKEN_KEYWORD}, {"required_version", TOKEN_KEYWORD},
+    {"provisioner", TOKEN_KEYWORD}, {"connection", TOKEN_KEYWORD}, {"lifecycle", TOKEN_KEYWORD},
+    {"moved", TOKEN_KEYWORD}, {"import", TOKEN_KEYWORD}, {"check", TOKEN_KEYWORD},
+    /* Meta-arguments */
+    {"count", TOKEN_KEYWORD}, {"for_each", TOKEN_KEYWORD}, {"depends_on", TOKEN_KEYWORD},
+    {"providers", TOKEN_KEYWORD}, {"source", TOKEN_KEYWORD}, {"version", TOKEN_KEYWORD},
+    /* Expressions */
+    {"for", TOKEN_KEYWORD}, {"in", TOKEN_KEYWORD}, {"if", TOKEN_KEYWORD},
+    {"each", TOKEN_KEYWORD}, {"self", TOKEN_KEYWORD}, {"var", TOKEN_KEYWORD},
+    {"local", TOKEN_KEYWORD}, {"path", TOKEN_KEYWORD},
+    /* Types */
+    {"string", TOKEN_TYPE}, {"number", TOKEN_TYPE}, {"bool", TOKEN_TYPE},
+    {"list", TOKEN_TYPE}, {"map", TOKEN_TYPE}, {"set", TOKEN_TYPE},
+    {"object", TOKEN_TYPE}, {"tuple", TOKEN_TYPE}, {"any", TOKEN_TYPE},
+    {"null", TOKEN_TYPE}, {"true", TOKEN_TYPE}, {"false", TOKEN_TYPE},
+    /* Common functions */
+    {"concat", TOKEN_TYPE}, {"join", TOKEN_TYPE}, {"split", TOKEN_TYPE},
+    {"length", TOKEN_TYPE}, {"lookup", TOKEN_TYPE}, {"merge", TOKEN_TYPE},
+    {"file", TOKEN_TYPE}, {"format", TOKEN_TYPE}, {"tostring", TOKEN_TYPE},
+    {"tolist", TOKEN_TYPE}, {"toset", TOKEN_TYPE}, {"tomap", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
 /* Case-insensitive string comparison helper */
 static int strcasecmp_local(const char *s1, const char *s2) {
     while (*s1 && *s2) {
@@ -838,6 +868,9 @@ LanguageType syntax_detect_language(const char *filename) {
     }
     for (int i = 0; typescript_extensions[i]; i++) {
         if (strcasecmp_local(ext, typescript_extensions[i]) == 0) return LANG_TYPESCRIPT;
+    }
+    for (int i = 0; terraform_extensions[i]; i++) {
+        if (strcasecmp_local(ext, terraform_extensions[i]) == 0) return LANG_TERRAFORM;
     }
 
     return LANG_NONE;
@@ -965,6 +998,7 @@ static const Keyword *get_keywords(LanguageType lang) {
         case LANG_JSON:       return NULL; /* JSON has no keywords, just structure */
         case LANG_HTML:       return html_keywords;
         case LANG_TYPESCRIPT: return typescript_keywords;
+        case LANG_TERRAFORM:  return terraform_keywords;
         default:              return NULL;
     }
 }
@@ -3321,6 +3355,158 @@ static void highlight_html(Buffer *buf, size_t line_start, size_t line_end,
     }
 }
 
+/* Highlight a line for Terraform/HCL */
+static void highlight_terraform(Buffer *buf, size_t line_start, size_t line_end,
+                                HighlightState *state, TokenType *out, size_t out_size) {
+    const Keyword *keywords = terraform_keywords;
+    size_t pos = line_start;
+    size_t idx = 0;
+
+    /* Handle continued block comment */
+    if (*state == HL_STATE_BLOCK_COMMENT) {
+        while (pos < line_end && idx < out_size) {
+            out[idx++] = TOKEN_COMMENT;
+            if (buffer_get_char(buf, pos) == '*' &&
+                pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '/') {
+                if (idx < out_size) out[idx++] = TOKEN_COMMENT;
+                pos += 2;
+                *state = HL_STATE_NORMAL;
+                break;
+            }
+            pos++;
+        }
+        if (*state == HL_STATE_BLOCK_COMMENT) return;
+    }
+
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+
+        /* Check for # comment */
+        if (c == '#') {
+            while (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                pos++;
+            }
+            break;
+        }
+
+        /* Check for // comment */
+        if (c == '/' && pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '/') {
+            while (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                pos++;
+            }
+            break;
+        }
+
+        /* Check for block comment */
+        if (c == '/' && pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '*') {
+            *state = HL_STATE_BLOCK_COMMENT;
+            out[idx++] = TOKEN_COMMENT;
+            pos++;
+            if (idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                pos++;
+            }
+            while (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                if (buffer_get_char(buf, pos) == '*' &&
+                    pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '/') {
+                    if (idx < out_size) out[idx++] = TOKEN_COMMENT;
+                    pos += 2;
+                    *state = HL_STATE_NORMAL;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Check for string */
+        if (c == '"') {
+            out[idx++] = TOKEN_STRING;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                char sc = buffer_get_char(buf, pos);
+                if (sc == '\\' && pos + 1 < line_end) {
+                    out[idx++] = TOKEN_STRING;
+                    pos++;
+                    if (idx < out_size) {
+                        out[idx++] = TOKEN_STRING;
+                        pos++;
+                    }
+                    continue;
+                }
+                /* Highlight ${...} interpolation */
+                if (sc == '$' && pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '{') {
+                    out[idx++] = TOKEN_VARIABLE;
+                    pos++;
+                    if (idx < out_size) {
+                        out[idx++] = TOKEN_VARIABLE;
+                        pos++;
+                    }
+                    int brace_depth = 1;
+                    while (pos < line_end && idx < out_size && brace_depth > 0) {
+                        char ic = buffer_get_char(buf, pos);
+                        out[idx++] = TOKEN_VARIABLE;
+                        if (ic == '{') brace_depth++;
+                        else if (ic == '}') brace_depth--;
+                        pos++;
+                    }
+                    continue;
+                }
+                out[idx++] = TOKEN_STRING;
+                pos++;
+                if (sc == '"') break;
+            }
+            continue;
+        }
+
+        /* Check for number */
+        if (isdigit(c) || (c == '-' && pos + 1 < line_end && isdigit(buffer_get_char(buf, pos + 1)))) {
+            while (pos < line_end && idx < out_size &&
+                   (isdigit(buffer_get_char(buf, pos)) || buffer_get_char(buf, pos) == '.' ||
+                    buffer_get_char(buf, pos) == '-' || buffer_get_char(buf, pos) == 'e' ||
+                    buffer_get_char(buf, pos) == 'E')) {
+                out[idx++] = TOKEN_NUMBER;
+                pos++;
+            }
+            continue;
+        }
+
+        /* Check for identifier/keyword */
+        if (isalpha(c) || c == '_') {
+            size_t word_start = idx;
+            size_t word_pos = pos;
+            while (pos < line_end && idx < out_size &&
+                   (isalnum(buffer_get_char(buf, pos)) || buffer_get_char(buf, pos) == '_')) {
+                out[idx++] = TOKEN_NORMAL;
+                pos++;
+            }
+            /* Look up keyword */
+            size_t word_len = pos - word_pos;
+            char word[64];
+            if (word_len < 64) {
+                for (size_t i = 0; i < word_len; i++) {
+                    word[i] = buffer_get_char(buf, word_pos + i);
+                }
+                word[word_len] = '\0';
+                TokenType token = lookup_keyword(keywords, word, word_len);
+                if (token != TOKEN_NORMAL) {
+                    for (size_t i = word_start; i < idx; i++) {
+                        out[i] = token;
+                    }
+                }
+            }
+            continue;
+        }
+
+        /* Default */
+        out[idx++] = TOKEN_NORMAL;
+        pos++;
+    }
+}
+
 /* Main highlighting function */
 void syntax_highlight_line(Buffer *buf, size_t line_start, size_t line_end,
                            LanguageType lang, HighlightState *state,
@@ -3406,6 +3592,9 @@ void syntax_highlight_line(Buffer *buf, size_t line_start, size_t line_end,
             break;
         case LANG_HTML:
             highlight_html(buf, line_start, line_end, state, out, out_size);
+            break;
+        case LANG_TERRAFORM:
+            highlight_terraform(buf, line_start, line_end, state, out, out_size);
             break;
         default:
             break;

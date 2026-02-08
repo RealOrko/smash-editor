@@ -55,6 +55,7 @@ typedef enum {
     LANG_GITCONFIG,     /* Git config/ignore files */
     LANG_HTML,          /* HTML/XML */
     LANG_TYPESCRIPT,    /* TypeScript */
+    LANG_TERRAFORM,     /* Terraform/HCL */
     LANG_MAX
 } LanguageType;
 
