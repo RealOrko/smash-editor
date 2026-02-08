@@ -153,7 +153,7 @@ static void explorer_draw(ExplorerState *state, int rows, int cols) {
 
     /* Calculate visible area */
     int content_start_y = box_y + 2;
-    int content_height = box_height - 4;  /* Leave room for top border, separator, and bottom */
+    int content_height = box_height - 5;  /* Leave room for top border, separator, and 2 status lines */
     int content_width = box_width - 4;
 
     /* Adjust scroll offset to keep selection visible */
@@ -198,20 +198,29 @@ static void explorer_draw(ExplorerState *state, int rows, int cols) {
         }
     }
 
-    /* Draw status bar at bottom */
-    int status_y = box_y + box_height - 2;
+    /* Draw status bar at bottom (2 lines) */
+    int status_y = box_y + box_height - 3;
     attron(COLOR_PAIR(COLOR_STATUS));
+
+    /* First status line - navigation hints */
     move(status_y, box_x + 1);
     for (int i = 1; i < box_width - 1; i++) {
         addch(' ');
     }
+    mvprintw(status_y, box_x + 2, "Arrows=Navigate  Enter=Open  Backspace=Parent  Esc=Cancel");
 
+    /* Second status line - filter info or type hint */
+    status_y++;
+    move(status_y, box_x + 1);
+    for (int i = 1; i < box_width - 1; i++) {
+        addch(' ');
+    }
     if (state->filter_length > 0) {
         mvprintw(status_y, box_x + 2, "Filter: %s", state->filter_buffer);
+    } else {
+        mvprintw(status_y, box_x + 2, "Type to search");
     }
 
-    int help_len = 30;
-    mvprintw(status_y, box_x + box_width - help_len - 2, "Enter=Select  Esc=Cancel");
     attroff(COLOR_PAIR(COLOR_STATUS));
 
     attroff(COLOR_PAIR(COLOR_DIALOG));
