@@ -314,6 +314,11 @@ void display_draw_editor(Editor *ed) {
     size_t buf_len = buffer_get_length(ed->buffer);
     bool has_sel = editor_has_selection(ed) || editor_has_multi_selection(ed);
 
+    /* Syntax highlighting state */
+    bool use_syntax = ed->syntax_enabled && ed->syntax_lang != LANG_NONE;
+    HighlightState hl_state = HL_STATE_NORMAL;
+    TokenType line_tokens[MAX_LINE_LENGTH];
+
     /* Fill background */
     attron(COLOR_PAIR(COLOR_EDITOR));
     for (int row = 0; row < ed->edit_height; row++) {
@@ -342,8 +347,14 @@ void display_draw_editor(Editor *ed) {
     size_t pos = 0;
     size_t current_line = 1;
 
-    /* Skip to first visible line */
+    /* Skip to first visible line, tracking highlight state for multi-line constructs */
     while (pos < buf_len && current_line <= ed->scroll_row) {
+        if (use_syntax) {
+            /* Process line for highlight state (for block comments, etc.) */
+            size_t line_end = buffer_line_end(ed->buffer, pos);
+            syntax_highlight_line(ed->buffer, pos, line_end, ed->syntax_lang,
+                                  &hl_state, line_tokens, MAX_LINE_LENGTH);
+        }
         if (buffer_get_char(ed->buffer, pos) == '\n') {
             current_line++;
         }
@@ -355,6 +366,16 @@ void display_draw_editor(Editor *ed) {
         int screen_col = 0;
         size_t visual_col = 1;
 
+        /* Pre-compute syntax highlighting for this line */
+        size_t line_start = pos;
+        size_t line_end = buffer_line_end(ed->buffer, pos);
+        size_t line_char_idx = 0;
+
+        if (use_syntax) {
+            syntax_highlight_line(ed->buffer, line_start, line_end, ed->syntax_lang,
+                                  &hl_state, line_tokens, MAX_LINE_LENGTH);
+        }
+
         while (pos < buf_len) {
             char c = buffer_get_char(ed->buffer, pos);
 
@@ -363,12 +384,14 @@ void display_draw_editor(Editor *ed) {
                 break;
             }
 
-            /* Check if character is in selection */
+            /* Determine color for this character */
+            int char_color = COLOR_EDITOR;
             if (has_sel && pos_in_selection(ed, pos)) {
-                attron(COLOR_PAIR(COLOR_HIGHLIGHT));
-            } else {
-                attron(COLOR_PAIR(COLOR_EDITOR));
+                char_color = COLOR_HIGHLIGHT;
+            } else if (use_syntax && line_char_idx < MAX_LINE_LENGTH) {
+                char_color = syntax_token_to_color(line_tokens[line_char_idx]);
             }
+            attron(COLOR_PAIR(char_color));
 
             /* Decode UTF-8 character */
             wchar_t wc;
@@ -402,6 +425,7 @@ void display_draw_editor(Editor *ed) {
 
             visual_col += char_width;
             pos += char_bytes;
+            line_char_idx += char_bytes;
 
             screen_col = visual_col - ed->scroll_col - 1;
             if (screen_col >= ed->edit_width) {

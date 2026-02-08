@@ -142,6 +142,9 @@ Editor *editor_create(void) {
     ed->status_message[0] = '\0';
     ed->status_message_time = 0;
 
+    ed->syntax_lang = LANG_NONE;
+    ed->syntax_enabled = true;
+
     return ed;
 }
 
@@ -194,6 +197,18 @@ void editor_init_screen(Editor *ed) {
     init_pair(COLOR_DIALOGBTN, COLOR_BLACK, COLOR_CYAN);
     init_pair(COLOR_STATUS, COLOR_BLACK, COLOR_CYAN);
     init_pair(COLOR_BORDER, COLOR_WHITE, COLOR_BLUE);
+
+    /* Syntax highlighting color pairs */
+    init_pair(COLOR_SYN_KEYWORD, COLOR_YELLOW, COLOR_BLUE);
+    init_pair(COLOR_SYN_TYPE, COLOR_GREEN, COLOR_BLUE);
+    init_pair(COLOR_SYN_STRING, COLOR_MAGENTA, COLOR_BLUE);
+    init_pair(COLOR_SYN_COMMENT, COLOR_CYAN, COLOR_BLUE);
+    init_pair(COLOR_SYN_PREPROC, COLOR_MAGENTA, COLOR_BLUE);
+    init_pair(COLOR_SYN_NUMBER, COLOR_CYAN, COLOR_BLUE);
+    init_pair(COLOR_SYN_VARIABLE, COLOR_GREEN, COLOR_BLUE);
+    init_pair(COLOR_SYN_HEADING, COLOR_YELLOW, COLOR_BLUE);
+    init_pair(COLOR_SYN_EMPHASIS, COLOR_WHITE, COLOR_BLUE);
+    init_pair(COLOR_SYN_CODE, COLOR_CYAN, COLOR_BLUE);
 
     editor_update_dimensions(ed);
 }

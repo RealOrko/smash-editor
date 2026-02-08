@@ -81,6 +81,7 @@ set(SOURCES
     src/clipboard.c
     src/undo.c
     src/explorer.c
+    src/syntax.c
 )
 
 # Executable

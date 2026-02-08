@@ -56,6 +56,14 @@ bool file_load(Editor *ed, const char *filename) {
     editor_clear_selection(ed);
     editor_update_cursor_position(ed);
 
+    /* Detect syntax highlighting language from extension first */
+    ed->syntax_lang = syntax_detect_language(filename);
+
+    /* If no extension match, try shebang detection */
+    if (ed->syntax_lang == LANG_NONE) {
+        ed->syntax_lang = syntax_detect_from_shebang(ed->buffer);
+    }
+
     return true;
 }
 
@@ -151,7 +159,12 @@ bool file_save_as(Editor *ed) {
 
     if (dialog_save_file(ed, filename, sizeof(filename)) == DIALOG_OK) {
         if (filename[0]) {
-            return file_save_to(ed, filename);
+            bool result = file_save_to(ed, filename);
+            if (result) {
+                /* Update syntax highlighting for new filename */
+                ed->syntax_lang = syntax_detect_language(filename);
+            }
+            return result;
         }
     }
 

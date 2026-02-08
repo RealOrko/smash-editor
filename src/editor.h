@@ -84,6 +84,10 @@ typedef struct Editor {
     /* Status bar message */
     char status_message[128];
     time_t status_message_time;
+
+    /* Syntax highlighting */
+    LanguageType syntax_lang;
+    bool syntax_enabled;
 } Editor;
 
 /* Editor lifecycle */
