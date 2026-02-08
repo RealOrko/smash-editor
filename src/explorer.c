@@ -153,7 +153,7 @@ static void explorer_draw(ExplorerState *state, int rows, int cols) {
 
     /* Calculate visible area */
     int content_start_y = box_y + 2;
-    int content_height = box_height - 5;  /* Leave room for top border, separator, and 2 status lines */
+    int content_height = box_height - 4;  /* Leave room for top border, separator, and status line */
     int content_width = box_width - 4;
 
     /* Adjust scroll offset to keep selection visible */
@@ -198,11 +198,10 @@ static void explorer_draw(ExplorerState *state, int rows, int cols) {
         }
     }
 
-    /* Draw status bar at bottom (2 lines) */
-    int status_y = box_y + box_height - 3;
+    /* Draw status bar at bottom */
+    int status_y = box_y + box_height - 2;
     attron(COLOR_PAIR(COLOR_STATUS));
 
-    /* First status line */
     move(status_y, box_x + 1);
     for (int i = 1; i < box_width - 1; i++) {
         addch(' ');
@@ -212,17 +211,8 @@ static void explorer_draw(ExplorerState *state, int rows, int cols) {
     } else {
         mvprintw(status_y, box_x + 2, "Type to search");
     }
-    const char *hints1 = "Enter=Open  Esc=Cancel";
-    mvprintw(status_y, box_x + box_width - (int)strlen(hints1) - 2, "%s", hints1);
-
-    /* Second status line */
-    status_y++;
-    move(status_y, box_x + 1);
-    for (int i = 1; i < box_width - 1; i++) {
-        addch(' ');
-    }
-    const char *hints2 = "Arrows=Navigate  Backspace=Parent";
-    mvprintw(status_y, box_x + box_width - (int)strlen(hints2) - 2, "%s", hints2);
+    const char *hints = "Bksp=Parent  Enter=Open  Esc=Cancel";
+    mvprintw(status_y, box_x + box_width - (int)strlen(hints) - 2, "%s", hints);
 
     attroff(COLOR_PAIR(COLOR_STATUS));
 
