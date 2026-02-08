@@ -553,94 +553,39 @@ void editor_goto_line(Editor *ed, size_t line) {
     editor_scroll_to_cursor(ed);
 }
 
-/* Debug logging for multi-select */
-static FILE *g_dbg = NULL;
-static void dbg_open(void) {
-    if (!g_dbg) g_dbg = fopen("/tmp/insert_debug.log", "a");
-}
-static void dbg_close(void) {
-    if (g_dbg) { fclose(g_dbg); g_dbg = NULL; }
-}
-static void dbg_state(Editor *ed, const char *label) {
-    if (!g_dbg || !ed) return;
-    fprintf(g_dbg, "=== STATE: %s ===\n", label);
-    fflush(g_dbg);
-    fprintf(g_dbg, "  buffer=%p length=%zu\n", (void*)ed->buffer, ed->buffer ? buffer_get_length(ed->buffer) : 0);
-    fflush(g_dbg);
-    fprintf(g_dbg, "  cursor_pos=%zu\n", ed->cursor_pos);
-    fflush(g_dbg);
-    fprintf(g_dbg, "  selection.active=%d count=%d\n", ed->selection.active, ed->selection.count);
-    fflush(g_dbg);
-    for (int i = 0; i < ed->selection.count && i < 10; i++) {
-        fprintf(g_dbg, "    range[%d]: start=%zu end=%zu cursor=%zu\n", i,
-                ed->selection.ranges[i].start, ed->selection.ranges[i].end, ed->selection.ranges[i].cursor);
-        fflush(g_dbg);
-    }
-    fprintf(g_dbg, "  undo=%p\n", (void*)ed->undo);
-    fflush(g_dbg);
-    fprintf(g_dbg, "=== END STATE ===\n");
-    fflush(g_dbg);
-}
-
 /* Text operations */
 void editor_insert_char(Editor *ed, char c) {
     if (!ed || !ed->buffer) return;
 
     /* Handle multi-select */
     if (ed->selection.count > 0) {
-        dbg_open();
-        fprintf(g_dbg, "\n########## INSERT_CHAR '%c' (0x%02x) ##########\n", c, (unsigned char)c);
-        dbg_state(ed, "ENTRY");
+        debug_log("\n########## INSERT_CHAR '%c' (0x%02x) ##########\n", c, (unsigned char)c);
+        debug_log_state(ed, "ENTRY");
 
-        fprintf(g_dbg, "SORTING selections descending...\n");
         /* Sort selections by position (descending) to process from end first */
         for (int i = 0; i < ed->selection.count - 1; i++) {
             for (int j = i + 1; j < ed->selection.count; j++) {
                 if (ed->selection.ranges[i].start < ed->selection.ranges[j].start) {
-                    fprintf(g_dbg, "  SWAP range[%d] <-> range[%d]\n", i, j);
                     SelectionRange tmp = ed->selection.ranges[i];
                     ed->selection.ranges[i] = ed->selection.ranges[j];
                     ed->selection.ranges[j] = tmp;
                 }
             }
         }
-        dbg_state(ed, "AFTER SORT");
+        debug_log_state(ed, "AFTER SORT");
 
-        fprintf(g_dbg, "CALLING undo_begin_group\n");
         undo_begin_group(ed->undo);
-        fprintf(g_dbg, "undo_begin_group returned\n");
 
         /* Process from end to start - higher positions first so lower ones stay valid */
         char str[2] = {c, '\0'};
         int valid_count = ed->selection.count;
-        fprintf(g_dbg, "valid_count=%d, starting loop\n", valid_count);
 
         for (int i = 0; i < ed->selection.count; i++) {
-            fprintf(g_dbg, "\n--- LOOP ITERATION i=%d (count=%d) ---\n", i, ed->selection.count);
-            fflush(g_dbg);
-            fprintf(g_dbg, "  about to call dbg_state\n");
-            fflush(g_dbg);
-            dbg_state(ed, "LOOP START");
-            fprintf(g_dbg, "  dbg_state returned\n");
-            fflush(g_dbg);
+            debug_log("--- LOOP ITERATION i=%d ---\n", i);
 
-            fprintf(g_dbg, "Reading ranges[%d]...\n", i);
-            fflush(g_dbg);
-            fprintf(g_dbg, "  ed=%p ed->selection.ranges=%p\n", (void*)ed, (void*)ed->selection.ranges);
-            fflush(g_dbg);
-            fprintf(g_dbg, "  &ranges[%d]=%p\n", i, (void*)&ed->selection.ranges[i]);
-            fflush(g_dbg);
-            fprintf(g_dbg, "  about to read .start\n");
-            fflush(g_dbg);
             size_t start = ed->selection.ranges[i].start;
-            fprintf(g_dbg, "  read start=%zu\n", start);
-            fflush(g_dbg);
             size_t end = ed->selection.ranges[i].end;
-            fprintf(g_dbg, "  raw: start=%zu end=%zu\n", start, end);
-            fflush(g_dbg);
-
             if (start > end) {
-                fprintf(g_dbg, "  SWAPPING start/end\n");
                 size_t tmp = start;
                 start = end;
                 end = tmp;
@@ -648,94 +593,58 @@ void editor_insert_char(Editor *ed, char c) {
 
             /* Bounds check */
             size_t buf_len = buffer_get_length(ed->buffer);
-            fprintf(g_dbg, "  buf_len=%zu, start=%zu, end=%zu\n", buf_len, start, end);
-            if (start > buf_len) { fprintf(g_dbg, "  CLAMPING start %zu -> %zu\n", start, buf_len); start = buf_len; }
-            if (end > buf_len) { fprintf(g_dbg, "  CLAMPING end %zu -> %zu\n", end, buf_len); end = buf_len; }
+            if (start > buf_len) start = buf_len;
+            if (end > buf_len) end = buf_len;
 
             /* Delete the selection and record undo */
             if (end > start) {
-                fprintf(g_dbg, "  DELETING range %zu-%zu (%zu chars)\n", start, end, end-start);
+                debug_log("  DELETING range %zu-%zu\n", start, end);
                 char *deleted = buffer_get_range(ed->buffer, start, end);
-                fprintf(g_dbg, "  buffer_get_range returned %p\n", (void*)deleted);
                 if (deleted) {
-                    fprintf(g_dbg, "  calling undo_record_delete\n");
                     undo_record_delete(ed->undo, start, deleted, end - start, start);
-                    fprintf(g_dbg, "  undo_record_delete returned, freeing\n");
                     free(deleted);
-                    fprintf(g_dbg, "  freed\n");
                 }
-                fprintf(g_dbg, "  calling buffer_delete_range\n");
                 buffer_delete_range(ed->buffer, start, end);
-                fprintf(g_dbg, "  buffer_delete_range returned, new len=%zu\n", buffer_get_length(ed->buffer));
-            } else {
-                fprintf(g_dbg, "  NO DELETE (start==end, cursor only)\n");
             }
 
             /* Calculate how much this operation shifts higher positions */
-            fprintf(g_dbg, "  calculating shift from ranges[%d]: start=%zu end=%zu\n",
-                    i, ed->selection.ranges[i].start, ed->selection.ranges[i].end);
             size_t orig_end = ed->selection.ranges[i].end;
             size_t orig_start = ed->selection.ranges[i].start;
             if (orig_start > orig_end) { size_t t = orig_start; orig_start = orig_end; orig_end = t; }
             int shift = 1 - (int)(orig_end - orig_start);
-            fprintf(g_dbg, "  orig_start=%zu orig_end=%zu shift=%d\n", orig_start, orig_end, shift);
 
             /* Insert the character and record undo */
-            fprintf(g_dbg, "  INSERTING '%c' at %zu\n", c, start);
-            fprintf(g_dbg, "  calling undo_record_insert\n");
+            debug_log("  INSERTING '%c' at %zu\n", c, start);
             undo_record_insert(ed->undo, start, str, 1, start);
-            fprintf(g_dbg, "  undo_record_insert returned\n");
-            fprintf(g_dbg, "  calling buffer_insert_char\n");
             buffer_insert_char(ed->buffer, start, c);
-            fprintf(g_dbg, "  buffer_insert_char returned, new len=%zu\n", buffer_get_length(ed->buffer));
 
             /* Update THIS range to cursor after insert */
-            fprintf(g_dbg, "  updating ranges[%d]: %zu,%zu,%zu -> %zu,%zu,%zu\n", i,
-                    ed->selection.ranges[i].start, ed->selection.ranges[i].end, ed->selection.ranges[i].cursor,
-                    start+1, start+1, start+1);
             ed->selection.ranges[i].start = start + 1;
             ed->selection.ranges[i].end = start + 1;
             ed->selection.ranges[i].cursor = start + 1;
 
             /* Shift all HIGHER positions (earlier in array) by net change */
-            fprintf(g_dbg, "  SHIFTING ranges[0..%d] by %d\n", i-1, shift);
             for (int k = 0; k < i; k++) {
-                fprintf(g_dbg, "    ranges[%d]: %zu,%zu,%zu -> %zu,%zu,%zu\n", k,
-                        ed->selection.ranges[k].start, ed->selection.ranges[k].end, ed->selection.ranges[k].cursor,
-                        ed->selection.ranges[k].start + shift, ed->selection.ranges[k].end + shift, ed->selection.ranges[k].cursor + shift);
                 ed->selection.ranges[k].start += shift;
                 ed->selection.ranges[k].end += shift;
                 ed->selection.ranges[k].cursor += shift;
             }
 
-            dbg_state(ed, "LOOP END");
-            fprintf(g_dbg, "--- END ITERATION i=%d ---\n", i);
-            fflush(g_dbg);
+            debug_log_state(ed, "LOOP END");
         }
 
-        fprintf(g_dbg, "\nLOOP COMPLETE, calling undo_end_group\n");
         undo_end_group(ed->undo);
-        fprintf(g_dbg, "undo_end_group returned\n");
 
-        fprintf(g_dbg, "valid_count=%d\n", valid_count);
         if (valid_count > 0) {
-            fprintf(g_dbg, "setting cursor_pos = ranges[%d].start = %zu\n",
-                    valid_count-1, ed->selection.ranges[valid_count - 1].start);
             ed->cursor_pos = ed->selection.ranges[valid_count - 1].start;
             ed->selection.active = true;
         } else {
-            fprintf(g_dbg, "valid_count is 0, clearing selection\n");
             ed->selection.active = false;
         }
         ed->modified = true;
 
-        dbg_state(ed, "BEFORE RETURN");
-        fprintf(g_dbg, "calling editor_scroll_to_cursor\n");
-        fflush(g_dbg);
+        debug_log_state(ed, "COMPLETE");
         editor_scroll_to_cursor(ed);
-        fprintf(g_dbg, "editor_scroll_to_cursor returned\n");
-        fprintf(g_dbg, "########## INSERT_CHAR COMPLETE ##########\n\n");
-        fflush(g_dbg);
         return;
     }
 
@@ -1356,10 +1265,8 @@ void editor_paste(Editor *ed) {
 void editor_undo(Editor *ed) {
     if (!ed || !undo_can_undo(ed->undo)) return;
 
-    FILE *dbg = fopen("/tmp/undo_debug.log", "a");
-
     int group_id = undo_peek_group(ed->undo);
-    if (dbg) fprintf(dbg, "\n=== UNDO group_id=%d ===\n", group_id);
+    debug_log("\n=== UNDO group_id=%d ===\n", group_id);
 
     if (group_id != 0) {
         /* Grouped operations: collect all ops in this group first */
@@ -1370,13 +1277,13 @@ void editor_undo(Editor *ed) {
         while (op_count < 256 && undo_peek_group(ed->undo) == group_id) {
             UndoOp *op = undo_pop(ed->undo);
             if (!op) break;
-            if (dbg) fprintf(dbg, "  Popped[%d]: type=%s pos=%zu len=%zu\n",
+            debug_log("  Popped[%d]: type=%s pos=%zu len=%zu\n",
                     op_count, op->type == UNDO_INSERT ? "INSERT" : "DELETE",
                     op->pos, op->length);
             ops[op_count++] = op;
         }
 
-        if (dbg) fprintf(dbg, "  Total ops: %d\n", op_count);
+        debug_log("  Total ops: %d\n", op_count);
 
         /* Calculate current positions.
          * ops[] are in REVERSE order of application (LIFO).
@@ -1388,28 +1295,28 @@ void editor_undo(Editor *ed) {
         for (int i = 0; i < op_count; i++) {
             current_pos[i] = (size_t)((long)ops[i]->pos + cumulative);
             if (ops[i]->type == UNDO_INSERT) {
-                if (dbg) fprintf(dbg, "  calc[%d] INSERT: pos=%zu + cum=%ld = %zu; cum+=%zu\n",
-                        i, ops[i]->pos, cumulative, current_pos[i], ops[i]->length);
+                debug_log("  calc[%d] INSERT: pos=%zu + cum=%ld = %zu\n",
+                        i, ops[i]->pos, cumulative, current_pos[i]);
                 cumulative += (long)ops[i]->length;  /* This insert shifted later ops up */
             } else {
-                if (dbg) fprintf(dbg, "  calc[%d] DELETE: pos=%zu + cum=%ld = %zu; cum-=%zu\n",
-                        i, ops[i]->pos, cumulative, current_pos[i], ops[i]->length);
+                debug_log("  calc[%d] DELETE: pos=%zu + cum=%ld = %zu\n",
+                        i, ops[i]->pos, cumulative, current_pos[i]);
                 cumulative -= (long)ops[i]->length;  /* This delete shifted later ops down */
             }
         }
 
-        if (dbg) fprintf(dbg, "  Applying in reverse order:\n");
+        debug_log("  Applying in reverse order:\n");
 
         /* Apply in REVERSE order (high-to-low current positions) so that
          * each insert doesn't affect the positions of subsequent inserts. */
         for (int i = op_count - 1; i >= 0; i--) {
             UndoOp *op = ops[i];
             if (op->type == UNDO_INSERT) {
-                if (dbg) fprintf(dbg, "    [%d] Undo INSERT: delete at %zu len %zu\n",
+                debug_log("    [%d] Undo INSERT: delete at %zu len %zu\n",
                         i, current_pos[i], op->length);
                 buffer_delete_range(ed->buffer, current_pos[i], current_pos[i] + op->length);
             } else if (op->type == UNDO_DELETE) {
-                if (dbg) fprintf(dbg, "    [%d] Undo DELETE: insert at %zu len %zu\n",
+                debug_log("    [%d] Undo DELETE: insert at %zu len %zu\n",
                         i, current_pos[i], op->length);
                 buffer_insert_string(ed->buffer, current_pos[i], op->text, op->length);
             }
@@ -1420,14 +1327,13 @@ void editor_undo(Editor *ed) {
             ed->cursor_pos = ops[0]->cursor_pos;
         }
 
-        if (dbg) { fprintf(dbg, "  Done. cursor_pos=%zu\n", ed->cursor_pos); fclose(dbg); }
+        debug_log("  Done. cursor_pos=%zu\n", ed->cursor_pos);
 
         /* Free all ops */
         for (int i = 0; i < op_count; i++) {
             undo_op_free(ops[i]);
         }
     } else {
-        if (dbg) fclose(dbg);
         /* Single operation - just apply it directly */
         UndoOp *op = undo_pop(ed->undo);
         if (!op) return;

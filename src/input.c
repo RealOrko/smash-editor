@@ -1,4 +1,5 @@
 #include "smashedit.h"
+#include <stdarg.h>
 
 /* PDCurses extended key codes for Windows - from curses.h */
 #ifdef PDCURSES
@@ -91,6 +92,41 @@ void input_toggle_debug_mode(void) {
 
 int input_is_debug_mode(void) {
     return debug_key_mode;
+}
+
+/* Debug logging - only active when debug mode is enabled */
+#define SMASHEDIT_DEBUG_LOG "/tmp/smashedit-debug.log"
+static FILE *debug_file = NULL;
+
+void debug_log(const char *fmt, ...) {
+    if (!debug_key_mode) return;
+
+    if (!debug_file) {
+        debug_file = fopen(SMASHEDIT_DEBUG_LOG, "a");
+        if (!debug_file) return;
+    }
+
+    va_list args;
+    va_start(args, fmt);
+    vfprintf(debug_file, fmt, args);
+    va_end(args);
+    fflush(debug_file);
+}
+
+void debug_log_state(Editor *ed, const char *label) {
+    if (!debug_key_mode || !ed) return;
+
+    debug_log("=== STATE: %s ===\n", label);
+    debug_log("  buffer=%p length=%zu\n", (void*)ed->buffer,
+              ed->buffer ? buffer_get_length(ed->buffer) : 0);
+    debug_log("  cursor_pos=%zu\n", ed->cursor_pos);
+    debug_log("  selection.active=%d count=%d\n", ed->selection.active, ed->selection.count);
+    for (int i = 0; i < ed->selection.count && i < 10; i++) {
+        debug_log("    range[%d]: start=%zu end=%zu cursor=%zu\n", i,
+                  ed->selection.ranges[i].start, ed->selection.ranges[i].end,
+                  ed->selection.ranges[i].cursor);
+    }
+    debug_log("=== END STATE ===\n");
 }
 
 bool input_is_alt_key(int *key) {
