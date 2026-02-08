@@ -26,7 +26,7 @@
 #define TAB_WIDTH 2
 
 /* Undo stack size */
-#define MAX_UNDO_LEVELS 100
+#define MAX_UNDO_LEVELS 1024
 
 /* Color pairs */
 #define COLOR_EDITOR 1      /* White on blue - main editor */

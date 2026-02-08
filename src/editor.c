@@ -1288,12 +1288,32 @@ void editor_cut(Editor *ed) {
 }
 
 void editor_copy(Editor *ed) {
-    if (!ed || !editor_has_selection(ed)) return;
+    if (!ed || !ed->buffer) return;
 
-    char *text = editor_get_selection(ed);
-    if (text) {
-        clipboard_set(ed->clipboard, text, strlen(text));
-        free(text);
+    if (editor_has_selection(ed)) {
+        /* Copy selection */
+        char *text = editor_get_selection(ed);
+        if (text) {
+            clipboard_set(ed->clipboard, text, strlen(text));
+            free(text);
+        }
+    } else {
+        /* No selection - copy entire line */
+        size_t line_start = buffer_line_start(ed->buffer, ed->cursor_pos);
+        size_t line_end = buffer_line_end(ed->buffer, ed->cursor_pos);
+
+        /* Include the newline if present */
+        if (line_end < buffer_get_length(ed->buffer)) {
+            line_end++;
+        }
+
+        if (line_start < line_end) {
+            char *text = buffer_get_range(ed->buffer, line_start, line_end);
+            if (text) {
+                clipboard_set(ed->clipboard, text, line_end - line_start);
+                free(text);
+            }
+        }
     }
 }
 
