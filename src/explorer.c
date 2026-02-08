@@ -5,6 +5,10 @@
 #include <wchar.h>
 #include <strings.h>
 
+/* Remember last location and selection */
+static char last_explorer_path[MAX_PATH_LENGTH] = "";
+static char last_selected_name[256] = "";
+
 static void draw_wchar_explorer(int y, int x, wchar_t wc) {
     cchar_t cc;
     wchar_t wstr[2] = {wc, L'\0'};
@@ -66,6 +70,16 @@ static void explorer_read_directory(ExplorerState *state) {
     /* Reset selection and scroll */
     state->selected_index = 0;
     state->scroll_offset = 0;
+}
+
+static void explorer_select_by_name(ExplorerState *state, const char *name) {
+    if (!name || !name[0]) return;
+    for (int i = 0; i < state->entry_count; i++) {
+        if (strcmp(state->entries[i].name, name) == 0) {
+            state->selected_index = i;
+            return;
+        }
+    }
 }
 
 static void explorer_filter_and_select(ExplorerState *state) {
@@ -254,12 +268,20 @@ bool explorer_open(Editor *ed) {
     ExplorerState state;
     memset(&state, 0, sizeof(state));
 
-    /* Get current working directory */
-    if (getcwd(state.current_path, sizeof(state.current_path)) == NULL) {
+    /* Use remembered path if available, otherwise get current working directory */
+    if (last_explorer_path[0] != '\0') {
+        strncpy(state.current_path, last_explorer_path, sizeof(state.current_path) - 1);
+        state.current_path[sizeof(state.current_path) - 1] = '\0';
+    } else if (getcwd(state.current_path, sizeof(state.current_path)) == NULL) {
         strcpy(state.current_path, "/");
     }
 
     explorer_read_directory(&state);
+
+    /* Try to restore last selection */
+    if (last_selected_name[0] != '\0') {
+        explorer_select_by_name(&state, last_selected_name);
+    }
 
     curs_set(0);  /* Hide cursor */
 
@@ -382,6 +404,13 @@ bool explorer_open(Editor *ed) {
                                 snprintf(full_path, sizeof(full_path), "/%s", entry->name);
                             }
                             if (file_load(ed, full_path)) {
+                                /* Remember path and selection for next time */
+                                strncpy(last_explorer_path, state.current_path,
+                                        sizeof(last_explorer_path) - 1);
+                                last_explorer_path[sizeof(last_explorer_path) - 1] = '\0';
+                                strncpy(last_selected_name, entry->name,
+                                        sizeof(last_selected_name) - 1);
+                                last_selected_name[sizeof(last_selected_name) - 1] = '\0';
                                 file_opened = true;
                                 running = false;
                             }
@@ -401,6 +430,15 @@ bool explorer_open(Editor *ed) {
                 break;
 
             case 27:  /* Escape */
+                /* Remember location for next time even when canceling */
+                strncpy(last_explorer_path, state.current_path,
+                        sizeof(last_explorer_path) - 1);
+                last_explorer_path[sizeof(last_explorer_path) - 1] = '\0';
+                if (state.entry_count > 0 && state.selected_index < state.entry_count) {
+                    strncpy(last_selected_name, state.entries[state.selected_index].name,
+                            sizeof(last_selected_name) - 1);
+                    last_selected_name[sizeof(last_selected_name) - 1] = '\0';
+                }
                 running = false;
                 break;
 
