@@ -448,8 +448,8 @@ void dialog_about(Editor *ed) {
     int rows, cols;
     getmaxyx(stdscr, rows, cols);
 
-    int dialog_width = 45;
-    int dialog_height = 10;
+    int dialog_width = 55;
+    int dialog_height = 12;
     int dialog_x = (cols - dialog_width) / 2;
     int dialog_y = (rows - dialog_height) / 2;
 
@@ -458,10 +458,13 @@ void dialog_about(Editor *ed) {
     dialog_draw_box(dialog_y, dialog_x, dialog_height, dialog_width, "About SmashEdit");
 
     attron(COLOR_PAIR(COLOR_DIALOG));
-    mvprintw(dialog_y + 2, dialog_x + 8, "SmashEdit v%s", SMASHEDIT_VERSION);
-    mvprintw(dialog_y + 4, dialog_x + 5, "A terminal text editor inspired by");
-    mvprintw(dialog_y + 5, dialog_x + 11, "MS-DOS EDIT");
-    mvprintw(dialog_y + 7, dialog_x + 8, "Press any key to continue");
+    mvprintw(dialog_y + 2, dialog_x + (dialog_width - 14 - strlen(SMASHEDIT_VERSION)) / 2,
+             "SmashEdit v%s", SMASHEDIT_VERSION);
+    mvprintw(dialog_y + 4, dialog_x + (dialog_width - 34) / 2,
+             "A terminal text editor inspired by");
+    mvprintw(dialog_y + 5, dialog_x + (dialog_width - 11) / 2, "MS-DOS EDIT");
+    mvprintw(dialog_y + 7, dialog_x + 2, "%s", SMASHEDIT_GITHUB_URL);
+    mvprintw(dialog_y + 9, dialog_x + (dialog_width - 25) / 2, "Press any key to continue");
     attroff(COLOR_PAIR(COLOR_DIALOG));
 
     refresh();

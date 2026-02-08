@@ -15,18 +15,23 @@
 #include <locale.h>
 #include <wchar.h>
 
-/* Version */
+/* Version - defined by CMake, fallback for non-CMake builds */
+#ifndef SMASHEDIT_VERSION
 #define SMASHEDIT_VERSION "1.0.0"
+#endif
+
+/* GitHub repository URL */
+#define SMASHEDIT_GITHUB_URL "https://github.com/RealOrko/smash-editor"
 
 /* Buffer constants */
 #define INITIAL_GAP_SIZE 1024
 #define GAP_INCREMENT 1024
-#define MAX_LINE_LENGTH 4096
-#define MAX_FILENAME 256
+#define MAX_LINE_LENGTH 16384
+#define MAX_FILENAME 4096
 #define TAB_WIDTH 2
 
 /* Undo stack size */
-#define MAX_UNDO_LEVELS 1024
+#define MAX_UNDO_LEVELS 16384
 
 /* Color pairs */
 #define COLOR_EDITOR 1      /* White on blue - main editor */

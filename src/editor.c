@@ -803,6 +803,7 @@ void editor_delete_char(Editor *ed) {
             if (start > buf_len) start = buf_len;
             if (end > buf_len) end = buf_len;
 
+            int deleted_len = 0;
             if (end > start) {
                 /* Delete selection content */
                 char *deleted = buffer_get_range(ed->buffer, start, end);
@@ -811,27 +812,34 @@ void editor_delete_char(Editor *ed) {
                     free(deleted);
                 }
                 buffer_delete_range(ed->buffer, start, end);
+                deleted_len = (int)(end - start);
             } else if (start < buf_len) {
                 /* Zero-width cursor: delete char forward */
                 char c = buffer_get_char(ed->buffer, start);
                 char str[2] = {c, '\0'};
                 undo_record_delete(ed->undo, start, str, 1, start);
                 buffer_delete_char(ed->buffer, start);
+                deleted_len = 1;
             }
 
             new_positions[valid_count++] = start;
+
+            /* Shift all previously-processed (higher) positions down */
+            for (int k = 0; k < valid_count - 1; k++) {
+                new_positions[k] -= deleted_len;
+            }
         }
 
         /* End undo group */
         undo_end_group(ed->undo);
 
         /* Update ranges */
+        ed->selection.count = valid_count;
         for (int i = 0; i < valid_count; i++) {
             ed->selection.ranges[i].start = new_positions[i];
             ed->selection.ranges[i].end = new_positions[i];
             ed->selection.ranges[i].cursor = new_positions[i];
         }
-        ed->selection.count = valid_count;
 
         if (valid_count > 0) {
             ed->cursor_pos = new_positions[valid_count - 1];
@@ -907,6 +915,7 @@ void editor_backspace(Editor *ed) {
             if (start > buf_len) start = buf_len;
             if (end > buf_len) end = buf_len;
 
+            int deleted_len = 0;
             if (end > start) {
                 /* Delete selection content */
                 char *deleted = buffer_get_range(ed->buffer, start, end);
@@ -915,6 +924,7 @@ void editor_backspace(Editor *ed) {
                     free(deleted);
                 }
                 buffer_delete_range(ed->buffer, start, end);
+                deleted_len = (int)(end - start);
                 new_positions[valid_count++] = start;
             } else if (start > 0) {
                 /* Zero-width cursor: delete char backward */
@@ -923,7 +933,13 @@ void editor_backspace(Editor *ed) {
                 char str[2] = {c, '\0'};
                 undo_record_delete(ed->undo, start, str, 1, start + 1);
                 buffer_delete_char(ed->buffer, start);
+                deleted_len = 1;
                 new_positions[valid_count++] = start;
+            }
+
+            /* Shift all previously-processed (higher) positions down */
+            for (int k = 0; k < valid_count - 1; k++) {
+                new_positions[k] -= deleted_len;
             }
         }
 
@@ -931,12 +947,12 @@ void editor_backspace(Editor *ed) {
         undo_end_group(ed->undo);
 
         /* Update ranges */
+        ed->selection.count = valid_count;
         for (int i = 0; i < valid_count; i++) {
             ed->selection.ranges[i].start = new_positions[i];
             ed->selection.ranges[i].end = new_positions[i];
             ed->selection.ranges[i].cursor = new_positions[i];
         }
-        ed->selection.count = valid_count;
 
         if (valid_count > 0) {
             ed->cursor_pos = new_positions[valid_count - 1];

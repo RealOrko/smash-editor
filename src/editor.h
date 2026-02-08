@@ -26,7 +26,7 @@ typedef struct SelectionRange {
 } SelectionRange;
 
 /* Selection state - supports multiple selections */
-#define MAX_SELECTIONS 1024
+#define MAX_SELECTIONS 16384
 
 typedef struct Selection {
     bool active;

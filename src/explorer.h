@@ -9,7 +9,7 @@
 struct Editor;
 
 /* Maximum entries and path length */
-#define MAX_EXPLORER_ENTRIES 1024
+#define MAX_EXPLORER_ENTRIES 8192
 #define MAX_PATH_LENGTH 4096
 #define FILTER_BUFFER_SIZE 64
 #define FILTER_TIMEOUT_SECS 2

@@ -70,22 +70,28 @@ static void explorer_read_directory(ExplorerState *state) {
 
 static void explorer_filter_and_select(ExplorerState *state) {
     if (state->filter_length == 0) return;
+    if (state->entry_count == 0) return;
 
     size_t filter_len = (size_t)state->filter_length;
 
-    /* First, try to match directories */
-    for (int i = 0; i < state->entry_count; i++) {
-        if (state->entries[i].is_directory &&
-            strncasecmp(state->entries[i].name, state->filter_buffer, filter_len) == 0) {
+    /* If continuing to type (not first char), stay on current if it still matches */
+    if (state->filter_length > 1 &&
+        strncasecmp(state->entries[state->selected_index].name,
+                    state->filter_buffer, filter_len) == 0) {
+        return;
+    }
+
+    /* First char or current doesn't match: find next match from selected_index + 1 */
+    for (int i = state->selected_index + 1; i < state->entry_count; i++) {
+        if (strncasecmp(state->entries[i].name, state->filter_buffer, filter_len) == 0) {
             state->selected_index = i;
             return;
         }
     }
 
-    /* If no directory match, try files */
-    for (int i = 0; i < state->entry_count; i++) {
-        if (!state->entries[i].is_directory &&
-            strncasecmp(state->entries[i].name, state->filter_buffer, filter_len) == 0) {
+    /* Wrap around: search from beginning to selected_index */
+    for (int i = 0; i <= state->selected_index; i++) {
+        if (strncasecmp(state->entries[i].name, state->filter_buffer, filter_len) == 0) {
             state->selected_index = i;
             return;
         }

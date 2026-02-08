@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 project(smashedit C)
 
+# Version - can be overridden via -DSMASHEDIT_VERSION=x.x.x
+set(SMASHEDIT_VERSION "1.0.0" CACHE STRING "SmashEdit version string")
+message(STATUS "Building SmashEdit version: ${SMASHEDIT_VERSION}")
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
@@ -121,6 +125,9 @@ endif()
 
 # Add required definitions for wide character support and signals
 target_compile_definitions(smashedit PRIVATE _XOPEN_SOURCE=700 _XOPEN_SOURCE_EXTENDED)
+
+# Pass version to source code
+target_compile_definitions(smashedit PRIVATE SMASHEDIT_VERSION="${SMASHEDIT_VERSION}")
 
 # Platform-specific definitions
 if(APPLE)
