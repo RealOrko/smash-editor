@@ -463,7 +463,8 @@ void dialog_about(Editor *ed) {
     mvprintw(dialog_y + 4, dialog_x + (dialog_width - 34) / 2,
              "A terminal text editor inspired by");
     mvprintw(dialog_y + 5, dialog_x + (dialog_width - 11) / 2, "MS-DOS EDIT");
-    mvprintw(dialog_y + 7, dialog_x + 2, "%s", SMASHEDIT_GITHUB_URL);
+    mvprintw(dialog_y + 7, dialog_x + (dialog_width - (int)strlen(SMASHEDIT_GITHUB_URL)) / 2,
+             "%s", SMASHEDIT_GITHUB_URL);
     mvprintw(dialog_y + 9, dialog_x + (dialog_width - 25) / 2, "Press any key to continue");
     attroff(COLOR_PAIR(COLOR_DIALOG));
 
