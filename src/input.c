@@ -609,6 +609,48 @@ static void input_handle_panel(Editor *ed, int key) {
             }
             break;
 
+        case KEY_F(2):  /* Rename file or folder */
+            if (state->entry_count > 0 && state->selected_index < state->entry_count) {
+                ExplorerEntry *entry = &state->entries[state->selected_index];
+                /* Don't rename ".." */
+                if (strcmp(entry->name, "..") != 0) {
+                    char new_name[256];
+                    strncpy(new_name, entry->name, sizeof(new_name) - 1);
+                    new_name[sizeof(new_name) - 1] = '\0';
+
+                    const char *title = entry->is_directory ? "Rename Folder" : "Rename File";
+                    DialogResult result = dialog_input(ed, title, "New name:", new_name, sizeof(new_name));
+
+                    if (result == DIALOG_OK && new_name[0] && strcmp(new_name, entry->name) != 0) {
+                        char old_path[MAX_PATH_LENGTH];
+                        char new_path[MAX_PATH_LENGTH];
+                        size_t path_len = strlen(state->current_path);
+
+                        if (path_len > 1) {
+                            snprintf(old_path, sizeof(old_path), "%s/%s",
+                                     state->current_path, entry->name);
+                            snprintf(new_path, sizeof(new_path), "%s/%s",
+                                     state->current_path, new_name);
+                        } else {
+                            snprintf(old_path, sizeof(old_path), "/%s", entry->name);
+                            snprintf(new_path, sizeof(new_path), "/%s", new_name);
+                        }
+
+                        /* Check if destination already exists */
+                        struct stat st;
+                        if (stat(new_path, &st) == 0) {
+                            editor_set_status_message(ed, "A file with that name already exists");
+                        } else if (rename(old_path, new_path) == 0) {
+                            editor_panel_read_directory(ed);
+                            editor_set_status_message(ed, "Renamed");
+                        } else {
+                            editor_set_status_message(ed, "Failed to rename");
+                        }
+                    }
+                }
+            }
+            break;
+
         case KEY_CTRL('c'):  /* Copy file/folder(s) */
         case KEY_CTRL('x'):  /* Cut file/folder(s) */
             {

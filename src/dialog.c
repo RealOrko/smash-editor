@@ -528,6 +528,7 @@ void dialog_shortcuts(Editor *ed) {
         "  Ctrl+X         Cut selected files",
         "  Ctrl+V         Paste files",
         "  Ctrl+N         Create new folder",
+        "  F2             Rename file/folder",
         "  Delete         Delete file/folder",
         "  Escape         Return focus to editor",
         "",
