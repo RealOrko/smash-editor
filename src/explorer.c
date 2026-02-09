@@ -920,6 +920,21 @@ bool explorer_open(Editor *ed) {
                 }
                 break;
 
+            case KEY_CTRL('a'):  /* Select all files/folders */
+                if (state.entry_count > 0) {
+                    /* Start from first non-".." entry */
+                    state.selection_anchor = (strcmp(state.entries[0].name, "..") == 0) ? 1 : 0;
+                    /* Only select if there are actual files (not just "..") */
+                    if (state.selection_anchor < state.entry_count) {
+                        state.selected_index = state.entry_count - 1;
+                        state.filter_buffer[0] = '\0';
+                        state.filter_length = 0;
+                    } else {
+                        state.selection_anchor = -1;
+                    }
+                }
+                break;
+
             default:
                 /* Type-ahead filtering */
                 if (key >= 32 && key < 127) {
