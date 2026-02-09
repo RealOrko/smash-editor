@@ -481,6 +481,7 @@ static void display_draw_hex_editor(Editor *ed) {
         attron(COLOR_PAIR(COLOR_EDITOR));
     }
 
+    attrset(A_NORMAL);
     attroff(COLOR_PAIR(COLOR_EDITOR));
 }
 
@@ -625,6 +626,8 @@ void display_draw_editor(Editor *ed) {
         attron(COLOR_PAIR(COLOR_EDITOR));
     }
 
+    /* Reset all attributes to prevent bleeding into other UI elements */
+    attrset(A_NORMAL);
     attroff(COLOR_PAIR(COLOR_EDITOR));
 
     /* Position cursor */
@@ -757,6 +760,7 @@ void display_refresh(Editor *ed) {
             addch(' ');
         }
     }
+    attrset(A_NORMAL);
     attroff(COLOR_PAIR(COLOR_EDITOR));
 
     display_draw_menubar(ed);
