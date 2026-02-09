@@ -154,6 +154,52 @@ static const char *get_basename(const char *path) {
     return base ? base + 1 : path;
 }
 
+/* Generate unique destination path by adding (1), (2), etc. if file exists */
+static void make_unique_path(char *dst_path, size_t dst_size, const char *dir, const char *basename) {
+    struct stat st;
+
+    /* Try original name first */
+    if (strlen(dir) > 1) {
+        snprintf(dst_path, dst_size, "%s/%s", dir, basename);
+    } else {
+        snprintf(dst_path, dst_size, "/%s", basename);
+    }
+
+    if (stat(dst_path, &st) != 0) {
+        return;  /* Original name is available */
+    }
+
+    /* Find extension */
+    const char *ext = strrchr(basename, '.');
+    char name_part[256];
+    char ext_part[64] = "";
+
+    if (ext && ext != basename) {
+        size_t name_len = ext - basename;
+        if (name_len >= sizeof(name_part)) name_len = sizeof(name_part) - 1;
+        strncpy(name_part, basename, name_len);
+        name_part[name_len] = '\0';
+        strncpy(ext_part, ext, sizeof(ext_part) - 1);
+        ext_part[sizeof(ext_part) - 1] = '\0';
+    } else {
+        strncpy(name_part, basename, sizeof(name_part) - 1);
+        name_part[sizeof(name_part) - 1] = '\0';
+    }
+
+    /* Try numbered versions */
+    for (int i = 1; i < 1000; i++) {
+        if (strlen(dir) > 1) {
+            snprintf(dst_path, dst_size, "%s/%s (%d)%s", dir, name_part, i, ext_part);
+        } else {
+            snprintf(dst_path, dst_size, "/%s (%d)%s", name_part, i, ext_part);
+        }
+        if (stat(dst_path, &st) != 0) {
+            return;  /* Found available name */
+        }
+    }
+    /* If we get here, just use original (will fail) */
+}
+
 /* Copy a single file */
 static bool copy_file(const char *src, const char *dst) {
     FILE *in = fopen(src, "rb");
@@ -621,19 +667,25 @@ static void input_handle_panel(Editor *ed, int key) {
 
                     const char *basename = get_basename(src_path);
                     char dst_path[4096];
-                    size_t path_len = strlen(state->current_path);
-                    if (path_len > 1) {
-                        snprintf(dst_path, sizeof(dst_path), "%s/%s",
-                                 state->current_path, basename);
-                    } else {
-                        snprintf(dst_path, sizeof(dst_path), "/%s", basename);
-                    }
 
-                    /* Check if destination already exists */
-                    struct stat st;
-                    if (stat(dst_path, &st) == 0) {
-                        fail_count++;
-                        continue;
+                    if (ed->file_clipboard_is_cut) {
+                        /* For cut/move, use exact name (fail if exists) */
+                        size_t path_len = strlen(state->current_path);
+                        if (path_len > 1) {
+                            snprintf(dst_path, sizeof(dst_path), "%s/%s",
+                                     state->current_path, basename);
+                        } else {
+                            snprintf(dst_path, sizeof(dst_path), "/%s", basename);
+                        }
+                        struct stat st;
+                        if (stat(dst_path, &st) == 0) {
+                            fail_count++;
+                            continue;
+                        }
+                    } else {
+                        /* For copy, auto-number if exists */
+                        make_unique_path(dst_path, sizeof(dst_path),
+                                        state->current_path, basename);
                     }
 
                     bool success = false;
