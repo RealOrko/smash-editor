@@ -574,36 +574,88 @@ static void input_handle_panel(Editor *ed, int key) {
             }
             break;
 
-        case KEY_DC:  /* Delete file or folder */
+        case KEY_DC:  /* Delete file(s) or folder(s) */
             if (state->entry_count > 0 && state->selected_index < state->entry_count) {
-                ExplorerEntry *entry = &state->entries[state->selected_index];
-                /* Don't delete ".." */
-                if (strcmp(entry->name, "..") != 0) {
+                /* Determine selection range */
+                int sel_start, sel_end;
+                if (state->selection_anchor >= 0) {
+                    sel_start = state->selection_anchor < state->selected_index ?
+                                state->selection_anchor : state->selected_index;
+                    sel_end = state->selection_anchor > state->selected_index ?
+                              state->selection_anchor : state->selected_index;
+                } else {
+                    sel_start = sel_end = state->selected_index;
+                }
+
+                /* Count items to delete (excluding "..") */
+                int delete_count = 0;
+                for (int i = sel_start; i <= sel_end; i++) {
+                    if (strcmp(state->entries[i].name, "..") != 0) {
+                        delete_count++;
+                    }
+                }
+
+                if (delete_count > 0) {
                     char msg[300];
-                    snprintf(msg, sizeof(msg), "Delete '%s'?", entry->name);
-                    const char *title = entry->is_directory ? "Delete Folder" : "Delete File";
+                    const char *title;
+                    if (delete_count == 1) {
+                        /* Find the single item */
+                        for (int i = sel_start; i <= sel_end; i++) {
+                            if (strcmp(state->entries[i].name, "..") != 0) {
+                                snprintf(msg, sizeof(msg), "Delete '%s'?", state->entries[i].name);
+                                title = state->entries[i].is_directory ? "Delete Folder" : "Delete File";
+                                break;
+                            }
+                        }
+                    } else {
+                        snprintf(msg, sizeof(msg), "Delete %d items?", delete_count);
+                        title = "Delete Multiple Items";
+                    }
+
                     DialogResult result = dialog_confirm(ed, title, msg);
                     if (result == DIALOG_YES) {
-                        char full_path[MAX_PATH_LENGTH];
-                        size_t path_len = strlen(state->current_path);
-                        if (path_len > 1) {
-                            snprintf(full_path, sizeof(full_path), "%s/%s",
-                                     state->current_path, entry->name);
-                        } else {
-                            snprintf(full_path, sizeof(full_path), "/%s", entry->name);
+                        int success_count = 0;
+                        int fail_count = 0;
+
+                        for (int i = sel_start; i <= sel_end; i++) {
+                            ExplorerEntry *entry = &state->entries[i];
+                            if (strcmp(entry->name, "..") == 0) continue;
+
+                            char full_path[MAX_PATH_LENGTH];
+                            size_t path_len = strlen(state->current_path);
+                            if (path_len > 1) {
+                                snprintf(full_path, sizeof(full_path), "%s/%s",
+                                         state->current_path, entry->name);
+                            } else {
+                                snprintf(full_path, sizeof(full_path), "/%s", entry->name);
+                            }
+
+                            bool success;
+                            if (entry->is_directory) {
+                                success = delete_directory_recursive(full_path);
+                            } else {
+                                success = (remove(full_path) == 0);
+                            }
+
+                            if (success) {
+                                success_count++;
+                            } else {
+                                fail_count++;
+                            }
                         }
-                        bool success;
-                        if (entry->is_directory) {
-                            success = delete_directory_recursive(full_path);
+
+                        editor_panel_read_directory(ed);
+                        state->selection_anchor = -1;
+
+                        char status_msg[64];
+                        if (fail_count == 0) {
+                            snprintf(status_msg, sizeof(status_msg), "%d item%s deleted",
+                                     success_count, success_count > 1 ? "s" : "");
                         } else {
-                            success = (remove(full_path) == 0);
+                            snprintf(status_msg, sizeof(status_msg), "%d deleted, %d failed",
+                                     success_count, fail_count);
                         }
-                        if (success) {
-                            editor_panel_read_directory(ed);
-                            editor_set_status_message(ed, entry->is_directory ? "Folder deleted" : "File deleted");
-                        } else {
-                            editor_set_status_message(ed, entry->is_directory ? "Failed to delete folder" : "Failed to delete file");
-                        }
+                        editor_set_status_message(ed, status_msg);
                     }
                 }
             }
