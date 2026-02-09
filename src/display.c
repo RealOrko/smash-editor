@@ -501,6 +501,7 @@ void display_draw_editor(Editor *ed) {
     bool use_syntax = ed->syntax_enabled && ed->syntax_lang != LANG_NONE;
     HighlightState hl_state = HL_STATE_NORMAL;
     TokenType line_tokens[MAX_LINE_LENGTH];
+    memset(line_tokens, TOKEN_NORMAL, sizeof(line_tokens));
 
     /* Fill background */
     attron(COLOR_PAIR(COLOR_EDITOR));
@@ -555,6 +556,7 @@ void display_draw_editor(Editor *ed) {
         size_t line_char_idx = 0;
 
         if (use_syntax) {
+            memset(line_tokens, TOKEN_NORMAL, sizeof(line_tokens));
             syntax_highlight_line(ed->buffer, line_start, line_end, ed->syntax_lang,
                                   &hl_state, line_tokens, MAX_LINE_LENGTH);
         }
@@ -576,7 +578,7 @@ void display_draw_editor(Editor *ed) {
                 char_color = syntax_token_to_color(line_tokens[line_char_idx]);
                 char_attr = syntax_token_to_attr(line_tokens[line_char_idx]);
             }
-            attron(COLOR_PAIR(char_color) | char_attr);
+            attrset(COLOR_PAIR(char_color) | char_attr);
 
             /* Decode UTF-8 character */
             wchar_t wc;
