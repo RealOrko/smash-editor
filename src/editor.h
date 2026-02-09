@@ -101,6 +101,11 @@ typedef struct Editor {
     bool panel_visible;         /* Side panel shown */
     bool panel_focused;         /* Panel has input focus */
     ExplorerState *panel_state; /* Panel file browser state */
+
+    /* File clipboard for explorer operations */
+    char file_clipboard_path[4096];  /* Path of copied/cut file */
+    bool file_clipboard_is_cut;      /* true = cut (move), false = copy */
+    bool file_clipboard_is_dir;      /* true if directory */
 } Editor;
 
 /* Editor lifecycle */

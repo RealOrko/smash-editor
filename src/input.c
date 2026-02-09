@@ -3,6 +3,8 @@
 #include <strings.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <dirent.h>
+#include <errno.h>
 
 /* PDCurses extended key codes for Windows - from curses.h */
 #ifdef PDCURSES
@@ -144,6 +146,139 @@ bool input_is_alt_key(int *key) {
         }
     }
     return false;
+}
+
+/* Get basename from path */
+static const char *get_basename(const char *path) {
+    const char *base = strrchr(path, '/');
+    return base ? base + 1 : path;
+}
+
+/* Copy a single file */
+static bool copy_file(const char *src, const char *dst) {
+    FILE *in = fopen(src, "rb");
+    if (!in) return false;
+
+    FILE *out = fopen(dst, "wb");
+    if (!out) {
+        fclose(in);
+        return false;
+    }
+
+    char buf[8192];
+    size_t n;
+    bool success = true;
+
+    while ((n = fread(buf, 1, sizeof(buf), in)) > 0) {
+        if (fwrite(buf, 1, n, out) != n) {
+            success = false;
+            break;
+        }
+    }
+
+    fclose(in);
+    fclose(out);
+
+    /* Preserve permissions */
+    if (success) {
+        struct stat st;
+        if (stat(src, &st) == 0) {
+            chmod(dst, st.st_mode);
+        }
+    }
+
+    return success;
+}
+
+/* Forward declaration for recursive copy */
+static bool copy_directory_recursive(const char *src, const char *dst);
+
+/* Copy directory recursively */
+static bool copy_directory_recursive(const char *src, const char *dst) {
+    struct stat st;
+    if (stat(src, &st) != 0) return false;
+
+    /* Create destination directory */
+    if (mkdir(dst, st.st_mode) != 0 && errno != EEXIST) {
+        return false;
+    }
+
+    DIR *dir = opendir(src);
+    if (!dir) return false;
+
+    struct dirent *entry;
+    bool success = true;
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        char src_path[4096], dst_path[4096];
+        snprintf(src_path, sizeof(src_path), "%s/%s", src, entry->d_name);
+        snprintf(dst_path, sizeof(dst_path), "%s/%s", dst, entry->d_name);
+
+        struct stat entry_st;
+        if (stat(src_path, &entry_st) != 0) {
+            success = false;
+            continue;
+        }
+
+        if (S_ISDIR(entry_st.st_mode)) {
+            if (!copy_directory_recursive(src_path, dst_path)) {
+                success = false;
+            }
+        } else {
+            if (!copy_file(src_path, dst_path)) {
+                success = false;
+            }
+        }
+    }
+
+    closedir(dir);
+    return success;
+}
+
+/* Delete directory recursively */
+static bool delete_directory_recursive(const char *path) {
+    DIR *dir = opendir(path);
+    if (!dir) return false;
+
+    struct dirent *entry;
+    bool success = true;
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        char full_path[4096];
+        snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
+
+        struct stat st;
+        if (stat(full_path, &st) != 0) {
+            success = false;
+            continue;
+        }
+
+        if (S_ISDIR(st.st_mode)) {
+            if (!delete_directory_recursive(full_path)) {
+                success = false;
+            }
+        } else {
+            if (remove(full_path) != 0) {
+                success = false;
+            }
+        }
+    }
+
+    closedir(dir);
+
+    if (success) {
+        success = (rmdir(path) == 0);
+    }
+
+    return success;
 }
 
 /* Handle panel navigation and filter timeout */
@@ -390,6 +525,104 @@ static void input_handle_panel(Editor *ed, int key) {
                             editor_set_status_message(ed, entry->is_directory ? "Failed to delete folder (not empty?)" : "Failed to delete file");
                         }
                     }
+                }
+            }
+            break;
+
+        case KEY_CTRL('c'):  /* Copy file/folder */
+            if (state->entry_count > 0 && state->selected_index < state->entry_count) {
+                ExplorerEntry *entry = &state->entries[state->selected_index];
+                if (strcmp(entry->name, "..") != 0) {
+                    size_t path_len = strlen(state->current_path);
+                    if (path_len > 1) {
+                        snprintf(ed->file_clipboard_path, sizeof(ed->file_clipboard_path),
+                                 "%s/%s", state->current_path, entry->name);
+                    } else {
+                        snprintf(ed->file_clipboard_path, sizeof(ed->file_clipboard_path),
+                                 "/%s", entry->name);
+                    }
+                    ed->file_clipboard_is_cut = false;
+                    ed->file_clipboard_is_dir = entry->is_directory;
+                    editor_set_status_message(ed, entry->is_directory ? "Folder copied" : "File copied");
+                }
+            }
+            break;
+
+        case KEY_CTRL('x'):  /* Cut file/folder */
+            if (state->entry_count > 0 && state->selected_index < state->entry_count) {
+                ExplorerEntry *entry = &state->entries[state->selected_index];
+                if (strcmp(entry->name, "..") != 0) {
+                    size_t path_len = strlen(state->current_path);
+                    if (path_len > 1) {
+                        snprintf(ed->file_clipboard_path, sizeof(ed->file_clipboard_path),
+                                 "%s/%s", state->current_path, entry->name);
+                    } else {
+                        snprintf(ed->file_clipboard_path, sizeof(ed->file_clipboard_path),
+                                 "/%s", entry->name);
+                    }
+                    ed->file_clipboard_is_cut = true;
+                    ed->file_clipboard_is_dir = entry->is_directory;
+                    editor_set_status_message(ed, entry->is_directory ? "Folder cut" : "File cut");
+                }
+            }
+            break;
+
+        case KEY_CTRL('v'):  /* Paste file/folder */
+            if (ed->file_clipboard_path[0]) {
+                const char *basename = get_basename(ed->file_clipboard_path);
+                char dst_path[4096];
+                size_t path_len = strlen(state->current_path);
+                if (path_len > 1) {
+                    snprintf(dst_path, sizeof(dst_path), "%s/%s",
+                             state->current_path, basename);
+                } else {
+                    snprintf(dst_path, sizeof(dst_path), "/%s", basename);
+                }
+
+                /* Check if destination already exists */
+                struct stat st;
+                if (stat(dst_path, &st) == 0) {
+                    editor_set_status_message(ed, "Destination already exists");
+                    break;
+                }
+
+                bool success = false;
+                if (ed->file_clipboard_is_cut) {
+                    /* Move (rename) */
+                    if (rename(ed->file_clipboard_path, dst_path) == 0) {
+                        success = true;
+                        ed->file_clipboard_path[0] = '\0';  /* Clear clipboard after cut */
+                    } else if (errno == EXDEV) {
+                        /* Cross-device move: copy then delete */
+                        if (ed->file_clipboard_is_dir) {
+                            success = copy_directory_recursive(ed->file_clipboard_path, dst_path);
+                            if (success) {
+                                delete_directory_recursive(ed->file_clipboard_path);
+                            }
+                        } else {
+                            success = copy_file(ed->file_clipboard_path, dst_path);
+                            if (success) {
+                                remove(ed->file_clipboard_path);
+                            }
+                        }
+                        if (success) {
+                            ed->file_clipboard_path[0] = '\0';
+                        }
+                    }
+                } else {
+                    /* Copy */
+                    if (ed->file_clipboard_is_dir) {
+                        success = copy_directory_recursive(ed->file_clipboard_path, dst_path);
+                    } else {
+                        success = copy_file(ed->file_clipboard_path, dst_path);
+                    }
+                }
+
+                if (success) {
+                    editor_panel_read_directory(ed);
+                    editor_set_status_message(ed, ed->file_clipboard_is_cut ? "Moved" : "Pasted");
+                } else {
+                    editor_set_status_message(ed, "Paste failed");
                 }
             }
             break;
