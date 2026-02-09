@@ -92,6 +92,11 @@ bool file_save_to(Editor *ed, const char *filename) {
     ed->filename[MAX_FILENAME - 1] = '\0';
     ed->modified = false;
 
+    /* Refresh file panel if visible */
+    if (ed->panel_visible && ed->panel_state) {
+        editor_panel_read_directory(ed);
+    }
+
     editor_set_status_message(ed, "File saved");
     return true;
 }

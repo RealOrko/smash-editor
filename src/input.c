@@ -1,6 +1,8 @@
 #include "smashedit.h"
 #include <stdarg.h>
 #include <strings.h>
+#include <unistd.h>
+#include <sys/stat.h>
 
 /* PDCurses extended key codes for Windows - from curses.h */
 #ifdef PDCURSES
@@ -332,6 +334,64 @@ static void input_handle_panel(Editor *ed, int key) {
 
         case KEY_BTAB:  /* Shift+Tab to switch focus back to editor */
             ed->panel_focused = false;
+            break;
+
+        case KEY_CTRL('n'):  /* Ctrl+N or Ctrl+Shift+N - New folder */
+            {
+                char folder_name[256] = "";
+                DialogResult result = dialog_input(ed, "New Folder", "Folder name:", folder_name, sizeof(folder_name));
+                if (result == DIALOG_OK && folder_name[0]) {
+                    char full_path[MAX_PATH_LENGTH];
+                    size_t path_len = strlen(state->current_path);
+                    if (path_len > 1) {
+                        snprintf(full_path, sizeof(full_path), "%s/%s",
+                                 state->current_path, folder_name);
+                    } else {
+                        snprintf(full_path, sizeof(full_path), "/%s", folder_name);
+                    }
+                    if (mkdir(full_path, 0755) == 0) {
+                        editor_panel_read_directory(ed);
+                        editor_set_status_message(ed, "Folder created");
+                    } else {
+                        editor_set_status_message(ed, "Failed to create folder");
+                    }
+                }
+            }
+            break;
+
+        case KEY_DC:  /* Delete file or folder */
+            if (state->entry_count > 0 && state->selected_index < state->entry_count) {
+                ExplorerEntry *entry = &state->entries[state->selected_index];
+                /* Don't delete ".." */
+                if (strcmp(entry->name, "..") != 0) {
+                    char msg[300];
+                    snprintf(msg, sizeof(msg), "Delete '%s'?", entry->name);
+                    const char *title = entry->is_directory ? "Delete Folder" : "Delete File";
+                    DialogResult result = dialog_confirm(ed, title, msg);
+                    if (result == DIALOG_YES) {
+                        char full_path[MAX_PATH_LENGTH];
+                        size_t path_len = strlen(state->current_path);
+                        if (path_len > 1) {
+                            snprintf(full_path, sizeof(full_path), "%s/%s",
+                                     state->current_path, entry->name);
+                        } else {
+                            snprintf(full_path, sizeof(full_path), "/%s", entry->name);
+                        }
+                        int result_code;
+                        if (entry->is_directory) {
+                            result_code = rmdir(full_path);
+                        } else {
+                            result_code = remove(full_path);
+                        }
+                        if (result_code == 0) {
+                            editor_panel_read_directory(ed);
+                            editor_set_status_message(ed, entry->is_directory ? "Folder deleted" : "File deleted");
+                        } else {
+                            editor_set_status_message(ed, entry->is_directory ? "Failed to delete folder (not empty?)" : "Failed to delete file");
+                        }
+                    }
+                }
+            }
             break;
 
         default:

@@ -501,35 +501,42 @@ void editor_move_doc_end(Editor *ed) {
     editor_scroll_to_cursor(ed);
 }
 
+/* Check if character is a word character (alphanumeric) */
+static bool is_word_char(char c) {
+    return (c >= 'a' && c <= 'z') ||
+           (c >= 'A' && c <= 'Z') ||
+           (c >= '0' && c <= '9');
+}
+
 void editor_move_word_left(Editor *ed) {
     if (!ed || !ed->buffer || ed->cursor_pos == 0) return;
 
     size_t pos = ed->cursor_pos;
 
-    /* Check if we're at the start of a word (previous char is whitespace or we're at position 0) */
-    bool at_word_start = (pos == 0) ||
-                         isspace(buffer_get_char(ed->buffer, pos - 1)) ||
-                         (pos < buffer_get_length(ed->buffer) &&
-                          !isspace(buffer_get_char(ed->buffer, pos)) &&
-                          isspace(buffer_get_char(ed->buffer, pos - 1)));
+    /* Check if we're in a word (previous char is word char) */
+    bool prev_is_word = (pos > 0 && is_word_char(buffer_get_char(ed->buffer, pos - 1)));
 
-    /* Check if we're in whitespace */
-    bool in_whitespace = (pos > 0 && pos <= buffer_get_length(ed->buffer) &&
-                          (pos == buffer_get_length(ed->buffer) ||
-                           isspace(buffer_get_char(ed->buffer, pos))));
-
-    if (at_word_start || in_whitespace) {
-        /* Skip whitespace backwards */
-        while (ed->cursor_pos > 0 && isspace(buffer_get_char(ed->buffer, ed->cursor_pos - 1))) {
+    if (prev_is_word) {
+        /* Move to start of current word */
+        while (ed->cursor_pos > 0 && is_word_char(buffer_get_char(ed->buffer, ed->cursor_pos - 1))) {
             ed->cursor_pos--;
         }
-        /* Skip word characters backwards to get to start of previous word */
-        while (ed->cursor_pos > 0 && !isspace(buffer_get_char(ed->buffer, ed->cursor_pos - 1))) {
-            ed->cursor_pos--;
+        /* If selecting, stop at word start */
+        if (ed->selection.active) {
+            editor_update_selection(ed);
+            editor_scroll_to_cursor(ed);
+            return;
         }
-    } else {
-        /* We're in the middle of a word - go to start of current word */
-        while (ed->cursor_pos > 0 && !isspace(buffer_get_char(ed->buffer, ed->cursor_pos - 1))) {
+    }
+
+    /* Skip non-word characters backwards */
+    while (ed->cursor_pos > 0 && !is_word_char(buffer_get_char(ed->buffer, ed->cursor_pos - 1))) {
+        ed->cursor_pos--;
+    }
+
+    /* If not selecting, also move to start of previous word */
+    if (!ed->selection.active) {
+        while (ed->cursor_pos > 0 && is_word_char(buffer_get_char(ed->buffer, ed->cursor_pos - 1))) {
             ed->cursor_pos--;
         }
     }
@@ -546,18 +553,24 @@ void editor_move_word_right(Editor *ed) {
 
     if (ed->cursor_pos >= len) return;
 
-    /* Check if we're in a word (current char is not whitespace) */
-    bool in_word = !isspace(buffer_get_char(ed->buffer, ed->cursor_pos));
+    /* Check if we're in a word (current char is alphanumeric) */
+    bool in_word = is_word_char(buffer_get_char(ed->buffer, ed->cursor_pos));
 
     if (in_word) {
         /* Move past end of current word */
-        while (ed->cursor_pos < len && !isspace(buffer_get_char(ed->buffer, ed->cursor_pos))) {
+        while (ed->cursor_pos < len && is_word_char(buffer_get_char(ed->buffer, ed->cursor_pos))) {
             ed->cursor_pos++;
+        }
+        /* If selecting, stop at word end */
+        if (ed->selection.active) {
+            editor_update_selection(ed);
+            editor_scroll_to_cursor(ed);
+            return;
         }
     }
 
-    /* Skip whitespace to get to start of next word */
-    while (ed->cursor_pos < len && isspace(buffer_get_char(ed->buffer, ed->cursor_pos))) {
+    /* Skip non-word characters to get to start of next word */
+    while (ed->cursor_pos < len && !is_word_char(buffer_get_char(ed->buffer, ed->cursor_pos))) {
         ed->cursor_pos++;
     }
 
@@ -1033,18 +1046,18 @@ void editor_select_word(Editor *ed) {
     size_t pos = ed->cursor_pos;
     if (pos >= len) pos = len - 1;
 
-    /* If on whitespace, don't select */
-    if (isspace(buffer_get_char(ed->buffer, pos))) return;
+    /* If not on a word character, don't select */
+    if (!is_word_char(buffer_get_char(ed->buffer, pos))) return;
 
     /* Find word start */
     size_t start = pos;
-    while (start > 0 && !isspace(buffer_get_char(ed->buffer, start - 1))) {
+    while (start > 0 && is_word_char(buffer_get_char(ed->buffer, start - 1))) {
         start--;
     }
 
     /* Find word end */
     size_t end = pos;
-    while (end < len && !isspace(buffer_get_char(ed->buffer, end))) {
+    while (end < len && is_word_char(buffer_get_char(ed->buffer, end))) {
         end++;
     }
 
