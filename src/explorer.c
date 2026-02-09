@@ -773,6 +773,9 @@ bool explorer_open(Editor *ed) {
                                  is_cut ? "cut" : "copied");
                         editor_set_status_message(ed, msg);
                     }
+
+                    /* Clear multi-selection after copy/cut */
+                    state.selection_anchor = -1;
                 }
                 break;
 
