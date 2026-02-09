@@ -354,7 +354,6 @@ static void input_handle_hex(Editor *ed, int key) {
 
     switch (key) {
         /* Exit hex mode */
-        case KEY_F(4):
         case 27:  /* Escape */
             ed->hex_mode = false;
             break;
@@ -636,9 +635,30 @@ void input_handle(Editor *ed, MenuState *menu) {
         return;
     }
 
-    /* Check for Ctrl+Alt+E to open file explorer (ncurses) */
+    /* Check for Ctrl+Alt+E to toggle file panel (ncurses) */
     if (is_alt && key == KEY_CTRL('e')) {
-        explorer_open(ed);
+        ed->panel_visible = !ed->panel_visible;
+        if (ed->panel_visible) {
+            if (!ed->panel_state || ed->panel_state->entry_count == 0) {
+                editor_panel_init(ed);
+            }
+            ed->panel_focused = true;
+        } else {
+            ed->panel_focused = false;
+        }
+        editor_update_dimensions(ed);
+        return;
+    }
+
+    /* Check for Ctrl+Alt+H to toggle hex mode (ncurses) */
+    if (is_alt && key == KEY_CTRL('h')) {
+        ed->hex_mode = !ed->hex_mode;
+        if (ed->hex_mode) {
+            ed->hex_nibble = 0;
+            ed->hex_cursor_in_ascii = false;
+            ed->hex_scroll = (ed->cursor_pos / 16) * 16;
+            editor_clear_selection(ed);
+        }
         return;
     }
 
@@ -859,28 +879,6 @@ void input_handle(Editor *ed, MenuState *menu) {
             input_toggle_debug_mode();
             break;
 
-        case KEY_F(4):  /* Toggle hex mode */
-            ed->hex_mode = !ed->hex_mode;
-            if (ed->hex_mode) {
-                ed->hex_nibble = 0;
-                ed->hex_cursor_in_ascii = false;
-                ed->hex_scroll = (ed->cursor_pos / 16) * 16;
-                editor_clear_selection(ed);
-            }
-            break;
-
-        case KEY_F(5):  /* Toggle file panel */
-            ed->panel_visible = !ed->panel_visible;
-            if (ed->panel_visible) {
-                if (!ed->panel_state || ed->panel_state->entry_count == 0) {
-                    editor_panel_init(ed);
-                }
-                ed->panel_focused = true;  /* Focus panel when shown */
-            } else {
-                ed->panel_focused = false;  /* Focus editor when hidden */
-            }
-            editor_update_dimensions(ed);
-            break;
 
         /* Shift+Arrow for selection */
         case KEY_SLEFT:
