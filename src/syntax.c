@@ -28,10 +28,31 @@ static const char *pascal_extensions[] = {".pas", ".pp", ".dpr", ".lpr", NULL};
 static const char *ada_extensions[] = {".adb", ".ads", ".ada", NULL};
 static const char *powershell_extensions[] = {".ps1", ".psm1", ".psd1", NULL};
 static const char *json_extensions[] = {".json", ".jsonc", NULL};
-static const char *docker_extensions[] = {NULL}; /* Dockerfile detected by name */
+/* Dockerfile detected by name, no extension array needed */
 static const char *html_extensions[] = {".html", ".htm", ".xhtml", ".xml", ".svg", NULL};
 static const char *typescript_extensions[] = {".ts", ".tsx", ".mts", ".cts", NULL};
 static const char *terraform_extensions[] = {".tf", ".tfvars", ".hcl", NULL};
+static const char *php_extensions[] = {".php", ".phtml", ".php3", ".php4", ".php5", ".php7", ".phps", NULL};
+static const char *kotlin_extensions[] = {".kt", ".kts", NULL};
+static const char *swift_extensions[] = {".swift", NULL};
+static const char *scala_extensions[] = {".scala", ".sc", NULL};
+static const char *elixir_extensions[] = {".ex", ".exs", NULL};
+static const char *erlang_extensions[] = {".erl", ".hrl", NULL};
+static const char *r_extensions[] = {".r", ".R", ".Rmd", NULL};
+static const char *julia_extensions[] = {".jl", NULL};
+static const char *zig_extensions[] = {".zig", NULL};
+static const char *nim_extensions[] = {".nim", ".nims", NULL};
+static const char *dart_extensions[] = {".dart", NULL};
+static const char *ocaml_extensions[] = {".ml", ".mli", NULL};
+static const char *fsharp_extensions[] = {".fs", ".fsi", ".fsx", NULL};
+static const char *groovy_extensions[] = {".groovy", ".gradle", ".gvy", NULL};
+static const char *prolog_extensions[] = {".pro", ".P", ".prolog", NULL};
+static const char *verilog_extensions[] = {".v", ".sv", ".svh", NULL};
+static const char *vhdl_extensions[] = {".vhd", ".vhdl", NULL};
+static const char *latex_extensions[] = {".tex", ".sty", ".cls", NULL};
+/* nginx detected by filename (nginx.conf etc), no extension array needed */
+/* apache detected by filename (.htaccess etc), no extension array needed */
+static const char *ini_extensions[] = {".ini", ".cfg", ".conf", ".desktop", NULL};
 
 /* Keyword structure */
 typedef struct {
@@ -757,6 +778,787 @@ static const Keyword terraform_keywords[] = {
     {NULL, TOKEN_NORMAL}
 };
 
+/* PHP keywords */
+static const Keyword php_keywords[] = {
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD}, {"elseif", TOKEN_KEYWORD},
+    {"for", TOKEN_KEYWORD}, {"foreach", TOKEN_KEYWORD}, {"while", TOKEN_KEYWORD},
+    {"do", TOKEN_KEYWORD}, {"switch", TOKEN_KEYWORD}, {"case", TOKEN_KEYWORD},
+    {"break", TOKEN_KEYWORD}, {"continue", TOKEN_KEYWORD}, {"return", TOKEN_KEYWORD},
+    {"default", TOKEN_KEYWORD}, {"match", TOKEN_KEYWORD}, {"throw", TOKEN_KEYWORD},
+    {"try", TOKEN_KEYWORD}, {"catch", TOKEN_KEYWORD}, {"finally", TOKEN_KEYWORD},
+    /* Keywords */
+    {"function", TOKEN_KEYWORD}, {"class", TOKEN_KEYWORD}, {"interface", TOKEN_KEYWORD},
+    {"trait", TOKEN_KEYWORD}, {"extends", TOKEN_KEYWORD}, {"implements", TOKEN_KEYWORD},
+    {"public", TOKEN_KEYWORD}, {"private", TOKEN_KEYWORD}, {"protected", TOKEN_KEYWORD},
+    {"static", TOKEN_KEYWORD}, {"final", TOKEN_KEYWORD}, {"abstract", TOKEN_KEYWORD},
+    {"const", TOKEN_KEYWORD}, {"new", TOKEN_KEYWORD}, {"clone", TOKEN_KEYWORD},
+    {"instanceof", TOKEN_KEYWORD}, {"namespace", TOKEN_KEYWORD}, {"use", TOKEN_KEYWORD},
+    {"as", TOKEN_KEYWORD}, {"echo", TOKEN_KEYWORD}, {"print", TOKEN_KEYWORD},
+    {"require", TOKEN_KEYWORD}, {"require_once", TOKEN_KEYWORD},
+    {"include", TOKEN_KEYWORD}, {"include_once", TOKEN_KEYWORD},
+    {"global", TOKEN_KEYWORD}, {"isset", TOKEN_KEYWORD}, {"unset", TOKEN_KEYWORD},
+    {"empty", TOKEN_KEYWORD}, {"die", TOKEN_KEYWORD}, {"exit", TOKEN_KEYWORD},
+    {"fn", TOKEN_KEYWORD}, {"enum", TOKEN_KEYWORD}, {"readonly", TOKEN_KEYWORD},
+    /* Types */
+    {"int", TOKEN_TYPE}, {"float", TOKEN_TYPE}, {"string", TOKEN_TYPE},
+    {"bool", TOKEN_TYPE}, {"array", TOKEN_TYPE}, {"object", TOKEN_TYPE},
+    {"mixed", TOKEN_TYPE}, {"void", TOKEN_TYPE}, {"null", TOKEN_TYPE},
+    {"true", TOKEN_TYPE}, {"false", TOKEN_TYPE}, {"callable", TOKEN_TYPE},
+    {"iterable", TOKEN_TYPE}, {"self", TOKEN_TYPE}, {"parent", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* Kotlin keywords */
+static const Keyword kotlin_keywords[] = {
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD}, {"when", TOKEN_KEYWORD},
+    {"for", TOKEN_KEYWORD}, {"while", TOKEN_KEYWORD}, {"do", TOKEN_KEYWORD},
+    {"break", TOKEN_KEYWORD}, {"continue", TOKEN_KEYWORD}, {"return", TOKEN_KEYWORD},
+    {"throw", TOKEN_KEYWORD}, {"try", TOKEN_KEYWORD}, {"catch", TOKEN_KEYWORD},
+    {"finally", TOKEN_KEYWORD},
+    /* Keywords */
+    {"fun", TOKEN_KEYWORD}, {"val", TOKEN_KEYWORD}, {"var", TOKEN_KEYWORD},
+    {"class", TOKEN_KEYWORD}, {"interface", TOKEN_KEYWORD}, {"object", TOKEN_KEYWORD},
+    {"package", TOKEN_KEYWORD}, {"import", TOKEN_KEYWORD}, {"typealias", TOKEN_KEYWORD},
+    {"this", TOKEN_KEYWORD}, {"super", TOKEN_KEYWORD}, {"null", TOKEN_KEYWORD},
+    {"true", TOKEN_KEYWORD}, {"false", TOKEN_KEYWORD}, {"is", TOKEN_KEYWORD},
+    {"in", TOKEN_KEYWORD}, {"as", TOKEN_KEYWORD}, {"constructor", TOKEN_KEYWORD},
+    {"companion", TOKEN_KEYWORD}, {"init", TOKEN_KEYWORD}, {"get", TOKEN_KEYWORD},
+    {"set", TOKEN_KEYWORD}, {"by", TOKEN_KEYWORD}, {"where", TOKEN_KEYWORD},
+    /* Modifiers */
+    {"public", TOKEN_KEYWORD}, {"private", TOKEN_KEYWORD}, {"protected", TOKEN_KEYWORD},
+    {"internal", TOKEN_KEYWORD}, {"open", TOKEN_KEYWORD}, {"final", TOKEN_KEYWORD},
+    {"abstract", TOKEN_KEYWORD}, {"sealed", TOKEN_KEYWORD}, {"data", TOKEN_KEYWORD},
+    {"inline", TOKEN_KEYWORD}, {"noinline", TOKEN_KEYWORD}, {"crossinline", TOKEN_KEYWORD},
+    {"reified", TOKEN_KEYWORD}, {"suspend", TOKEN_KEYWORD}, {"override", TOKEN_KEYWORD},
+    {"lateinit", TOKEN_KEYWORD}, {"const", TOKEN_KEYWORD}, {"enum", TOKEN_KEYWORD},
+    {"annotation", TOKEN_KEYWORD}, {"vararg", TOKEN_KEYWORD}, {"tailrec", TOKEN_KEYWORD},
+    {"operator", TOKEN_KEYWORD}, {"infix", TOKEN_KEYWORD}, {"external", TOKEN_KEYWORD},
+    /* Types */
+    {"Int", TOKEN_TYPE}, {"Long", TOKEN_TYPE}, {"Short", TOKEN_TYPE},
+    {"Byte", TOKEN_TYPE}, {"Float", TOKEN_TYPE}, {"Double", TOKEN_TYPE},
+    {"Boolean", TOKEN_TYPE}, {"Char", TOKEN_TYPE}, {"String", TOKEN_TYPE},
+    {"Unit", TOKEN_TYPE}, {"Nothing", TOKEN_TYPE}, {"Any", TOKEN_TYPE},
+    {"Array", TOKEN_TYPE}, {"List", TOKEN_TYPE}, {"Map", TOKEN_TYPE},
+    {"Set", TOKEN_TYPE}, {"MutableList", TOKEN_TYPE}, {"MutableMap", TOKEN_TYPE},
+    {"MutableSet", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* Swift keywords */
+static const Keyword swift_keywords[] = {
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD}, {"guard", TOKEN_KEYWORD},
+    {"switch", TOKEN_KEYWORD}, {"case", TOKEN_KEYWORD}, {"default", TOKEN_KEYWORD},
+    {"for", TOKEN_KEYWORD}, {"while", TOKEN_KEYWORD}, {"repeat", TOKEN_KEYWORD},
+    {"break", TOKEN_KEYWORD}, {"continue", TOKEN_KEYWORD}, {"return", TOKEN_KEYWORD},
+    {"fallthrough", TOKEN_KEYWORD}, {"throw", TOKEN_KEYWORD}, {"throws", TOKEN_KEYWORD},
+    {"rethrows", TOKEN_KEYWORD}, {"try", TOKEN_KEYWORD}, {"catch", TOKEN_KEYWORD},
+    {"defer", TOKEN_KEYWORD}, {"do", TOKEN_KEYWORD}, {"where", TOKEN_KEYWORD},
+    /* Keywords */
+    {"func", TOKEN_KEYWORD}, {"let", TOKEN_KEYWORD}, {"var", TOKEN_KEYWORD},
+    {"class", TOKEN_KEYWORD}, {"struct", TOKEN_KEYWORD}, {"enum", TOKEN_KEYWORD},
+    {"protocol", TOKEN_KEYWORD}, {"extension", TOKEN_KEYWORD}, {"typealias", TOKEN_KEYWORD},
+    {"import", TOKEN_KEYWORD}, {"init", TOKEN_KEYWORD}, {"deinit", TOKEN_KEYWORD},
+    {"self", TOKEN_KEYWORD}, {"Self", TOKEN_KEYWORD}, {"super", TOKEN_KEYWORD},
+    {"nil", TOKEN_KEYWORD}, {"true", TOKEN_KEYWORD}, {"false", TOKEN_KEYWORD},
+    {"is", TOKEN_KEYWORD}, {"as", TOKEN_KEYWORD}, {"in", TOKEN_KEYWORD},
+    {"subscript", TOKEN_KEYWORD}, {"operator", TOKEN_KEYWORD}, {"precedencegroup", TOKEN_KEYWORD},
+    {"associatedtype", TOKEN_KEYWORD}, {"some", TOKEN_KEYWORD}, {"any", TOKEN_KEYWORD},
+    /* Modifiers */
+    {"public", TOKEN_KEYWORD}, {"private", TOKEN_KEYWORD}, {"fileprivate", TOKEN_KEYWORD},
+    {"internal", TOKEN_KEYWORD}, {"open", TOKEN_KEYWORD}, {"final", TOKEN_KEYWORD},
+    {"static", TOKEN_KEYWORD}, {"override", TOKEN_KEYWORD}, {"required", TOKEN_KEYWORD},
+    {"convenience", TOKEN_KEYWORD}, {"lazy", TOKEN_KEYWORD}, {"weak", TOKEN_KEYWORD},
+    {"unowned", TOKEN_KEYWORD}, {"mutating", TOKEN_KEYWORD}, {"nonmutating", TOKEN_KEYWORD},
+    {"inout", TOKEN_KEYWORD}, {"indirect", TOKEN_KEYWORD}, {"async", TOKEN_KEYWORD},
+    {"await", TOKEN_KEYWORD}, {"actor", TOKEN_KEYWORD}, {"nonisolated", TOKEN_KEYWORD},
+    /* Types */
+    {"Int", TOKEN_TYPE}, {"Int8", TOKEN_TYPE}, {"Int16", TOKEN_TYPE},
+    {"Int32", TOKEN_TYPE}, {"Int64", TOKEN_TYPE}, {"UInt", TOKEN_TYPE},
+    {"Float", TOKEN_TYPE}, {"Double", TOKEN_TYPE}, {"Bool", TOKEN_TYPE},
+    {"String", TOKEN_TYPE}, {"Character", TOKEN_TYPE}, {"Array", TOKEN_TYPE},
+    {"Dictionary", TOKEN_TYPE}, {"Set", TOKEN_TYPE}, {"Optional", TOKEN_TYPE},
+    {"Any", TOKEN_TYPE}, {"AnyObject", TOKEN_TYPE}, {"Void", TOKEN_TYPE},
+    {"Never", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* Scala keywords */
+static const Keyword scala_keywords[] = {
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD}, {"match", TOKEN_KEYWORD},
+    {"case", TOKEN_KEYWORD}, {"for", TOKEN_KEYWORD}, {"while", TOKEN_KEYWORD},
+    {"do", TOKEN_KEYWORD}, {"return", TOKEN_KEYWORD}, {"throw", TOKEN_KEYWORD},
+    {"try", TOKEN_KEYWORD}, {"catch", TOKEN_KEYWORD}, {"finally", TOKEN_KEYWORD},
+    /* Keywords */
+    {"def", TOKEN_KEYWORD}, {"val", TOKEN_KEYWORD}, {"var", TOKEN_KEYWORD},
+    {"class", TOKEN_KEYWORD}, {"trait", TOKEN_KEYWORD}, {"object", TOKEN_KEYWORD},
+    {"extends", TOKEN_KEYWORD}, {"with", TOKEN_KEYWORD}, {"new", TOKEN_KEYWORD},
+    {"this", TOKEN_KEYWORD}, {"super", TOKEN_KEYWORD}, {"package", TOKEN_KEYWORD},
+    {"import", TOKEN_KEYWORD}, {"type", TOKEN_KEYWORD}, {"yield", TOKEN_KEYWORD},
+    {"lazy", TOKEN_KEYWORD}, {"implicit", TOKEN_KEYWORD}, {"override", TOKEN_KEYWORD},
+    {"abstract", TOKEN_KEYWORD}, {"final", TOKEN_KEYWORD}, {"sealed", TOKEN_KEYWORD},
+    {"private", TOKEN_KEYWORD}, {"protected", TOKEN_KEYWORD}, {"forSome", TOKEN_KEYWORD},
+    {"given", TOKEN_KEYWORD}, {"using", TOKEN_KEYWORD}, {"enum", TOKEN_KEYWORD},
+    {"then", TOKEN_KEYWORD}, {"export", TOKEN_KEYWORD}, {"extension", TOKEN_KEYWORD},
+    {"end", TOKEN_KEYWORD}, {"inline", TOKEN_KEYWORD}, {"opaque", TOKEN_KEYWORD},
+    {"transparent", TOKEN_KEYWORD}, {"derives", TOKEN_KEYWORD},
+    /* Values */
+    {"null", TOKEN_KEYWORD}, {"true", TOKEN_KEYWORD}, {"false", TOKEN_KEYWORD},
+    /* Types */
+    {"Int", TOKEN_TYPE}, {"Long", TOKEN_TYPE}, {"Short", TOKEN_TYPE},
+    {"Byte", TOKEN_TYPE}, {"Float", TOKEN_TYPE}, {"Double", TOKEN_TYPE},
+    {"Boolean", TOKEN_TYPE}, {"Char", TOKEN_TYPE}, {"String", TOKEN_TYPE},
+    {"Unit", TOKEN_TYPE}, {"Nothing", TOKEN_TYPE}, {"Any", TOKEN_TYPE},
+    {"AnyRef", TOKEN_TYPE}, {"AnyVal", TOKEN_TYPE}, {"Null", TOKEN_TYPE},
+    {"Option", TOKEN_TYPE}, {"Some", TOKEN_TYPE}, {"None", TOKEN_TYPE},
+    {"List", TOKEN_TYPE}, {"Seq", TOKEN_TYPE}, {"Map", TOKEN_TYPE},
+    {"Set", TOKEN_TYPE}, {"Vector", TOKEN_TYPE}, {"Array", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* Elixir keywords */
+static const Keyword elixir_keywords[] = {
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD}, {"unless", TOKEN_KEYWORD},
+    {"case", TOKEN_KEYWORD}, {"cond", TOKEN_KEYWORD}, {"with", TOKEN_KEYWORD},
+    {"for", TOKEN_KEYWORD}, {"raise", TOKEN_KEYWORD}, {"reraise", TOKEN_KEYWORD},
+    {"try", TOKEN_KEYWORD}, {"catch", TOKEN_KEYWORD}, {"rescue", TOKEN_KEYWORD},
+    {"after", TOKEN_KEYWORD}, {"receive", TOKEN_KEYWORD},
+    /* Keywords */
+    {"def", TOKEN_KEYWORD}, {"defp", TOKEN_KEYWORD}, {"defmodule", TOKEN_KEYWORD},
+    {"defmacro", TOKEN_KEYWORD}, {"defmacrop", TOKEN_KEYWORD}, {"defstruct", TOKEN_KEYWORD},
+    {"defprotocol", TOKEN_KEYWORD}, {"defimpl", TOKEN_KEYWORD}, {"defdelegate", TOKEN_KEYWORD},
+    {"defguard", TOKEN_KEYWORD}, {"defguardp", TOKEN_KEYWORD}, {"defexception", TOKEN_KEYWORD},
+    {"defoverridable", TOKEN_KEYWORD}, {"defcallback", TOKEN_KEYWORD},
+    {"do", TOKEN_KEYWORD}, {"end", TOKEN_KEYWORD}, {"fn", TOKEN_KEYWORD},
+    {"when", TOKEN_KEYWORD}, {"in", TOKEN_KEYWORD}, {"and", TOKEN_KEYWORD},
+    {"or", TOKEN_KEYWORD}, {"not", TOKEN_KEYWORD}, {"import", TOKEN_KEYWORD},
+    {"require", TOKEN_KEYWORD}, {"alias", TOKEN_KEYWORD}, {"use", TOKEN_KEYWORD},
+    {"quote", TOKEN_KEYWORD}, {"unquote", TOKEN_KEYWORD}, {"unquote_splicing", TOKEN_KEYWORD},
+    {"super", TOKEN_KEYWORD},
+    /* Values */
+    {"nil", TOKEN_KEYWORD}, {"true", TOKEN_KEYWORD}, {"false", TOKEN_KEYWORD},
+    /* Atoms/Types */
+    {":ok", TOKEN_TYPE}, {":error", TOKEN_TYPE}, {":atom", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* Erlang keywords */
+static const Keyword erlang_keywords[] = {
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"case", TOKEN_KEYWORD}, {"of", TOKEN_KEYWORD},
+    {"receive", TOKEN_KEYWORD}, {"after", TOKEN_KEYWORD}, {"when", TOKEN_KEYWORD},
+    {"try", TOKEN_KEYWORD}, {"catch", TOKEN_KEYWORD}, {"throw", TOKEN_KEYWORD},
+    {"begin", TOKEN_KEYWORD}, {"end", TOKEN_KEYWORD},
+    /* Keywords */
+    {"fun", TOKEN_KEYWORD}, {"let", TOKEN_KEYWORD}, {"query", TOKEN_KEYWORD},
+    {"and", TOKEN_KEYWORD}, {"andalso", TOKEN_KEYWORD}, {"band", TOKEN_KEYWORD},
+    {"bnot", TOKEN_KEYWORD}, {"bor", TOKEN_KEYWORD}, {"bsl", TOKEN_KEYWORD},
+    {"bsr", TOKEN_KEYWORD}, {"bxor", TOKEN_KEYWORD}, {"div", TOKEN_KEYWORD},
+    {"not", TOKEN_KEYWORD}, {"or", TOKEN_KEYWORD}, {"orelse", TOKEN_KEYWORD},
+    {"rem", TOKEN_KEYWORD}, {"xor", TOKEN_KEYWORD},
+    /* Directives */
+    {"-module", TOKEN_PREPROCESSOR}, {"-export", TOKEN_PREPROCESSOR},
+    {"-import", TOKEN_PREPROCESSOR}, {"-compile", TOKEN_PREPROCESSOR},
+    {"-define", TOKEN_PREPROCESSOR}, {"-include", TOKEN_PREPROCESSOR},
+    {"-record", TOKEN_PREPROCESSOR}, {"-spec", TOKEN_PREPROCESSOR},
+    {"-type", TOKEN_PREPROCESSOR}, {"-behaviour", TOKEN_PREPROCESSOR},
+    {"-callback", TOKEN_PREPROCESSOR}, {"-ifdef", TOKEN_PREPROCESSOR},
+    {"-ifndef", TOKEN_PREPROCESSOR}, {"-endif", TOKEN_PREPROCESSOR},
+    /* BIFs */
+    {"spawn", TOKEN_TYPE}, {"self", TOKEN_TYPE}, {"send", TOKEN_TYPE},
+    {"exit", TOKEN_TYPE}, {"link", TOKEN_TYPE}, {"unlink", TOKEN_TYPE},
+    {"register", TOKEN_TYPE}, {"whereis", TOKEN_TYPE}, {"process_flag", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* R keywords */
+static const Keyword r_keywords[] = {
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD}, {"for", TOKEN_KEYWORD},
+    {"while", TOKEN_KEYWORD}, {"repeat", TOKEN_KEYWORD}, {"break", TOKEN_KEYWORD},
+    {"next", TOKEN_KEYWORD}, {"return", TOKEN_KEYWORD}, {"in", TOKEN_KEYWORD},
+    /* Keywords */
+    {"function", TOKEN_KEYWORD}, {"library", TOKEN_KEYWORD}, {"require", TOKEN_KEYWORD},
+    {"source", TOKEN_KEYWORD}, {"setwd", TOKEN_KEYWORD}, {"getwd", TOKEN_KEYWORD},
+    /* Values */
+    {"TRUE", TOKEN_KEYWORD}, {"FALSE", TOKEN_KEYWORD}, {"NA", TOKEN_KEYWORD},
+    {"NULL", TOKEN_KEYWORD}, {"NaN", TOKEN_KEYWORD}, {"Inf", TOKEN_KEYWORD},
+    {"NA_integer_", TOKEN_KEYWORD}, {"NA_real_", TOKEN_KEYWORD},
+    {"NA_complex_", TOKEN_KEYWORD}, {"NA_character_", TOKEN_KEYWORD},
+    /* Common functions */
+    {"c", TOKEN_TYPE}, {"list", TOKEN_TYPE}, {"data.frame", TOKEN_TYPE},
+    {"matrix", TOKEN_TYPE}, {"array", TOKEN_TYPE}, {"vector", TOKEN_TYPE},
+    {"factor", TOKEN_TYPE}, {"print", TOKEN_TYPE}, {"cat", TOKEN_TYPE},
+    {"length", TOKEN_TYPE}, {"dim", TOKEN_TYPE}, {"nrow", TOKEN_TYPE},
+    {"ncol", TOKEN_TYPE}, {"class", TOKEN_TYPE}, {"typeof", TOKEN_TYPE},
+    {"sum", TOKEN_TYPE}, {"mean", TOKEN_TYPE}, {"median", TOKEN_TYPE},
+    {"sd", TOKEN_TYPE}, {"var", TOKEN_TYPE}, {"min", TOKEN_TYPE},
+    {"max", TOKEN_TYPE}, {"range", TOKEN_TYPE}, {"sort", TOKEN_TYPE},
+    {"order", TOKEN_TYPE}, {"unique", TOKEN_TYPE}, {"table", TOKEN_TYPE},
+    {"apply", TOKEN_TYPE}, {"lapply", TOKEN_TYPE}, {"sapply", TOKEN_TYPE},
+    {"mapply", TOKEN_TYPE}, {"tapply", TOKEN_TYPE}, {"vapply", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* Julia keywords */
+static const Keyword julia_keywords[] = {
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD}, {"elseif", TOKEN_KEYWORD},
+    {"for", TOKEN_KEYWORD}, {"while", TOKEN_KEYWORD}, {"break", TOKEN_KEYWORD},
+    {"continue", TOKEN_KEYWORD}, {"return", TOKEN_KEYWORD}, {"try", TOKEN_KEYWORD},
+    {"catch", TOKEN_KEYWORD}, {"finally", TOKEN_KEYWORD}, {"throw", TOKEN_KEYWORD},
+    {"begin", TOKEN_KEYWORD}, {"end", TOKEN_KEYWORD}, {"do", TOKEN_KEYWORD},
+    /* Keywords */
+    {"function", TOKEN_KEYWORD}, {"macro", TOKEN_KEYWORD}, {"module", TOKEN_KEYWORD},
+    {"baremodule", TOKEN_KEYWORD}, {"struct", TOKEN_KEYWORD}, {"mutable", TOKEN_KEYWORD},
+    {"abstract", TOKEN_KEYWORD}, {"primitive", TOKEN_KEYWORD}, {"type", TOKEN_KEYWORD},
+    {"const", TOKEN_KEYWORD}, {"global", TOKEN_KEYWORD}, {"local", TOKEN_KEYWORD},
+    {"let", TOKEN_KEYWORD}, {"import", TOKEN_KEYWORD}, {"using", TOKEN_KEYWORD},
+    {"export", TOKEN_KEYWORD}, {"where", TOKEN_KEYWORD}, {"in", TOKEN_KEYWORD},
+    {"isa", TOKEN_KEYWORD}, {"quote", TOKEN_KEYWORD},
+    /* Values */
+    {"true", TOKEN_KEYWORD}, {"false", TOKEN_KEYWORD}, {"nothing", TOKEN_KEYWORD},
+    {"missing", TOKEN_KEYWORD},
+    /* Types */
+    {"Int", TOKEN_TYPE}, {"Int8", TOKEN_TYPE}, {"Int16", TOKEN_TYPE},
+    {"Int32", TOKEN_TYPE}, {"Int64", TOKEN_TYPE}, {"Int128", TOKEN_TYPE},
+    {"UInt", TOKEN_TYPE}, {"UInt8", TOKEN_TYPE}, {"UInt16", TOKEN_TYPE},
+    {"UInt32", TOKEN_TYPE}, {"UInt64", TOKEN_TYPE}, {"UInt128", TOKEN_TYPE},
+    {"Float16", TOKEN_TYPE}, {"Float32", TOKEN_TYPE}, {"Float64", TOKEN_TYPE},
+    {"Bool", TOKEN_TYPE}, {"Char", TOKEN_TYPE}, {"String", TOKEN_TYPE},
+    {"Any", TOKEN_TYPE}, {"Union", TOKEN_TYPE}, {"Nothing", TOKEN_TYPE},
+    {"Missing", TOKEN_TYPE}, {"Tuple", TOKEN_TYPE}, {"NamedTuple", TOKEN_TYPE},
+    {"Array", TOKEN_TYPE}, {"Vector", TOKEN_TYPE}, {"Matrix", TOKEN_TYPE},
+    {"Dict", TOKEN_TYPE}, {"Set", TOKEN_TYPE}, {"Symbol", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* Zig keywords */
+static const Keyword zig_keywords[] = {
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD}, {"switch", TOKEN_KEYWORD},
+    {"for", TOKEN_KEYWORD}, {"while", TOKEN_KEYWORD}, {"break", TOKEN_KEYWORD},
+    {"continue", TOKEN_KEYWORD}, {"return", TOKEN_KEYWORD}, {"unreachable", TOKEN_KEYWORD},
+    {"orelse", TOKEN_KEYWORD}, {"catch", TOKEN_KEYWORD}, {"try", TOKEN_KEYWORD},
+    /* Keywords */
+    {"fn", TOKEN_KEYWORD}, {"pub", TOKEN_KEYWORD}, {"const", TOKEN_KEYWORD},
+    {"var", TOKEN_KEYWORD}, {"struct", TOKEN_KEYWORD}, {"enum", TOKEN_KEYWORD},
+    {"union", TOKEN_KEYWORD}, {"error", TOKEN_KEYWORD}, {"test", TOKEN_KEYWORD},
+    {"comptime", TOKEN_KEYWORD}, {"inline", TOKEN_KEYWORD}, {"noinline", TOKEN_KEYWORD},
+    {"extern", TOKEN_KEYWORD}, {"export", TOKEN_KEYWORD}, {"usingnamespace", TOKEN_KEYWORD},
+    {"defer", TOKEN_KEYWORD}, {"errdefer", TOKEN_KEYWORD}, {"async", TOKEN_KEYWORD},
+    {"await", TOKEN_KEYWORD}, {"suspend", TOKEN_KEYWORD}, {"resume", TOKEN_KEYWORD},
+    {"nosuspend", TOKEN_KEYWORD}, {"threadlocal", TOKEN_KEYWORD},
+    {"packed", TOKEN_KEYWORD}, {"opaque", TOKEN_KEYWORD}, {"align", TOKEN_KEYWORD},
+    {"allowzero", TOKEN_KEYWORD}, {"anytype", TOKEN_KEYWORD}, {"asm", TOKEN_KEYWORD},
+    {"volatile", TOKEN_KEYWORD}, {"linksection", TOKEN_KEYWORD}, {"callconv", TOKEN_KEYWORD},
+    /* Values */
+    {"true", TOKEN_KEYWORD}, {"false", TOKEN_KEYWORD}, {"null", TOKEN_KEYWORD},
+    {"undefined", TOKEN_KEYWORD},
+    /* Types */
+    {"i8", TOKEN_TYPE}, {"i16", TOKEN_TYPE}, {"i32", TOKEN_TYPE},
+    {"i64", TOKEN_TYPE}, {"i128", TOKEN_TYPE}, {"isize", TOKEN_TYPE},
+    {"u8", TOKEN_TYPE}, {"u16", TOKEN_TYPE}, {"u32", TOKEN_TYPE},
+    {"u64", TOKEN_TYPE}, {"u128", TOKEN_TYPE}, {"usize", TOKEN_TYPE},
+    {"f16", TOKEN_TYPE}, {"f32", TOKEN_TYPE}, {"f64", TOKEN_TYPE},
+    {"f80", TOKEN_TYPE}, {"f128", TOKEN_TYPE}, {"bool", TOKEN_TYPE},
+    {"void", TOKEN_TYPE}, {"noreturn", TOKEN_TYPE}, {"type", TOKEN_TYPE},
+    {"anyerror", TOKEN_TYPE}, {"anyframe", TOKEN_TYPE}, {"comptime_int", TOKEN_TYPE},
+    {"comptime_float", TOKEN_TYPE}, {"c_short", TOKEN_TYPE}, {"c_int", TOKEN_TYPE},
+    {"c_long", TOKEN_TYPE}, {"c_longlong", TOKEN_TYPE}, {"c_char", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* Nim keywords */
+static const Keyword nim_keywords[] = {
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"elif", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD},
+    {"case", TOKEN_KEYWORD}, {"of", TOKEN_KEYWORD}, {"for", TOKEN_KEYWORD},
+    {"while", TOKEN_KEYWORD}, {"break", TOKEN_KEYWORD}, {"continue", TOKEN_KEYWORD},
+    {"return", TOKEN_KEYWORD}, {"try", TOKEN_KEYWORD}, {"except", TOKEN_KEYWORD},
+    {"finally", TOKEN_KEYWORD}, {"raise", TOKEN_KEYWORD}, {"yield", TOKEN_KEYWORD},
+    {"when", TOKEN_KEYWORD}, {"block", TOKEN_KEYWORD},
+    /* Keywords */
+    {"proc", TOKEN_KEYWORD}, {"func", TOKEN_KEYWORD}, {"method", TOKEN_KEYWORD},
+    {"iterator", TOKEN_KEYWORD}, {"converter", TOKEN_KEYWORD}, {"macro", TOKEN_KEYWORD},
+    {"template", TOKEN_KEYWORD}, {"type", TOKEN_KEYWORD}, {"object", TOKEN_KEYWORD},
+    {"tuple", TOKEN_KEYWORD}, {"enum", TOKEN_KEYWORD}, {"concept", TOKEN_KEYWORD},
+    {"var", TOKEN_KEYWORD}, {"let", TOKEN_KEYWORD}, {"const", TOKEN_KEYWORD},
+    {"import", TOKEN_KEYWORD}, {"from", TOKEN_KEYWORD}, {"export", TOKEN_KEYWORD},
+    {"include", TOKEN_KEYWORD}, {"as", TOKEN_KEYWORD}, {"using", TOKEN_KEYWORD},
+    {"bind", TOKEN_KEYWORD}, {"mixin", TOKEN_KEYWORD}, {"static", TOKEN_KEYWORD},
+    {"ref", TOKEN_KEYWORD}, {"ptr", TOKEN_KEYWORD}, {"addr", TOKEN_KEYWORD},
+    {"defer", TOKEN_KEYWORD}, {"discard", TOKEN_KEYWORD}, {"distinct", TOKEN_KEYWORD},
+    {"and", TOKEN_KEYWORD}, {"or", TOKEN_KEYWORD}, {"not", TOKEN_KEYWORD},
+    {"xor", TOKEN_KEYWORD}, {"shl", TOKEN_KEYWORD}, {"shr", TOKEN_KEYWORD},
+    {"div", TOKEN_KEYWORD}, {"mod", TOKEN_KEYWORD}, {"in", TOKEN_KEYWORD},
+    {"notin", TOKEN_KEYWORD}, {"is", TOKEN_KEYWORD}, {"isnot", TOKEN_KEYWORD},
+    {"interface", TOKEN_KEYWORD}, {"asm", TOKEN_KEYWORD}, {"out", TOKEN_KEYWORD},
+    /* Values */
+    {"true", TOKEN_KEYWORD}, {"false", TOKEN_KEYWORD}, {"nil", TOKEN_KEYWORD},
+    /* Types */
+    {"int", TOKEN_TYPE}, {"int8", TOKEN_TYPE}, {"int16", TOKEN_TYPE},
+    {"int32", TOKEN_TYPE}, {"int64", TOKEN_TYPE}, {"uint", TOKEN_TYPE},
+    {"uint8", TOKEN_TYPE}, {"uint16", TOKEN_TYPE}, {"uint32", TOKEN_TYPE},
+    {"uint64", TOKEN_TYPE}, {"float", TOKEN_TYPE}, {"float32", TOKEN_TYPE},
+    {"float64", TOKEN_TYPE}, {"bool", TOKEN_TYPE}, {"char", TOKEN_TYPE},
+    {"string", TOKEN_TYPE}, {"cstring", TOKEN_TYPE}, {"pointer", TOKEN_TYPE},
+    {"void", TOKEN_TYPE}, {"auto", TOKEN_TYPE}, {"any", TOKEN_TYPE},
+    {"seq", TOKEN_TYPE}, {"array", TOKEN_TYPE}, {"set", TOKEN_TYPE},
+    {"Table", TOKEN_TYPE}, {"OrderedTable", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* Dart keywords */
+static const Keyword dart_keywords[] = {
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD}, {"for", TOKEN_KEYWORD},
+    {"while", TOKEN_KEYWORD}, {"do", TOKEN_KEYWORD}, {"switch", TOKEN_KEYWORD},
+    {"case", TOKEN_KEYWORD}, {"default", TOKEN_KEYWORD}, {"break", TOKEN_KEYWORD},
+    {"continue", TOKEN_KEYWORD}, {"return", TOKEN_KEYWORD}, {"throw", TOKEN_KEYWORD},
+    {"try", TOKEN_KEYWORD}, {"catch", TOKEN_KEYWORD}, {"finally", TOKEN_KEYWORD},
+    {"on", TOKEN_KEYWORD}, {"rethrow", TOKEN_KEYWORD}, {"assert", TOKEN_KEYWORD},
+    /* Keywords */
+    {"class", TOKEN_KEYWORD}, {"extends", TOKEN_KEYWORD}, {"implements", TOKEN_KEYWORD},
+    {"with", TOKEN_KEYWORD}, {"mixin", TOKEN_KEYWORD}, {"abstract", TOKEN_KEYWORD},
+    {"interface", TOKEN_KEYWORD}, {"enum", TOKEN_KEYWORD}, {"typedef", TOKEN_KEYWORD},
+    {"extension", TOKEN_KEYWORD}, {"new", TOKEN_KEYWORD}, {"const", TOKEN_KEYWORD},
+    {"final", TOKEN_KEYWORD}, {"var", TOKEN_KEYWORD}, {"late", TOKEN_KEYWORD},
+    {"static", TOKEN_KEYWORD}, {"factory", TOKEN_KEYWORD}, {"operator", TOKEN_KEYWORD},
+    {"get", TOKEN_KEYWORD}, {"set", TOKEN_KEYWORD}, {"this", TOKEN_KEYWORD},
+    {"super", TOKEN_KEYWORD}, {"import", TOKEN_KEYWORD}, {"export", TOKEN_KEYWORD},
+    {"library", TOKEN_KEYWORD}, {"part", TOKEN_KEYWORD}, {"as", TOKEN_KEYWORD},
+    {"show", TOKEN_KEYWORD}, {"hide", TOKEN_KEYWORD}, {"deferred", TOKEN_KEYWORD},
+    {"async", TOKEN_KEYWORD}, {"await", TOKEN_KEYWORD}, {"sync", TOKEN_KEYWORD},
+    {"yield", TOKEN_KEYWORD}, {"required", TOKEN_KEYWORD}, {"covariant", TOKEN_KEYWORD},
+    {"external", TOKEN_KEYWORD}, {"is", TOKEN_KEYWORD}, {"in", TOKEN_KEYWORD},
+    /* Values */
+    {"true", TOKEN_KEYWORD}, {"false", TOKEN_KEYWORD}, {"null", TOKEN_KEYWORD},
+    /* Types */
+    {"int", TOKEN_TYPE}, {"double", TOKEN_TYPE}, {"num", TOKEN_TYPE},
+    {"bool", TOKEN_TYPE}, {"String", TOKEN_TYPE}, {"List", TOKEN_TYPE},
+    {"Map", TOKEN_TYPE}, {"Set", TOKEN_TYPE}, {"Iterable", TOKEN_TYPE},
+    {"Object", TOKEN_TYPE}, {"dynamic", TOKEN_TYPE}, {"void", TOKEN_TYPE},
+    {"Never", TOKEN_TYPE}, {"Function", TOKEN_TYPE}, {"Future", TOKEN_TYPE},
+    {"Stream", TOKEN_TYPE}, {"Duration", TOKEN_TYPE}, {"DateTime", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* OCaml keywords */
+static const Keyword ocaml_keywords[] = {
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"then", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD},
+    {"match", TOKEN_KEYWORD}, {"with", TOKEN_KEYWORD}, {"when", TOKEN_KEYWORD},
+    {"for", TOKEN_KEYWORD}, {"while", TOKEN_KEYWORD}, {"do", TOKEN_KEYWORD},
+    {"done", TOKEN_KEYWORD}, {"to", TOKEN_KEYWORD}, {"downto", TOKEN_KEYWORD},
+    {"try", TOKEN_KEYWORD}, {"raise", TOKEN_KEYWORD},
+    /* Keywords */
+    {"let", TOKEN_KEYWORD}, {"in", TOKEN_KEYWORD}, {"and", TOKEN_KEYWORD},
+    {"rec", TOKEN_KEYWORD}, {"fun", TOKEN_KEYWORD}, {"function", TOKEN_KEYWORD},
+    {"type", TOKEN_KEYWORD}, {"module", TOKEN_KEYWORD}, {"struct", TOKEN_KEYWORD},
+    {"sig", TOKEN_KEYWORD}, {"end", TOKEN_KEYWORD}, {"functor", TOKEN_KEYWORD},
+    {"open", TOKEN_KEYWORD}, {"include", TOKEN_KEYWORD}, {"val", TOKEN_KEYWORD},
+    {"external", TOKEN_KEYWORD}, {"exception", TOKEN_KEYWORD}, {"assert", TOKEN_KEYWORD},
+    {"lazy", TOKEN_KEYWORD}, {"mutable", TOKEN_KEYWORD}, {"private", TOKEN_KEYWORD},
+    {"virtual", TOKEN_KEYWORD}, {"method", TOKEN_KEYWORD}, {"object", TOKEN_KEYWORD},
+    {"class", TOKEN_KEYWORD}, {"inherit", TOKEN_KEYWORD}, {"initializer", TOKEN_KEYWORD},
+    {"new", TOKEN_KEYWORD}, {"constraint", TOKEN_KEYWORD}, {"as", TOKEN_KEYWORD},
+    {"of", TOKEN_KEYWORD}, {"begin", TOKEN_KEYWORD}, {"or", TOKEN_KEYWORD},
+    {"land", TOKEN_KEYWORD}, {"lor", TOKEN_KEYWORD}, {"lxor", TOKEN_KEYWORD},
+    {"lsl", TOKEN_KEYWORD}, {"lsr", TOKEN_KEYWORD}, {"asr", TOKEN_KEYWORD},
+    {"mod", TOKEN_KEYWORD}, {"not", TOKEN_KEYWORD},
+    /* Values */
+    {"true", TOKEN_KEYWORD}, {"false", TOKEN_KEYWORD},
+    /* Types */
+    {"int", TOKEN_TYPE}, {"float", TOKEN_TYPE}, {"bool", TOKEN_TYPE},
+    {"char", TOKEN_TYPE}, {"string", TOKEN_TYPE}, {"unit", TOKEN_TYPE},
+    {"list", TOKEN_TYPE}, {"array", TOKEN_TYPE}, {"option", TOKEN_TYPE},
+    {"ref", TOKEN_TYPE}, {"exn", TOKEN_TYPE}, {"format", TOKEN_TYPE},
+    {"bytes", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* F# keywords */
+static const Keyword fsharp_keywords[] = {
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"then", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD},
+    {"elif", TOKEN_KEYWORD}, {"match", TOKEN_KEYWORD}, {"with", TOKEN_KEYWORD},
+    {"for", TOKEN_KEYWORD}, {"while", TOKEN_KEYWORD}, {"do", TOKEN_KEYWORD},
+    {"done", TOKEN_KEYWORD}, {"to", TOKEN_KEYWORD}, {"downto", TOKEN_KEYWORD},
+    {"try", TOKEN_KEYWORD}, {"finally", TOKEN_KEYWORD}, {"raise", TOKEN_KEYWORD},
+    {"when", TOKEN_KEYWORD}, {"yield", TOKEN_KEYWORD}, {"return", TOKEN_KEYWORD},
+    /* Keywords */
+    {"let", TOKEN_KEYWORD}, {"in", TOKEN_KEYWORD}, {"and", TOKEN_KEYWORD},
+    {"rec", TOKEN_KEYWORD}, {"fun", TOKEN_KEYWORD}, {"function", TOKEN_KEYWORD},
+    {"type", TOKEN_KEYWORD}, {"module", TOKEN_KEYWORD}, {"namespace", TOKEN_KEYWORD},
+    {"open", TOKEN_KEYWORD}, {"val", TOKEN_KEYWORD}, {"mutable", TOKEN_KEYWORD},
+    {"inline", TOKEN_KEYWORD}, {"static", TOKEN_KEYWORD}, {"member", TOKEN_KEYWORD},
+    {"abstract", TOKEN_KEYWORD}, {"override", TOKEN_KEYWORD}, {"default", TOKEN_KEYWORD},
+    {"interface", TOKEN_KEYWORD}, {"inherit", TOKEN_KEYWORD}, {"base", TOKEN_KEYWORD},
+    {"begin", TOKEN_KEYWORD}, {"end", TOKEN_KEYWORD}, {"struct", TOKEN_KEYWORD},
+    {"class", TOKEN_KEYWORD}, {"exception", TOKEN_KEYWORD}, {"lazy", TOKEN_KEYWORD},
+    {"as", TOKEN_KEYWORD}, {"assert", TOKEN_KEYWORD}, {"upcast", TOKEN_KEYWORD},
+    {"downcast", TOKEN_KEYWORD}, {"null", TOKEN_KEYWORD}, {"use", TOKEN_KEYWORD},
+    {"extern", TOKEN_KEYWORD}, {"new", TOKEN_KEYWORD}, {"of", TOKEN_KEYWORD},
+    {"not", TOKEN_KEYWORD}, {"or", TOKEN_KEYWORD}, {"private", TOKEN_KEYWORD},
+    {"public", TOKEN_KEYWORD}, {"internal", TOKEN_KEYWORD}, {"async", TOKEN_KEYWORD},
+    {"global", TOKEN_KEYWORD}, {"const", TOKEN_KEYWORD},
+    /* Values */
+    {"true", TOKEN_KEYWORD}, {"false", TOKEN_KEYWORD},
+    /* Types */
+    {"int", TOKEN_TYPE}, {"int8", TOKEN_TYPE}, {"int16", TOKEN_TYPE},
+    {"int32", TOKEN_TYPE}, {"int64", TOKEN_TYPE}, {"uint8", TOKEN_TYPE},
+    {"uint16", TOKEN_TYPE}, {"uint32", TOKEN_TYPE}, {"uint64", TOKEN_TYPE},
+    {"float", TOKEN_TYPE}, {"float32", TOKEN_TYPE}, {"double", TOKEN_TYPE},
+    {"decimal", TOKEN_TYPE}, {"bool", TOKEN_TYPE}, {"char", TOKEN_TYPE},
+    {"string", TOKEN_TYPE}, {"unit", TOKEN_TYPE}, {"byte", TOKEN_TYPE},
+    {"sbyte", TOKEN_TYPE}, {"bigint", TOKEN_TYPE}, {"obj", TOKEN_TYPE},
+    {"list", TOKEN_TYPE}, {"array", TOKEN_TYPE}, {"seq", TOKEN_TYPE},
+    {"option", TOKEN_TYPE}, {"Result", TOKEN_TYPE}, {"Async", TOKEN_TYPE},
+    {"Task", TOKEN_TYPE}, {"Map", TOKEN_TYPE}, {"Set", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* Groovy keywords */
+static const Keyword groovy_keywords[] = {
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD}, {"for", TOKEN_KEYWORD},
+    {"while", TOKEN_KEYWORD}, {"do", TOKEN_KEYWORD}, {"switch", TOKEN_KEYWORD},
+    {"case", TOKEN_KEYWORD}, {"default", TOKEN_KEYWORD}, {"break", TOKEN_KEYWORD},
+    {"continue", TOKEN_KEYWORD}, {"return", TOKEN_KEYWORD}, {"throw", TOKEN_KEYWORD},
+    {"try", TOKEN_KEYWORD}, {"catch", TOKEN_KEYWORD}, {"finally", TOKEN_KEYWORD},
+    /* Keywords */
+    {"def", TOKEN_KEYWORD}, {"var", TOKEN_KEYWORD}, {"class", TOKEN_KEYWORD},
+    {"interface", TOKEN_KEYWORD}, {"trait", TOKEN_KEYWORD}, {"enum", TOKEN_KEYWORD},
+    {"extends", TOKEN_KEYWORD}, {"implements", TOKEN_KEYWORD}, {"new", TOKEN_KEYWORD},
+    {"package", TOKEN_KEYWORD}, {"import", TOKEN_KEYWORD}, {"as", TOKEN_KEYWORD},
+    {"in", TOKEN_KEYWORD}, {"instanceof", TOKEN_KEYWORD}, {"this", TOKEN_KEYWORD},
+    {"super", TOKEN_KEYWORD}, {"static", TOKEN_KEYWORD}, {"final", TOKEN_KEYWORD},
+    {"abstract", TOKEN_KEYWORD}, {"private", TOKEN_KEYWORD}, {"protected", TOKEN_KEYWORD},
+    {"public", TOKEN_KEYWORD}, {"native", TOKEN_KEYWORD}, {"synchronized", TOKEN_KEYWORD},
+    {"transient", TOKEN_KEYWORD}, {"volatile", TOKEN_KEYWORD}, {"strictfp", TOKEN_KEYWORD},
+    {"assert", TOKEN_KEYWORD}, {"const", TOKEN_KEYWORD}, {"goto", TOKEN_KEYWORD},
+    /* Gradle specific */
+    {"apply", TOKEN_KEYWORD}, {"plugins", TOKEN_KEYWORD}, {"dependencies", TOKEN_KEYWORD},
+    {"repositories", TOKEN_KEYWORD}, {"task", TOKEN_KEYWORD}, {"buildscript", TOKEN_KEYWORD},
+    {"allprojects", TOKEN_KEYWORD}, {"subprojects", TOKEN_KEYWORD}, {"sourceSets", TOKEN_KEYWORD},
+    /* Values */
+    {"true", TOKEN_KEYWORD}, {"false", TOKEN_KEYWORD}, {"null", TOKEN_KEYWORD},
+    /* Types */
+    {"int", TOKEN_TYPE}, {"long", TOKEN_TYPE}, {"short", TOKEN_TYPE},
+    {"byte", TOKEN_TYPE}, {"float", TOKEN_TYPE}, {"double", TOKEN_TYPE},
+    {"boolean", TOKEN_TYPE}, {"char", TOKEN_TYPE}, {"void", TOKEN_TYPE},
+    {"String", TOKEN_TYPE}, {"Integer", TOKEN_TYPE}, {"Long", TOKEN_TYPE},
+    {"Double", TOKEN_TYPE}, {"Boolean", TOKEN_TYPE}, {"Object", TOKEN_TYPE},
+    {"List", TOKEN_TYPE}, {"Map", TOKEN_TYPE}, {"Set", TOKEN_TYPE},
+    {"Closure", TOKEN_TYPE}, {"BigDecimal", TOKEN_TYPE}, {"BigInteger", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* Prolog keywords */
+static const Keyword prolog_keywords[] = {
+    /* Control */
+    {"is", TOKEN_KEYWORD}, {"mod", TOKEN_KEYWORD}, {"rem", TOKEN_KEYWORD},
+    {"not", TOKEN_KEYWORD}, {"fail", TOKEN_KEYWORD}, {"true", TOKEN_KEYWORD},
+    {"false", TOKEN_KEYWORD}, {"halt", TOKEN_KEYWORD}, {"repeat", TOKEN_KEYWORD},
+    /* Operators */
+    {":-", TOKEN_KEYWORD}, {"-->", TOKEN_KEYWORD}, {"?-", TOKEN_KEYWORD},
+    /* Built-in predicates */
+    {"assert", TOKEN_TYPE}, {"asserta", TOKEN_TYPE}, {"assertz", TOKEN_TYPE},
+    {"retract", TOKEN_TYPE}, {"retractall", TOKEN_TYPE}, {"abolish", TOKEN_TYPE},
+    {"findall", TOKEN_TYPE}, {"bagof", TOKEN_TYPE}, {"setof", TOKEN_TYPE},
+    {"functor", TOKEN_TYPE}, {"arg", TOKEN_TYPE}, {"copy_term", TOKEN_TYPE},
+    {"call", TOKEN_TYPE}, {"once", TOKEN_TYPE}, {"ignore", TOKEN_TYPE},
+    {"catch", TOKEN_TYPE}, {"throw", TOKEN_TYPE},
+    {"read", TOKEN_TYPE}, {"write", TOKEN_TYPE}, {"writeln", TOKEN_TYPE},
+    {"nl", TOKEN_TYPE}, {"get_char", TOKEN_TYPE}, {"put_char", TOKEN_TYPE},
+    {"atom", TOKEN_TYPE}, {"number", TOKEN_TYPE}, {"integer", TOKEN_TYPE},
+    {"float", TOKEN_TYPE}, {"compound", TOKEN_TYPE}, {"var", TOKEN_TYPE},
+    {"nonvar", TOKEN_TYPE}, {"is_list", TOKEN_TYPE}, {"ground", TOKEN_TYPE},
+    {"length", TOKEN_TYPE}, {"append", TOKEN_TYPE}, {"member", TOKEN_TYPE},
+    {"reverse", TOKEN_TYPE}, {"sort", TOKEN_TYPE}, {"msort", TOKEN_TYPE},
+    {"succ", TOKEN_TYPE}, {"plus", TOKEN_TYPE}, {"abs", TOKEN_TYPE},
+    {"sign", TOKEN_TYPE}, {"min", TOKEN_TYPE}, {"max", TOKEN_TYPE},
+    {"between", TOKEN_TYPE}, {"random", TOKEN_TYPE},
+    {"atom_codes", TOKEN_TYPE}, {"atom_chars", TOKEN_TYPE}, {"atom_string", TOKEN_TYPE},
+    {"char_code", TOKEN_TYPE}, {"number_codes", TOKEN_TYPE}, {"number_chars", TOKEN_TYPE},
+    {"atom_length", TOKEN_TYPE}, {"atom_concat", TOKEN_TYPE}, {"sub_atom", TOKEN_TYPE},
+    {"open", TOKEN_TYPE}, {"close", TOKEN_TYPE}, {"read_term", TOKEN_TYPE},
+    {"write_term", TOKEN_TYPE}, {"see", TOKEN_TYPE}, {"seen", TOKEN_TYPE},
+    {"tell", TOKEN_TYPE}, {"told", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* Verilog keywords */
+static const Keyword verilog_keywords[] = {
+    /* Module/port */
+    {"module", TOKEN_KEYWORD}, {"endmodule", TOKEN_KEYWORD}, {"input", TOKEN_KEYWORD},
+    {"output", TOKEN_KEYWORD}, {"inout", TOKEN_KEYWORD}, {"parameter", TOKEN_KEYWORD},
+    {"localparam", TOKEN_KEYWORD}, {"defparam", TOKEN_KEYWORD},
+    /* Types */
+    {"wire", TOKEN_TYPE}, {"reg", TOKEN_TYPE}, {"integer", TOKEN_TYPE},
+    {"real", TOKEN_TYPE}, {"time", TOKEN_TYPE}, {"realtime", TOKEN_TYPE},
+    {"supply0", TOKEN_TYPE}, {"supply1", TOKEN_TYPE}, {"tri", TOKEN_TYPE},
+    {"triand", TOKEN_TYPE}, {"trior", TOKEN_TYPE}, {"tri0", TOKEN_TYPE},
+    {"tri1", TOKEN_TYPE}, {"wand", TOKEN_TYPE}, {"wor", TOKEN_TYPE},
+    {"signed", TOKEN_TYPE}, {"unsigned", TOKEN_TYPE}, {"genvar", TOKEN_TYPE},
+    /* SystemVerilog types */
+    {"logic", TOKEN_TYPE}, {"bit", TOKEN_TYPE}, {"byte", TOKEN_TYPE},
+    {"shortint", TOKEN_TYPE}, {"int", TOKEN_TYPE}, {"longint", TOKEN_TYPE},
+    {"shortreal", TOKEN_TYPE}, {"string", TOKEN_TYPE}, {"chandle", TOKEN_TYPE},
+    {"event", TOKEN_TYPE}, {"void", TOKEN_TYPE},
+    /* Procedural */
+    {"always", TOKEN_KEYWORD}, {"always_comb", TOKEN_KEYWORD}, {"always_ff", TOKEN_KEYWORD},
+    {"always_latch", TOKEN_KEYWORD}, {"initial", TOKEN_KEYWORD}, {"assign", TOKEN_KEYWORD},
+    {"deassign", TOKEN_KEYWORD}, {"force", TOKEN_KEYWORD}, {"release", TOKEN_KEYWORD},
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD}, {"case", TOKEN_KEYWORD},
+    {"casex", TOKEN_KEYWORD}, {"casez", TOKEN_KEYWORD}, {"endcase", TOKEN_KEYWORD},
+    {"default", TOKEN_KEYWORD}, {"for", TOKEN_KEYWORD}, {"while", TOKEN_KEYWORD},
+    {"repeat", TOKEN_KEYWORD}, {"forever", TOKEN_KEYWORD}, {"begin", TOKEN_KEYWORD},
+    {"end", TOKEN_KEYWORD}, {"fork", TOKEN_KEYWORD}, {"join", TOKEN_KEYWORD},
+    {"join_any", TOKEN_KEYWORD}, {"join_none", TOKEN_KEYWORD}, {"disable", TOKEN_KEYWORD},
+    {"wait", TOKEN_KEYWORD}, {"return", TOKEN_KEYWORD}, {"break", TOKEN_KEYWORD},
+    {"continue", TOKEN_KEYWORD},
+    /* Other */
+    {"function", TOKEN_KEYWORD}, {"endfunction", TOKEN_KEYWORD}, {"task", TOKEN_KEYWORD},
+    {"endtask", TOKEN_KEYWORD}, {"generate", TOKEN_KEYWORD}, {"endgenerate", TOKEN_KEYWORD},
+    {"primitive", TOKEN_KEYWORD}, {"endprimitive", TOKEN_KEYWORD}, {"table", TOKEN_KEYWORD},
+    {"endtable", TOKEN_KEYWORD}, {"specify", TOKEN_KEYWORD}, {"endspecify", TOKEN_KEYWORD},
+    {"posedge", TOKEN_KEYWORD}, {"negedge", TOKEN_KEYWORD}, {"edge", TOKEN_KEYWORD},
+    {"or", TOKEN_KEYWORD}, {"and", TOKEN_KEYWORD}, {"not", TOKEN_KEYWORD},
+    {"nand", TOKEN_KEYWORD}, {"nor", TOKEN_KEYWORD}, {"xor", TOKEN_KEYWORD},
+    {"xnor", TOKEN_KEYWORD}, {"buf", TOKEN_KEYWORD}, {"bufif0", TOKEN_KEYWORD},
+    {"bufif1", TOKEN_KEYWORD}, {"notif0", TOKEN_KEYWORD}, {"notif1", TOKEN_KEYWORD},
+    /* SystemVerilog */
+    {"class", TOKEN_KEYWORD}, {"endclass", TOKEN_KEYWORD}, {"extends", TOKEN_KEYWORD},
+    {"implements", TOKEN_KEYWORD}, {"interface", TOKEN_KEYWORD}, {"endinterface", TOKEN_KEYWORD},
+    {"package", TOKEN_KEYWORD}, {"endpackage", TOKEN_KEYWORD}, {"import", TOKEN_KEYWORD},
+    {"export", TOKEN_KEYWORD}, {"virtual", TOKEN_KEYWORD}, {"static", TOKEN_KEYWORD},
+    {"protected", TOKEN_KEYWORD}, {"local", TOKEN_KEYWORD}, {"const", TOKEN_KEYWORD},
+    {"new", TOKEN_KEYWORD}, {"this", TOKEN_KEYWORD}, {"super", TOKEN_KEYWORD},
+    {"null", TOKEN_KEYWORD}, {"typedef", TOKEN_KEYWORD}, {"enum", TOKEN_KEYWORD},
+    {"struct", TOKEN_KEYWORD}, {"union", TOKEN_KEYWORD}, {"packed", TOKEN_KEYWORD},
+    {"automatic", TOKEN_KEYWORD}, {"unique", TOKEN_KEYWORD}, {"priority", TOKEN_KEYWORD},
+    {"assert", TOKEN_KEYWORD}, {"assume", TOKEN_KEYWORD}, {"cover", TOKEN_KEYWORD},
+    {"property", TOKEN_KEYWORD}, {"endproperty", TOKEN_KEYWORD}, {"sequence", TOKEN_KEYWORD},
+    {"endsequence", TOKEN_KEYWORD}, {"clocking", TOKEN_KEYWORD}, {"endclocking", TOKEN_KEYWORD},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* VHDL keywords */
+static const Keyword vhdl_keywords[] = {
+    /* Entity/Architecture */
+    {"entity", TOKEN_KEYWORD}, {"architecture", TOKEN_KEYWORD}, {"of", TOKEN_KEYWORD},
+    {"is", TOKEN_KEYWORD}, {"begin", TOKEN_KEYWORD}, {"end", TOKEN_KEYWORD},
+    {"port", TOKEN_KEYWORD}, {"generic", TOKEN_KEYWORD}, {"map", TOKEN_KEYWORD},
+    {"component", TOKEN_KEYWORD}, {"configuration", TOKEN_KEYWORD},
+    /* Types */
+    {"signal", TOKEN_TYPE}, {"variable", TOKEN_TYPE}, {"constant", TOKEN_TYPE},
+    {"type", TOKEN_TYPE}, {"subtype", TOKEN_TYPE}, {"array", TOKEN_TYPE},
+    {"record", TOKEN_TYPE}, {"access", TOKEN_TYPE}, {"file", TOKEN_TYPE},
+    {"alias", TOKEN_TYPE}, {"attribute", TOKEN_TYPE}, {"range", TOKEN_TYPE},
+    {"to", TOKEN_TYPE}, {"downto", TOKEN_TYPE}, {"in", TOKEN_TYPE},
+    {"out", TOKEN_TYPE}, {"inout", TOKEN_TYPE}, {"buffer", TOKEN_TYPE},
+    {"linkage", TOKEN_TYPE},
+    /* Standard types */
+    {"bit", TOKEN_TYPE}, {"bit_vector", TOKEN_TYPE}, {"boolean", TOKEN_TYPE},
+    {"integer", TOKEN_TYPE}, {"natural", TOKEN_TYPE}, {"positive", TOKEN_TYPE},
+    {"real", TOKEN_TYPE}, {"character", TOKEN_TYPE}, {"string", TOKEN_TYPE},
+    {"time", TOKEN_TYPE}, {"std_logic", TOKEN_TYPE}, {"std_logic_vector", TOKEN_TYPE},
+    {"std_ulogic", TOKEN_TYPE}, {"std_ulogic_vector", TOKEN_TYPE},
+    {"signed", TOKEN_TYPE}, {"unsigned", TOKEN_TYPE},
+    /* Procedural */
+    {"process", TOKEN_KEYWORD}, {"function", TOKEN_KEYWORD}, {"procedure", TOKEN_KEYWORD},
+    {"return", TOKEN_KEYWORD}, {"impure", TOKEN_KEYWORD}, {"pure", TOKEN_KEYWORD},
+    /* Control flow */
+    {"if", TOKEN_KEYWORD}, {"then", TOKEN_KEYWORD}, {"else", TOKEN_KEYWORD},
+    {"elsif", TOKEN_KEYWORD}, {"case", TOKEN_KEYWORD}, {"when", TOKEN_KEYWORD},
+    {"others", TOKEN_KEYWORD}, {"for", TOKEN_KEYWORD}, {"while", TOKEN_KEYWORD},
+    {"loop", TOKEN_KEYWORD}, {"next", TOKEN_KEYWORD}, {"exit", TOKEN_KEYWORD},
+    {"wait", TOKEN_KEYWORD}, {"until", TOKEN_KEYWORD}, {"after", TOKEN_KEYWORD},
+    {"null", TOKEN_KEYWORD}, {"assert", TOKEN_KEYWORD}, {"report", TOKEN_KEYWORD},
+    {"severity", TOKEN_KEYWORD},
+    /* Other */
+    {"library", TOKEN_KEYWORD}, {"use", TOKEN_KEYWORD}, {"all", TOKEN_KEYWORD},
+    {"package", TOKEN_KEYWORD}, {"body", TOKEN_KEYWORD}, {"generate", TOKEN_KEYWORD},
+    {"block", TOKEN_KEYWORD}, {"with", TOKEN_KEYWORD}, {"select", TOKEN_KEYWORD},
+    {"and", TOKEN_KEYWORD}, {"or", TOKEN_KEYWORD}, {"not", TOKEN_KEYWORD},
+    {"xor", TOKEN_KEYWORD}, {"nand", TOKEN_KEYWORD}, {"nor", TOKEN_KEYWORD},
+    {"xnor", TOKEN_KEYWORD}, {"mod", TOKEN_KEYWORD}, {"rem", TOKEN_KEYWORD},
+    {"abs", TOKEN_KEYWORD}, {"sll", TOKEN_KEYWORD}, {"srl", TOKEN_KEYWORD},
+    {"sla", TOKEN_KEYWORD}, {"sra", TOKEN_KEYWORD}, {"rol", TOKEN_KEYWORD},
+    {"ror", TOKEN_KEYWORD}, {"new", TOKEN_KEYWORD}, {"transport", TOKEN_KEYWORD},
+    {"reject", TOKEN_KEYWORD}, {"inertial", TOKEN_KEYWORD}, {"guarded", TOKEN_KEYWORD},
+    {"bus", TOKEN_KEYWORD}, {"register", TOKEN_KEYWORD}, {"disconnect", TOKEN_KEYWORD},
+    {"open", TOKEN_KEYWORD}, {"shared", TOKEN_KEYWORD}, {"group", TOKEN_KEYWORD},
+    {"label", TOKEN_KEYWORD}, {"literal", TOKEN_KEYWORD}, {"units", TOKEN_KEYWORD},
+    {"unaffected", TOKEN_KEYWORD}, {"postponed", TOKEN_KEYWORD}, {"protected", TOKEN_KEYWORD},
+    /* Values */
+    {"true", TOKEN_KEYWORD}, {"false", TOKEN_KEYWORD},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* LaTeX keywords */
+static const Keyword latex_keywords[] = {
+    /* Document structure */
+    {"\\documentclass", TOKEN_KEYWORD}, {"\\usepackage", TOKEN_KEYWORD},
+    {"\\begin", TOKEN_KEYWORD}, {"\\end", TOKEN_KEYWORD},
+    {"\\chapter", TOKEN_KEYWORD}, {"\\section", TOKEN_KEYWORD},
+    {"\\subsection", TOKEN_KEYWORD}, {"\\subsubsection", TOKEN_KEYWORD},
+    {"\\paragraph", TOKEN_KEYWORD}, {"\\subparagraph", TOKEN_KEYWORD},
+    {"\\part", TOKEN_KEYWORD}, {"\\appendix", TOKEN_KEYWORD},
+    /* Text formatting */
+    {"\\textbf", TOKEN_KEYWORD}, {"\\textit", TOKEN_KEYWORD},
+    {"\\underline", TOKEN_KEYWORD}, {"\\emph", TOKEN_KEYWORD},
+    {"\\texttt", TOKEN_KEYWORD}, {"\\textsf", TOKEN_KEYWORD},
+    {"\\textsc", TOKEN_KEYWORD}, {"\\textrm", TOKEN_KEYWORD},
+    {"\\tiny", TOKEN_KEYWORD}, {"\\small", TOKEN_KEYWORD},
+    {"\\normalsize", TOKEN_KEYWORD}, {"\\large", TOKEN_KEYWORD},
+    {"\\Large", TOKEN_KEYWORD}, {"\\LARGE", TOKEN_KEYWORD},
+    {"\\huge", TOKEN_KEYWORD}, {"\\Huge", TOKEN_KEYWORD},
+    /* References */
+    {"\\label", TOKEN_KEYWORD}, {"\\ref", TOKEN_KEYWORD},
+    {"\\pageref", TOKEN_KEYWORD}, {"\\cite", TOKEN_KEYWORD},
+    {"\\bibliography", TOKEN_KEYWORD}, {"\\bibliographystyle", TOKEN_KEYWORD},
+    /* Environments */
+    {"\\item", TOKEN_KEYWORD}, {"\\caption", TOKEN_KEYWORD},
+    {"\\includegraphics", TOKEN_KEYWORD}, {"\\input", TOKEN_KEYWORD},
+    {"\\include", TOKEN_KEYWORD}, {"\\newcommand", TOKEN_KEYWORD},
+    {"\\renewcommand", TOKEN_KEYWORD}, {"\\newenvironment", TOKEN_KEYWORD},
+    {"\\def", TOKEN_KEYWORD}, {"\\let", TOKEN_KEYWORD},
+    /* Math */
+    {"\\frac", TOKEN_KEYWORD}, {"\\sqrt", TOKEN_KEYWORD},
+    {"\\sum", TOKEN_KEYWORD}, {"\\prod", TOKEN_KEYWORD},
+    {"\\int", TOKEN_KEYWORD}, {"\\partial", TOKEN_KEYWORD},
+    {"\\infty", TOKEN_KEYWORD}, {"\\alpha", TOKEN_KEYWORD},
+    {"\\beta", TOKEN_KEYWORD}, {"\\gamma", TOKEN_KEYWORD},
+    {"\\delta", TOKEN_KEYWORD}, {"\\epsilon", TOKEN_KEYWORD},
+    {"\\theta", TOKEN_KEYWORD}, {"\\lambda", TOKEN_KEYWORD},
+    {"\\mu", TOKEN_KEYWORD}, {"\\pi", TOKEN_KEYWORD},
+    {"\\sigma", TOKEN_KEYWORD}, {"\\phi", TOKEN_KEYWORD},
+    {"\\omega", TOKEN_KEYWORD}, {"\\left", TOKEN_KEYWORD},
+    {"\\right", TOKEN_KEYWORD}, {"\\cdot", TOKEN_KEYWORD},
+    {"\\times", TOKEN_KEYWORD}, {"\\div", TOKEN_KEYWORD},
+    {"\\pm", TOKEN_KEYWORD}, {"\\leq", TOKEN_KEYWORD},
+    {"\\geq", TOKEN_KEYWORD}, {"\\neq", TOKEN_KEYWORD},
+    {"\\approx", TOKEN_KEYWORD}, {"\\equiv", TOKEN_KEYWORD},
+    /* Common environments as types */
+    {"document", TOKEN_TYPE}, {"figure", TOKEN_TYPE}, {"table", TOKEN_TYPE},
+    {"equation", TOKEN_TYPE}, {"align", TOKEN_TYPE}, {"itemize", TOKEN_TYPE},
+    {"enumerate", TOKEN_TYPE}, {"description", TOKEN_TYPE}, {"verbatim", TOKEN_TYPE},
+    {"abstract", TOKEN_TYPE}, {"quote", TOKEN_TYPE}, {"center", TOKEN_TYPE},
+    {"tabular", TOKEN_TYPE}, {"array", TOKEN_TYPE}, {"minipage", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* Nginx config keywords */
+static const Keyword nginx_keywords[] = {
+    /* Main directives */
+    {"server", TOKEN_KEYWORD}, {"location", TOKEN_KEYWORD}, {"upstream", TOKEN_KEYWORD},
+    {"http", TOKEN_KEYWORD}, {"events", TOKEN_KEYWORD}, {"stream", TOKEN_KEYWORD},
+    {"map", TOKEN_KEYWORD}, {"geo", TOKEN_KEYWORD}, {"types", TOKEN_KEYWORD},
+    {"if", TOKEN_KEYWORD}, {"set", TOKEN_KEYWORD}, {"rewrite", TOKEN_KEYWORD},
+    {"return", TOKEN_KEYWORD}, {"break", TOKEN_KEYWORD}, {"include", TOKEN_KEYWORD},
+    /* Server directives */
+    {"listen", TOKEN_KEYWORD}, {"server_name", TOKEN_KEYWORD}, {"root", TOKEN_KEYWORD},
+    {"index", TOKEN_KEYWORD}, {"try_files", TOKEN_KEYWORD}, {"error_page", TOKEN_KEYWORD},
+    {"access_log", TOKEN_KEYWORD}, {"error_log", TOKEN_KEYWORD},
+    {"ssl_certificate", TOKEN_KEYWORD}, {"ssl_certificate_key", TOKEN_KEYWORD},
+    {"ssl_protocols", TOKEN_KEYWORD}, {"ssl_ciphers", TOKEN_KEYWORD},
+    /* Location directives */
+    {"alias", TOKEN_KEYWORD}, {"internal", TOKEN_KEYWORD}, {"limit_except", TOKEN_KEYWORD},
+    /* Proxy directives */
+    {"proxy_pass", TOKEN_KEYWORD}, {"proxy_set_header", TOKEN_KEYWORD},
+    {"proxy_redirect", TOKEN_KEYWORD}, {"proxy_buffering", TOKEN_KEYWORD},
+    {"proxy_cache", TOKEN_KEYWORD}, {"proxy_cache_valid", TOKEN_KEYWORD},
+    {"proxy_connect_timeout", TOKEN_KEYWORD}, {"proxy_read_timeout", TOKEN_KEYWORD},
+    /* FastCGI directives */
+    {"fastcgi_pass", TOKEN_KEYWORD}, {"fastcgi_param", TOKEN_KEYWORD},
+    {"fastcgi_index", TOKEN_KEYWORD}, {"fastcgi_split_path_info", TOKEN_KEYWORD},
+    /* Other directives */
+    {"worker_processes", TOKEN_KEYWORD}, {"worker_connections", TOKEN_KEYWORD},
+    {"keepalive_timeout", TOKEN_KEYWORD}, {"sendfile", TOKEN_KEYWORD},
+    {"gzip", TOKEN_KEYWORD}, {"gzip_types", TOKEN_KEYWORD},
+    {"client_max_body_size", TOKEN_KEYWORD}, {"default_type", TOKEN_KEYWORD},
+    {"add_header", TOKEN_KEYWORD}, {"expires", TOKEN_KEYWORD},
+    {"deny", TOKEN_KEYWORD}, {"allow", TOKEN_KEYWORD},
+    /* Values */
+    {"on", TOKEN_TYPE}, {"off", TOKEN_TYPE}, {"default", TOKEN_TYPE},
+    {"all", TOKEN_TYPE}, {"any", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* Apache config keywords */
+static const Keyword apache_keywords[] = {
+    /* Core directives */
+    {"ServerRoot", TOKEN_KEYWORD}, {"ServerName", TOKEN_KEYWORD},
+    {"ServerAdmin", TOKEN_KEYWORD}, {"ServerAlias", TOKEN_KEYWORD},
+    {"DocumentRoot", TOKEN_KEYWORD}, {"Listen", TOKEN_KEYWORD},
+    {"Include", TOKEN_KEYWORD}, {"IncludeOptional", TOKEN_KEYWORD},
+    {"LoadModule", TOKEN_KEYWORD}, {"User", TOKEN_KEYWORD},
+    {"Group", TOKEN_KEYWORD}, {"ErrorLog", TOKEN_KEYWORD},
+    {"CustomLog", TOKEN_KEYWORD}, {"LogLevel", TOKEN_KEYWORD},
+    /* Container directives */
+    {"<VirtualHost>", TOKEN_KEYWORD}, {"</VirtualHost>", TOKEN_KEYWORD},
+    {"<Directory>", TOKEN_KEYWORD}, {"</Directory>", TOKEN_KEYWORD},
+    {"<DirectoryMatch>", TOKEN_KEYWORD}, {"</DirectoryMatch>", TOKEN_KEYWORD},
+    {"<Files>", TOKEN_KEYWORD}, {"</Files>", TOKEN_KEYWORD},
+    {"<FilesMatch>", TOKEN_KEYWORD}, {"</FilesMatch>", TOKEN_KEYWORD},
+    {"<Location>", TOKEN_KEYWORD}, {"</Location>", TOKEN_KEYWORD},
+    {"<LocationMatch>", TOKEN_KEYWORD}, {"</LocationMatch>", TOKEN_KEYWORD},
+    {"<IfModule>", TOKEN_KEYWORD}, {"</IfModule>", TOKEN_KEYWORD},
+    {"<IfDefine>", TOKEN_KEYWORD}, {"</IfDefine>", TOKEN_KEYWORD},
+    /* Directory options */
+    {"Options", TOKEN_KEYWORD}, {"AllowOverride", TOKEN_KEYWORD},
+    {"Order", TOKEN_KEYWORD}, {"Allow", TOKEN_KEYWORD},
+    {"Deny", TOKEN_KEYWORD}, {"Require", TOKEN_KEYWORD},
+    {"DirectoryIndex", TOKEN_KEYWORD}, {"IndexOptions", TOKEN_KEYWORD},
+    /* Rewrite */
+    {"RewriteEngine", TOKEN_KEYWORD}, {"RewriteBase", TOKEN_KEYWORD},
+    {"RewriteCond", TOKEN_KEYWORD}, {"RewriteRule", TOKEN_KEYWORD},
+    {"RewriteMap", TOKEN_KEYWORD},
+    /* Other common */
+    {"Redirect", TOKEN_KEYWORD}, {"RedirectPermanent", TOKEN_KEYWORD},
+    {"RedirectMatch", TOKEN_KEYWORD}, {"Alias", TOKEN_KEYWORD},
+    {"AliasMatch", TOKEN_KEYWORD}, {"ScriptAlias", TOKEN_KEYWORD},
+    {"ProxyPass", TOKEN_KEYWORD}, {"ProxyPassReverse", TOKEN_KEYWORD},
+    {"SSLEngine", TOKEN_KEYWORD}, {"SSLCertificateFile", TOKEN_KEYWORD},
+    {"SSLCertificateKeyFile", TOKEN_KEYWORD}, {"SSLCertificateChainFile", TOKEN_KEYWORD},
+    {"Header", TOKEN_KEYWORD}, {"SetEnv", TOKEN_KEYWORD},
+    {"SetEnvIf", TOKEN_KEYWORD}, {"AddType", TOKEN_KEYWORD},
+    {"AddHandler", TOKEN_KEYWORD}, {"AddOutputFilter", TOKEN_KEYWORD},
+    {"ExpiresActive", TOKEN_KEYWORD}, {"ExpiresByType", TOKEN_KEYWORD},
+    {"FileETag", TOKEN_KEYWORD}, {"ErrorDocument", TOKEN_KEYWORD},
+    /* Values */
+    {"On", TOKEN_TYPE}, {"Off", TOKEN_TYPE}, {"None", TOKEN_TYPE},
+    {"All", TOKEN_TYPE}, {"Indexes", TOKEN_TYPE}, {"FollowSymLinks", TOKEN_TYPE},
+    {"ExecCGI", TOKEN_TYPE}, {"Includes", TOKEN_TYPE}, {"MultiViews", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
+/* INI file keywords */
+static const Keyword ini_keywords[] = {
+    /* Common boolean values */
+    {"true", TOKEN_TYPE}, {"false", TOKEN_TYPE},
+    {"yes", TOKEN_TYPE}, {"no", TOKEN_TYPE},
+    {"on", TOKEN_TYPE}, {"off", TOKEN_TYPE},
+    {"enabled", TOKEN_TYPE}, {"disabled", TOKEN_TYPE},
+    {"True", TOKEN_TYPE}, {"False", TOKEN_TYPE},
+    {"Yes", TOKEN_TYPE}, {"No", TOKEN_TYPE},
+    {"On", TOKEN_TYPE}, {"Off", TOKEN_TYPE},
+    {"TRUE", TOKEN_TYPE}, {"FALSE", TOKEN_TYPE},
+    {"YES", TOKEN_TYPE}, {"NO", TOKEN_TYPE},
+    {"ON", TOKEN_TYPE}, {"OFF", TOKEN_TYPE},
+    /* null */
+    {"null", TOKEN_TYPE}, {"NULL", TOKEN_TYPE}, {"none", TOKEN_TYPE},
+    {NULL, TOKEN_NORMAL}
+};
+
 /* Case-insensitive string comparison helper */
 static int strcasecmp_local(const char *s1, const char *s2) {
     while (*s1 && *s2) {
@@ -787,6 +1589,16 @@ LanguageType syntax_detect_language(const char *filename) {
     if (strcmp(basename, ".gitconfig") == 0 || strcmp(basename, ".gitignore") == 0 ||
         strcmp(basename, ".gitmodules") == 0 || strcmp(basename, ".gitattributes") == 0) {
         return LANG_GITCONFIG;
+    }
+    if (strcmp(basename, "nginx.conf") == 0 || strcmp(basename, "fastcgi.conf") == 0 ||
+        strcmp(basename, "mime.types") == 0 || strcmp(basename, "proxy.conf") == 0 ||
+        strcmp(basename, "uwsgi_params") == 0 || strcmp(basename, "scgi_params") == 0 ||
+        strcmp(basename, "fastcgi_params") == 0) {
+        return LANG_NGINX;
+    }
+    if (strcmp(basename, ".htaccess") == 0 || strcmp(basename, ".htpasswd") == 0 ||
+        strcmp(basename, "httpd.conf") == 0 || strcmp(basename, "apache2.conf") == 0) {
+        return LANG_APACHE;
     }
 
     /* Find extension */
@@ -871,6 +1683,63 @@ LanguageType syntax_detect_language(const char *filename) {
     }
     for (int i = 0; terraform_extensions[i]; i++) {
         if (strcasecmp_local(ext, terraform_extensions[i]) == 0) return LANG_TERRAFORM;
+    }
+    for (int i = 0; php_extensions[i]; i++) {
+        if (strcasecmp_local(ext, php_extensions[i]) == 0) return LANG_PHP;
+    }
+    for (int i = 0; kotlin_extensions[i]; i++) {
+        if (strcasecmp_local(ext, kotlin_extensions[i]) == 0) return LANG_KOTLIN;
+    }
+    for (int i = 0; swift_extensions[i]; i++) {
+        if (strcasecmp_local(ext, swift_extensions[i]) == 0) return LANG_SWIFT;
+    }
+    for (int i = 0; scala_extensions[i]; i++) {
+        if (strcasecmp_local(ext, scala_extensions[i]) == 0) return LANG_SCALA;
+    }
+    for (int i = 0; elixir_extensions[i]; i++) {
+        if (strcasecmp_local(ext, elixir_extensions[i]) == 0) return LANG_ELIXIR;
+    }
+    for (int i = 0; erlang_extensions[i]; i++) {
+        if (strcasecmp_local(ext, erlang_extensions[i]) == 0) return LANG_ERLANG;
+    }
+    for (int i = 0; r_extensions[i]; i++) {
+        if (strcasecmp_local(ext, r_extensions[i]) == 0) return LANG_R;
+    }
+    for (int i = 0; julia_extensions[i]; i++) {
+        if (strcasecmp_local(ext, julia_extensions[i]) == 0) return LANG_JULIA;
+    }
+    for (int i = 0; zig_extensions[i]; i++) {
+        if (strcasecmp_local(ext, zig_extensions[i]) == 0) return LANG_ZIG;
+    }
+    for (int i = 0; nim_extensions[i]; i++) {
+        if (strcasecmp_local(ext, nim_extensions[i]) == 0) return LANG_NIM;
+    }
+    for (int i = 0; dart_extensions[i]; i++) {
+        if (strcasecmp_local(ext, dart_extensions[i]) == 0) return LANG_DART;
+    }
+    for (int i = 0; ocaml_extensions[i]; i++) {
+        if (strcasecmp_local(ext, ocaml_extensions[i]) == 0) return LANG_OCAML;
+    }
+    for (int i = 0; fsharp_extensions[i]; i++) {
+        if (strcasecmp_local(ext, fsharp_extensions[i]) == 0) return LANG_FSHARP;
+    }
+    for (int i = 0; groovy_extensions[i]; i++) {
+        if (strcasecmp_local(ext, groovy_extensions[i]) == 0) return LANG_GROOVY;
+    }
+    for (int i = 0; prolog_extensions[i]; i++) {
+        if (strcasecmp_local(ext, prolog_extensions[i]) == 0) return LANG_PROLOG;
+    }
+    for (int i = 0; verilog_extensions[i]; i++) {
+        if (strcasecmp_local(ext, verilog_extensions[i]) == 0) return LANG_VERILOG;
+    }
+    for (int i = 0; vhdl_extensions[i]; i++) {
+        if (strcasecmp_local(ext, vhdl_extensions[i]) == 0) return LANG_VHDL;
+    }
+    for (int i = 0; latex_extensions[i]; i++) {
+        if (strcasecmp_local(ext, latex_extensions[i]) == 0) return LANG_LATEX;
+    }
+    for (int i = 0; ini_extensions[i]; i++) {
+        if (strcasecmp_local(ext, ini_extensions[i]) == 0) return LANG_INI;
     }
 
     return LANG_NONE;
@@ -999,6 +1868,27 @@ static const Keyword *get_keywords(LanguageType lang) {
         case LANG_HTML:       return html_keywords;
         case LANG_TYPESCRIPT: return typescript_keywords;
         case LANG_TERRAFORM:  return terraform_keywords;
+        case LANG_PHP:        return php_keywords;
+        case LANG_KOTLIN:     return kotlin_keywords;
+        case LANG_SWIFT:      return swift_keywords;
+        case LANG_SCALA:      return scala_keywords;
+        case LANG_ELIXIR:     return elixir_keywords;
+        case LANG_ERLANG:     return erlang_keywords;
+        case LANG_R:          return r_keywords;
+        case LANG_JULIA:      return julia_keywords;
+        case LANG_ZIG:        return zig_keywords;
+        case LANG_NIM:        return nim_keywords;
+        case LANG_DART:       return dart_keywords;
+        case LANG_OCAML:      return ocaml_keywords;
+        case LANG_FSHARP:     return fsharp_keywords;
+        case LANG_GROOVY:     return groovy_keywords;
+        case LANG_PROLOG:     return prolog_keywords;
+        case LANG_VERILOG:    return verilog_keywords;
+        case LANG_VHDL:       return vhdl_keywords;
+        case LANG_LATEX:      return latex_keywords;
+        case LANG_NGINX:      return nginx_keywords;
+        case LANG_APACHE:     return apache_keywords;
+        case LANG_INI:        return ini_keywords;
         default:              return NULL;
     }
 }
@@ -3507,6 +4397,1516 @@ static void highlight_terraform(Buffer *buf, size_t line_start, size_t line_end,
     }
 }
 
+/* PHP highlighter */
+static void highlight_php(Buffer *buf, size_t line_start, size_t line_end,
+                          HighlightState *state, TokenType *out, size_t out_size) {
+    const Keyword *keywords = php_keywords;
+    size_t pos = line_start;
+    size_t idx = 0;
+
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+
+        /* Continue multi-line comment */
+        if (*state == HL_STATE_BLOCK_COMMENT) {
+            out[idx++] = TOKEN_COMMENT;
+            if (c == '*' && pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '/') {
+                pos++;
+                if (idx < out_size) out[idx++] = TOKEN_COMMENT;
+                *state = HL_STATE_NORMAL;
+            }
+            pos++;
+            continue;
+        }
+
+        /* Single-line comment with // or # */
+        if ((c == '/' && pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '/') ||
+            c == '#') {
+            while (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                pos++;
+            }
+            break;
+        }
+
+        /* Multi-line comment */
+        if (c == '/' && pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '*') {
+            *state = HL_STATE_BLOCK_COMMENT;
+            out[idx++] = TOKEN_COMMENT;
+            pos++;
+            continue;
+        }
+
+        /* Strings */
+        if (c == '"' || c == '\'') {
+            char quote = c;
+            out[idx++] = TOKEN_STRING;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_STRING;
+                if (c == '\\' && pos + 1 < line_end) {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                } else if (c == quote) {
+                    pos++;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Variables ($var) */
+        if (c == '$') {
+            out[idx++] = TOKEN_VARIABLE;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_') {
+                    out[idx++] = TOKEN_VARIABLE;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Numbers */
+        if (isdigit(c)) {
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isdigit(c) || c == '.' || c == 'e' || c == 'E' || c == 'x' || c == 'X' ||
+                    (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+                    out[idx++] = TOKEN_NUMBER;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Keywords and identifiers */
+        if (isalpha(c) || c == '_') {
+            size_t word_start = idx;
+            size_t word_pos = pos;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_') {
+                    out[idx++] = TOKEN_NORMAL;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            size_t word_len = pos - word_pos;
+            if (word_len > 0 && word_len < 64) {
+                char word[64];
+                for (size_t i = 0; i < word_len; i++) {
+                    word[i] = buffer_get_char(buf, word_pos + i);
+                }
+                word[word_len] = '\0';
+                TokenType token = lookup_keyword(keywords, word, word_len);
+                if (token != TOKEN_NORMAL) {
+                    for (size_t i = word_start; i < idx; i++) {
+                        out[i] = token;
+                    }
+                }
+            }
+            continue;
+        }
+
+        out[idx++] = TOKEN_NORMAL;
+        pos++;
+    }
+}
+
+/* Elixir highlighter */
+static void highlight_elixir(Buffer *buf, size_t line_start, size_t line_end,
+                             HighlightState *state, TokenType *out, size_t out_size) {
+    const Keyword *keywords = elixir_keywords;
+    size_t pos = line_start;
+    size_t idx = 0;
+
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+
+        /* Single-line comment with # */
+        if (c == '#') {
+            while (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                pos++;
+            }
+            break;
+        }
+
+        /* Strings */
+        if (c == '"' || c == '\'') {
+            char quote = c;
+            out[idx++] = TOKEN_STRING;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_STRING;
+                if (c == '\\' && pos + 1 < line_end) {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                } else if (c == quote) {
+                    pos++;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Atoms (:atom) */
+        if (c == ':' && pos + 1 < line_end && (isalpha(buffer_get_char(buf, pos + 1)) ||
+            buffer_get_char(buf, pos + 1) == '_')) {
+            out[idx++] = TOKEN_TYPE;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_' || c == '?' || c == '!') {
+                    out[idx++] = TOKEN_TYPE;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Module attributes (@attr) */
+        if (c == '@') {
+            out[idx++] = TOKEN_PREPROCESSOR;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_') {
+                    out[idx++] = TOKEN_PREPROCESSOR;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Numbers */
+        if (isdigit(c)) {
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isdigit(c) || c == '.' || c == '_' || c == 'e' || c == 'E' ||
+                    c == 'x' || c == 'X' || c == 'b' || c == 'B' || c == 'o' || c == 'O') {
+                    out[idx++] = TOKEN_NUMBER;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Keywords and identifiers */
+        if (isalpha(c) || c == '_') {
+            size_t word_start = idx;
+            size_t word_pos = pos;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_' || c == '?' || c == '!') {
+                    out[idx++] = TOKEN_NORMAL;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            size_t word_len = pos - word_pos;
+            if (word_len > 0 && word_len < 64) {
+                char word[64];
+                for (size_t i = 0; i < word_len; i++) {
+                    word[i] = buffer_get_char(buf, word_pos + i);
+                }
+                word[word_len] = '\0';
+                TokenType token = lookup_keyword(keywords, word, word_len);
+                if (token != TOKEN_NORMAL) {
+                    for (size_t i = word_start; i < idx; i++) {
+                        out[i] = token;
+                    }
+                }
+            }
+            continue;
+        }
+
+        out[idx++] = TOKEN_NORMAL;
+        pos++;
+    }
+    (void)state;
+}
+
+/* Erlang highlighter */
+static void highlight_erlang(Buffer *buf, size_t line_start, size_t line_end,
+                             HighlightState *state, TokenType *out, size_t out_size) {
+    const Keyword *keywords = erlang_keywords;
+    size_t pos = line_start;
+    size_t idx = 0;
+
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+
+        /* Single-line comment with % */
+        if (c == '%') {
+            while (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                pos++;
+            }
+            break;
+        }
+
+        /* Strings */
+        if (c == '"') {
+            out[idx++] = TOKEN_STRING;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_STRING;
+                if (c == '\\' && pos + 1 < line_end) {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                } else if (c == '"') {
+                    pos++;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Atoms (single-quoted) */
+        if (c == '\'') {
+            out[idx++] = TOKEN_TYPE;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_TYPE;
+                if (c == '\\' && pos + 1 < line_end) {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_TYPE;
+                } else if (c == '\'') {
+                    pos++;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Directives (-module, -export, etc.) */
+        if (c == '-' && idx == 0) {
+            out[idx++] = TOKEN_PREPROCESSOR;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalpha(c) || c == '_') {
+                    out[idx++] = TOKEN_PREPROCESSOR;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Numbers */
+        if (isdigit(c)) {
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isdigit(c) || c == '.' || c == '#' || c == 'e' || c == 'E' ||
+                    (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+                    out[idx++] = TOKEN_NUMBER;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Keywords and atoms (lowercase start) */
+        if (isalpha(c) || c == '_') {
+            size_t word_start = idx;
+            size_t word_pos = pos;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_' || c == '@') {
+                    out[idx++] = TOKEN_NORMAL;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            size_t word_len = pos - word_pos;
+            if (word_len > 0 && word_len < 64) {
+                char word[64];
+                for (size_t i = 0; i < word_len; i++) {
+                    word[i] = buffer_get_char(buf, word_pos + i);
+                }
+                word[word_len] = '\0';
+                TokenType token = lookup_keyword(keywords, word, word_len);
+                if (token != TOKEN_NORMAL) {
+                    for (size_t i = word_start; i < idx; i++) {
+                        out[i] = token;
+                    }
+                }
+            }
+            continue;
+        }
+
+        out[idx++] = TOKEN_NORMAL;
+        pos++;
+    }
+    (void)state;
+}
+
+/* R highlighter */
+static void highlight_r(Buffer *buf, size_t line_start, size_t line_end,
+                        HighlightState *state, TokenType *out, size_t out_size) {
+    const Keyword *keywords = r_keywords;
+    size_t pos = line_start;
+    size_t idx = 0;
+
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+
+        /* Single-line comment with # */
+        if (c == '#') {
+            while (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                pos++;
+            }
+            break;
+        }
+
+        /* Strings */
+        if (c == '"' || c == '\'') {
+            char quote = c;
+            out[idx++] = TOKEN_STRING;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_STRING;
+                if (c == '\\' && pos + 1 < line_end) {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                } else if (c == quote) {
+                    pos++;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Numbers */
+        if (isdigit(c) || (c == '.' && pos + 1 < line_end && isdigit(buffer_get_char(buf, pos + 1)))) {
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isdigit(c) || c == '.' || c == 'e' || c == 'E' || c == 'L' || c == 'i') {
+                    out[idx++] = TOKEN_NUMBER;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Keywords and identifiers */
+        if (isalpha(c) || c == '_' || c == '.') {
+            size_t word_start = idx;
+            size_t word_pos = pos;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_' || c == '.') {
+                    out[idx++] = TOKEN_NORMAL;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            size_t word_len = pos - word_pos;
+            if (word_len > 0 && word_len < 64) {
+                char word[64];
+                for (size_t i = 0; i < word_len; i++) {
+                    word[i] = buffer_get_char(buf, word_pos + i);
+                }
+                word[word_len] = '\0';
+                TokenType token = lookup_keyword(keywords, word, word_len);
+                if (token != TOKEN_NORMAL) {
+                    for (size_t i = word_start; i < idx; i++) {
+                        out[i] = token;
+                    }
+                }
+            }
+            continue;
+        }
+
+        out[idx++] = TOKEN_NORMAL;
+        pos++;
+    }
+    (void)state;
+}
+
+/* Julia highlighter */
+static void highlight_julia(Buffer *buf, size_t line_start, size_t line_end,
+                            HighlightState *state, TokenType *out, size_t out_size) {
+    const Keyword *keywords = julia_keywords;
+    size_t pos = line_start;
+    size_t idx = 0;
+
+    /* Continue multi-line comment */
+    if (*state == HL_STATE_BLOCK_COMMENT) {
+        while (pos < line_end && idx < out_size) {
+            char c = buffer_get_char(buf, pos);
+            out[idx++] = TOKEN_COMMENT;
+            if (c == '=' && pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '#') {
+                pos++;
+                if (idx < out_size) out[idx++] = TOKEN_COMMENT;
+                *state = HL_STATE_NORMAL;
+                pos++;
+                break;
+            }
+            pos++;
+        }
+        if (*state == HL_STATE_BLOCK_COMMENT) return;
+    }
+
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+
+        /* Multi-line comment #= =# */
+        if (c == '#' && pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '=') {
+            *state = HL_STATE_BLOCK_COMMENT;
+            out[idx++] = TOKEN_COMMENT;
+            pos++;
+            continue;
+        }
+
+        /* Single-line comment with # */
+        if (c == '#') {
+            while (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                pos++;
+            }
+            break;
+        }
+
+        /* Triple-quoted strings */
+        if (c == '"' && pos + 2 < line_end &&
+            buffer_get_char(buf, pos + 1) == '"' && buffer_get_char(buf, pos + 2) == '"') {
+            out[idx++] = TOKEN_STRING;
+            out[idx++] = TOKEN_STRING;
+            out[idx++] = TOKEN_STRING;
+            pos += 3;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_STRING;
+                if (c == '"' && pos + 2 < line_end &&
+                    buffer_get_char(buf, pos + 1) == '"' && buffer_get_char(buf, pos + 2) == '"') {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                    pos++;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Strings */
+        if (c == '"' || c == '\'') {
+            char quote = c;
+            out[idx++] = TOKEN_STRING;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_STRING;
+                if (c == '\\' && pos + 1 < line_end) {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                } else if (c == quote) {
+                    pos++;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Symbols (:symbol) */
+        if (c == ':' && pos + 1 < line_end && isalpha(buffer_get_char(buf, pos + 1))) {
+            out[idx++] = TOKEN_TYPE;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_' || c == '!') {
+                    out[idx++] = TOKEN_TYPE;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Numbers */
+        if (isdigit(c)) {
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isdigit(c) || c == '.' || c == 'e' || c == 'E' || c == '_' ||
+                    c == 'x' || c == 'X' || c == 'b' || c == 'B' || c == 'o' || c == 'O' ||
+                    (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+                    out[idx++] = TOKEN_NUMBER;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Keywords and identifiers */
+        if (isalpha(c) || c == '_') {
+            size_t word_start = idx;
+            size_t word_pos = pos;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_' || c == '!') {
+                    out[idx++] = TOKEN_NORMAL;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            size_t word_len = pos - word_pos;
+            if (word_len > 0 && word_len < 64) {
+                char word[64];
+                for (size_t i = 0; i < word_len; i++) {
+                    word[i] = buffer_get_char(buf, word_pos + i);
+                }
+                word[word_len] = '\0';
+                TokenType token = lookup_keyword(keywords, word, word_len);
+                if (token != TOKEN_NORMAL) {
+                    for (size_t i = word_start; i < idx; i++) {
+                        out[i] = token;
+                    }
+                }
+            }
+            continue;
+        }
+
+        out[idx++] = TOKEN_NORMAL;
+        pos++;
+    }
+}
+
+/* Nim highlighter */
+static void highlight_nim(Buffer *buf, size_t line_start, size_t line_end,
+                          HighlightState *state, TokenType *out, size_t out_size) {
+    const Keyword *keywords = nim_keywords;
+    size_t pos = line_start;
+    size_t idx = 0;
+
+    /* Continue multi-line string */
+    if (*state == HL_STATE_STRING) {
+        while (pos < line_end && idx < out_size) {
+            char c = buffer_get_char(buf, pos);
+            out[idx++] = TOKEN_STRING;
+            if (c == '"' && pos + 2 < line_end &&
+                buffer_get_char(buf, pos + 1) == '"' && buffer_get_char(buf, pos + 2) == '"') {
+                pos++;
+                if (idx < out_size) out[idx++] = TOKEN_STRING;
+                pos++;
+                if (idx < out_size) out[idx++] = TOKEN_STRING;
+                *state = HL_STATE_NORMAL;
+                pos++;
+                break;
+            }
+            pos++;
+        }
+        if (*state == HL_STATE_STRING) return;
+    }
+
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+
+        /* Single-line comment with # */
+        if (c == '#' && !(pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '[')) {
+            while (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                pos++;
+            }
+            break;
+        }
+
+        /* Triple-quoted strings */
+        if (c == '"' && pos + 2 < line_end &&
+            buffer_get_char(buf, pos + 1) == '"' && buffer_get_char(buf, pos + 2) == '"') {
+            out[idx++] = TOKEN_STRING;
+            out[idx++] = TOKEN_STRING;
+            out[idx++] = TOKEN_STRING;
+            pos += 3;
+            *state = HL_STATE_STRING;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_STRING;
+                if (c == '"' && pos + 2 < line_end &&
+                    buffer_get_char(buf, pos + 1) == '"' && buffer_get_char(buf, pos + 2) == '"') {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                    pos++;
+                    *state = HL_STATE_NORMAL;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Strings */
+        if (c == '"') {
+            out[idx++] = TOKEN_STRING;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_STRING;
+                if (c == '\\' && pos + 1 < line_end) {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                } else if (c == '"') {
+                    pos++;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Character literals */
+        if (c == '\'') {
+            out[idx++] = TOKEN_CHAR;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_CHAR;
+                if (c == '\\' && pos + 1 < line_end) {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_CHAR;
+                } else if (c == '\'') {
+                    pos++;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Numbers */
+        if (isdigit(c)) {
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isdigit(c) || c == '.' || c == '_' || c == '\'' ||
+                    c == 'e' || c == 'E' || c == 'x' || c == 'X' ||
+                    c == 'b' || c == 'B' || c == 'o' || c == 'O' ||
+                    (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+                    out[idx++] = TOKEN_NUMBER;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Keywords and identifiers */
+        if (isalpha(c) || c == '_') {
+            size_t word_start = idx;
+            size_t word_pos = pos;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_') {
+                    out[idx++] = TOKEN_NORMAL;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            size_t word_len = pos - word_pos;
+            if (word_len > 0 && word_len < 64) {
+                char word[64];
+                for (size_t i = 0; i < word_len; i++) {
+                    word[i] = buffer_get_char(buf, word_pos + i);
+                }
+                word[word_len] = '\0';
+                TokenType token = lookup_keyword(keywords, word, word_len);
+                if (token != TOKEN_NORMAL) {
+                    for (size_t i = word_start; i < idx; i++) {
+                        out[i] = token;
+                    }
+                }
+            }
+            continue;
+        }
+
+        out[idx++] = TOKEN_NORMAL;
+        pos++;
+    }
+}
+
+/* OCaml highlighter (also used for F#) */
+static void highlight_ocaml(Buffer *buf, size_t line_start, size_t line_end,
+                            HighlightState *state, TokenType *out, size_t out_size) {
+    const Keyword *keywords = ocaml_keywords;
+    size_t pos = line_start;
+    size_t idx = 0;
+
+    /* Continue multi-line comment (* *) */
+    if (*state == HL_STATE_BLOCK_COMMENT) {
+        while (pos < line_end && idx < out_size) {
+            char c = buffer_get_char(buf, pos);
+            out[idx++] = TOKEN_COMMENT;
+            if (c == '*' && pos + 1 < line_end && buffer_get_char(buf, pos + 1) == ')') {
+                pos++;
+                if (idx < out_size) out[idx++] = TOKEN_COMMENT;
+                *state = HL_STATE_NORMAL;
+                pos++;
+                break;
+            }
+            pos++;
+        }
+        if (*state == HL_STATE_BLOCK_COMMENT) return;
+    }
+
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+
+        /* Multi-line comment (* *) */
+        if (c == '(' && pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '*') {
+            *state = HL_STATE_BLOCK_COMMENT;
+            out[idx++] = TOKEN_COMMENT;
+            pos++;
+            continue;
+        }
+
+        /* Strings */
+        if (c == '"') {
+            out[idx++] = TOKEN_STRING;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_STRING;
+                if (c == '\\' && pos + 1 < line_end) {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                } else if (c == '"') {
+                    pos++;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Character literals */
+        if (c == '\'') {
+            out[idx++] = TOKEN_CHAR;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_CHAR;
+                if (c == '\\' && pos + 1 < line_end) {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_CHAR;
+                } else if (c == '\'') {
+                    pos++;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Numbers */
+        if (isdigit(c)) {
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isdigit(c) || c == '.' || c == '_' ||
+                    c == 'e' || c == 'E' || c == 'x' || c == 'X' ||
+                    c == 'b' || c == 'B' || c == 'o' || c == 'O' ||
+                    (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+                    out[idx++] = TOKEN_NUMBER;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Keywords and identifiers */
+        if (isalpha(c) || c == '_') {
+            size_t word_start = idx;
+            size_t word_pos = pos;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_' || c == '\'') {
+                    out[idx++] = TOKEN_NORMAL;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            size_t word_len = pos - word_pos;
+            if (word_len > 0 && word_len < 64) {
+                char word[64];
+                for (size_t i = 0; i < word_len; i++) {
+                    word[i] = buffer_get_char(buf, word_pos + i);
+                }
+                word[word_len] = '\0';
+                TokenType token = lookup_keyword(keywords, word, word_len);
+                if (token != TOKEN_NORMAL) {
+                    for (size_t i = word_start; i < idx; i++) {
+                        out[i] = token;
+                    }
+                }
+            }
+            continue;
+        }
+
+        out[idx++] = TOKEN_NORMAL;
+        pos++;
+    }
+}
+
+/* Prolog highlighter */
+static void highlight_prolog(Buffer *buf, size_t line_start, size_t line_end,
+                             HighlightState *state, TokenType *out, size_t out_size) {
+    const Keyword *keywords = prolog_keywords;
+    size_t pos = line_start;
+    size_t idx = 0;
+
+    /* Continue multi-line comment */
+    if (*state == HL_STATE_BLOCK_COMMENT) {
+        while (pos < line_end && idx < out_size) {
+            char c = buffer_get_char(buf, pos);
+            out[idx++] = TOKEN_COMMENT;
+            if (c == '*' && pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '/') {
+                pos++;
+                if (idx < out_size) out[idx++] = TOKEN_COMMENT;
+                *state = HL_STATE_NORMAL;
+                pos++;
+                break;
+            }
+            pos++;
+        }
+        if (*state == HL_STATE_BLOCK_COMMENT) return;
+    }
+
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+
+        /* Multi-line comment */
+        if (c == '/' && pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '*') {
+            *state = HL_STATE_BLOCK_COMMENT;
+            out[idx++] = TOKEN_COMMENT;
+            pos++;
+            continue;
+        }
+
+        /* Single-line comment with % */
+        if (c == '%') {
+            while (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                pos++;
+            }
+            break;
+        }
+
+        /* Strings */
+        if (c == '"' || c == '\'') {
+            char quote = c;
+            out[idx++] = TOKEN_STRING;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_STRING;
+                if (c == '\\' && pos + 1 < line_end) {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                } else if (c == quote) {
+                    pos++;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Numbers */
+        if (isdigit(c)) {
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isdigit(c) || c == '.' || c == 'e' || c == 'E' || c == '\'') {
+                    out[idx++] = TOKEN_NUMBER;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Variables (start with uppercase or _) */
+        if (isupper(c) || c == '_') {
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_') {
+                    out[idx++] = TOKEN_VARIABLE;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Keywords and atoms (lowercase start) */
+        if (islower(c)) {
+            size_t word_start = idx;
+            size_t word_pos = pos;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_') {
+                    out[idx++] = TOKEN_NORMAL;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            size_t word_len = pos - word_pos;
+            if (word_len > 0 && word_len < 64) {
+                char word[64];
+                for (size_t i = 0; i < word_len; i++) {
+                    word[i] = buffer_get_char(buf, word_pos + i);
+                }
+                word[word_len] = '\0';
+                TokenType token = lookup_keyword(keywords, word, word_len);
+                if (token != TOKEN_NORMAL) {
+                    for (size_t i = word_start; i < idx; i++) {
+                        out[i] = token;
+                    }
+                }
+            }
+            continue;
+        }
+
+        out[idx++] = TOKEN_NORMAL;
+        pos++;
+    }
+}
+
+/* VHDL highlighter */
+static void highlight_vhdl(Buffer *buf, size_t line_start, size_t line_end,
+                           HighlightState *state, TokenType *out, size_t out_size) {
+    const Keyword *keywords = vhdl_keywords;
+    size_t pos = line_start;
+    size_t idx = 0;
+
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+
+        /* Single-line comment with -- */
+        if (c == '-' && pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '-') {
+            while (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                pos++;
+            }
+            break;
+        }
+
+        /* Strings */
+        if (c == '"') {
+            out[idx++] = TOKEN_STRING;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_STRING;
+                if (c == '"') {
+                    /* Check for escaped quote "" */
+                    if (pos + 1 < line_end && buffer_get_char(buf, pos + 1) == '"') {
+                        pos++;
+                        if (idx < out_size) out[idx++] = TOKEN_STRING;
+                    } else {
+                        pos++;
+                        break;
+                    }
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Character literals */
+        if (c == '\'') {
+            out[idx++] = TOKEN_CHAR;
+            pos++;
+            if (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_CHAR;
+                pos++;
+            }
+            if (pos < line_end && idx < out_size && buffer_get_char(buf, pos) == '\'') {
+                out[idx++] = TOKEN_CHAR;
+                pos++;
+            }
+            continue;
+        }
+
+        /* Numbers (including based literals) */
+        if (isdigit(c)) {
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isdigit(c) || c == '.' || c == '_' || c == '#' ||
+                    c == 'e' || c == 'E' ||
+                    (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+                    out[idx++] = TOKEN_NUMBER;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Keywords and identifiers (case-insensitive) */
+        if (isalpha(c) || c == '_') {
+            size_t word_start = idx;
+            size_t word_pos = pos;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_') {
+                    out[idx++] = TOKEN_NORMAL;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            size_t word_len = pos - word_pos;
+            if (word_len > 0 && word_len < 64) {
+                char word[64];
+                for (size_t i = 0; i < word_len; i++) {
+                    char ch = buffer_get_char(buf, word_pos + i);
+                    word[i] = tolower(ch);
+                }
+                word[word_len] = '\0';
+                TokenType token = lookup_keyword(keywords, word, word_len);
+                if (token != TOKEN_NORMAL) {
+                    for (size_t i = word_start; i < idx; i++) {
+                        out[i] = token;
+                    }
+                }
+            }
+            continue;
+        }
+
+        out[idx++] = TOKEN_NORMAL;
+        pos++;
+    }
+    (void)state;
+}
+
+/* LaTeX highlighter */
+static void highlight_latex(Buffer *buf, size_t line_start, size_t line_end,
+                            HighlightState *state, TokenType *out, size_t out_size) {
+    const Keyword *keywords = latex_keywords;
+    size_t pos = line_start;
+    size_t idx = 0;
+
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+
+        /* Single-line comment with % */
+        if (c == '%') {
+            while (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                pos++;
+            }
+            break;
+        }
+
+        /* Commands (\command) */
+        if (c == '\\') {
+            size_t word_start = idx;
+            out[idx++] = TOKEN_KEYWORD;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalpha(c) || c == '*') {
+                    out[idx++] = TOKEN_KEYWORD;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            /* Check for known commands */
+            size_t word_len = idx - word_start;
+            if (word_len > 1 && word_len < 64) {
+                char word[64];
+                size_t wp = word_start == 0 ? line_start : line_start + word_start;
+                for (size_t i = 0; i < word_len; i++) {
+                    word[i] = buffer_get_char(buf, wp + i);
+                }
+                word[word_len] = '\0';
+                TokenType token = lookup_keyword(keywords, word, word_len);
+                if (token != TOKEN_NORMAL) {
+                    for (size_t i = word_start; i < idx; i++) {
+                        out[i] = token;
+                    }
+                }
+            }
+            continue;
+        }
+
+        /* Curly braces content - environment names */
+        if (c == '{') {
+            out[idx++] = TOKEN_NORMAL;
+            pos++;
+            size_t env_start = idx;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (c == '}') {
+                    break;
+                }
+                if (isalpha(c) || c == '*') {
+                    out[idx++] = TOKEN_TYPE;
+                    pos++;
+                } else {
+                    out[idx++] = TOKEN_NORMAL;
+                    pos++;
+                }
+            }
+            (void)env_start;
+            continue;
+        }
+
+        /* Math mode $ */
+        if (c == '$') {
+            out[idx++] = TOKEN_STRING;
+            pos++;
+            /* Check for $$ */
+            bool display = false;
+            if (pos < line_end && buffer_get_char(buf, pos) == '$') {
+                out[idx++] = TOKEN_STRING;
+                pos++;
+                display = true;
+            }
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_STRING;
+                if (c == '$') {
+                    pos++;
+                    if (display && pos < line_end && buffer_get_char(buf, pos) == '$') {
+                        out[idx++] = TOKEN_STRING;
+                        pos++;
+                    }
+                    break;
+                }
+                if (c == '\\' && pos + 1 < line_end) {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        out[idx++] = TOKEN_NORMAL;
+        pos++;
+    }
+    (void)state;
+}
+
+/* Nginx/Apache config highlighter */
+static void highlight_nginx(Buffer *buf, size_t line_start, size_t line_end,
+                            HighlightState *state, TokenType *out, size_t out_size) {
+    const Keyword *keywords = nginx_keywords;
+    size_t pos = line_start;
+    size_t idx = 0;
+
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+
+        /* Single-line comment with # */
+        if (c == '#') {
+            while (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                pos++;
+            }
+            break;
+        }
+
+        /* Strings */
+        if (c == '"' || c == '\'') {
+            char quote = c;
+            out[idx++] = TOKEN_STRING;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_STRING;
+                if (c == '\\' && pos + 1 < line_end) {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                } else if (c == quote) {
+                    pos++;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Variables ($var) */
+        if (c == '$') {
+            out[idx++] = TOKEN_VARIABLE;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_') {
+                    out[idx++] = TOKEN_VARIABLE;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Numbers */
+        if (isdigit(c)) {
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isdigit(c) || c == '.' || c == 'k' || c == 'K' ||
+                    c == 'm' || c == 'M' || c == 'g' || c == 'G' ||
+                    c == 's' || c == 'h' || c == 'd') {
+                    out[idx++] = TOKEN_NUMBER;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        /* Keywords and identifiers */
+        if (isalpha(c) || c == '_') {
+            size_t word_start = idx;
+            size_t word_pos = pos;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_' || c == '-') {
+                    out[idx++] = TOKEN_NORMAL;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            size_t word_len = pos - word_pos;
+            if (word_len > 0 && word_len < 64) {
+                char word[64];
+                for (size_t i = 0; i < word_len; i++) {
+                    word[i] = buffer_get_char(buf, word_pos + i);
+                }
+                word[word_len] = '\0';
+                TokenType token = lookup_keyword(keywords, word, word_len);
+                if (token != TOKEN_NORMAL) {
+                    for (size_t i = word_start; i < idx; i++) {
+                        out[i] = token;
+                    }
+                }
+            }
+            continue;
+        }
+
+        out[idx++] = TOKEN_NORMAL;
+        pos++;
+    }
+    (void)state;
+}
+
+/* INI file highlighter */
+static void highlight_ini(Buffer *buf, size_t line_start, size_t line_end,
+                          HighlightState *state, TokenType *out, size_t out_size) {
+    const Keyword *keywords = ini_keywords;
+    size_t pos = line_start;
+    size_t idx = 0;
+
+    /* Skip leading whitespace */
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+        if (c == ' ' || c == '\t') {
+            out[idx++] = TOKEN_NORMAL;
+            pos++;
+        } else {
+            break;
+        }
+    }
+
+    if (pos >= line_end) return;
+
+    char first = buffer_get_char(buf, pos);
+
+    /* Comment with ; or # */
+    if (first == ';' || first == '#') {
+        while (pos < line_end && idx < out_size) {
+            out[idx++] = TOKEN_COMMENT;
+            pos++;
+        }
+        return;
+    }
+
+    /* Section header [section] */
+    if (first == '[') {
+        while (pos < line_end && idx < out_size) {
+            char c = buffer_get_char(buf, pos);
+            out[idx++] = TOKEN_KEYWORD;
+            if (c == ']') {
+                pos++;
+                break;
+            }
+            pos++;
+        }
+        /* Rest of line is normal or comment */
+        while (pos < line_end && idx < out_size) {
+            char c = buffer_get_char(buf, pos);
+            if (c == ';' || c == '#') {
+                while (pos < line_end && idx < out_size) {
+                    out[idx++] = TOKEN_COMMENT;
+                    pos++;
+                }
+                break;
+            }
+            out[idx++] = TOKEN_NORMAL;
+            pos++;
+        }
+        (void)state;
+        return;
+    }
+
+    /* Key = value line */
+    /* Key part */
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+        if (c == '=' || c == ':') {
+            break;
+        }
+        out[idx++] = TOKEN_TYPE;
+        pos++;
+    }
+
+    /* = or : */
+    if (pos < line_end && idx < out_size) {
+        out[idx++] = TOKEN_NORMAL;
+        pos++;
+    }
+
+    /* Value part */
+    while (pos < line_end && idx < out_size) {
+        char c = buffer_get_char(buf, pos);
+
+        /* Comment in value */
+        if (c == ';' || c == '#') {
+            while (pos < line_end && idx < out_size) {
+                out[idx++] = TOKEN_COMMENT;
+                pos++;
+            }
+            break;
+        }
+
+        /* Strings */
+        if (c == '"' || c == '\'') {
+            char quote = c;
+            out[idx++] = TOKEN_STRING;
+            pos++;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                out[idx++] = TOKEN_STRING;
+                if (c == '\\' && pos + 1 < line_end) {
+                    pos++;
+                    if (idx < out_size) out[idx++] = TOKEN_STRING;
+                } else if (c == quote) {
+                    pos++;
+                    break;
+                }
+                pos++;
+            }
+            continue;
+        }
+
+        /* Check for boolean/special values */
+        if (isalpha(c)) {
+            size_t word_start = idx;
+            size_t word_pos = pos;
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isalnum(c) || c == '_') {
+                    out[idx++] = TOKEN_NORMAL;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            size_t word_len = pos - word_pos;
+            if (word_len > 0 && word_len < 64) {
+                char word[64];
+                for (size_t i = 0; i < word_len; i++) {
+                    word[i] = buffer_get_char(buf, word_pos + i);
+                }
+                word[word_len] = '\0';
+                TokenType token = lookup_keyword(keywords, word, word_len);
+                if (token != TOKEN_NORMAL) {
+                    for (size_t i = word_start; i < idx; i++) {
+                        out[i] = token;
+                    }
+                }
+            }
+            continue;
+        }
+
+        /* Numbers */
+        if (isdigit(c) || (c == '-' && pos + 1 < line_end && isdigit(buffer_get_char(buf, pos + 1)))) {
+            while (pos < line_end && idx < out_size) {
+                c = buffer_get_char(buf, pos);
+                if (isdigit(c) || c == '.' || c == '-' || c == '+' || c == 'e' || c == 'E') {
+                    out[idx++] = TOKEN_NUMBER;
+                    pos++;
+                } else {
+                    break;
+                }
+            }
+            continue;
+        }
+
+        out[idx++] = TOKEN_NORMAL;
+        pos++;
+    }
+    (void)state;
+}
+
 /* Main highlighting function */
 void syntax_highlight_line(Buffer *buf, size_t line_start, size_t line_end,
                            LanguageType lang, HighlightState *state,
@@ -3595,6 +5995,53 @@ void syntax_highlight_line(Buffer *buf, size_t line_start, size_t line_end,
             break;
         case LANG_TERRAFORM:
             highlight_terraform(buf, line_start, line_end, state, out, out_size);
+            break;
+        case LANG_PHP:
+            highlight_php(buf, line_start, line_end, state, out, out_size);
+            break;
+        case LANG_KOTLIN:
+        case LANG_SWIFT:
+        case LANG_SCALA:
+        case LANG_ZIG:
+        case LANG_DART:
+        case LANG_GROOVY:
+        case LANG_VERILOG:
+            highlight_c_like(buf, line_start, line_end, lang, state, out, out_size);
+            break;
+        case LANG_ELIXIR:
+            highlight_elixir(buf, line_start, line_end, state, out, out_size);
+            break;
+        case LANG_ERLANG:
+            highlight_erlang(buf, line_start, line_end, state, out, out_size);
+            break;
+        case LANG_R:
+            highlight_r(buf, line_start, line_end, state, out, out_size);
+            break;
+        case LANG_JULIA:
+            highlight_julia(buf, line_start, line_end, state, out, out_size);
+            break;
+        case LANG_NIM:
+            highlight_nim(buf, line_start, line_end, state, out, out_size);
+            break;
+        case LANG_OCAML:
+        case LANG_FSHARP:
+            highlight_ocaml(buf, line_start, line_end, state, out, out_size);
+            break;
+        case LANG_PROLOG:
+            highlight_prolog(buf, line_start, line_end, state, out, out_size);
+            break;
+        case LANG_VHDL:
+            highlight_vhdl(buf, line_start, line_end, state, out, out_size);
+            break;
+        case LANG_LATEX:
+            highlight_latex(buf, line_start, line_end, state, out, out_size);
+            break;
+        case LANG_NGINX:
+        case LANG_APACHE:
+            highlight_nginx(buf, line_start, line_end, state, out, out_size);
+            break;
+        case LANG_INI:
+            highlight_ini(buf, line_start, line_end, state, out, out_size);
             break;
         default:
             break;

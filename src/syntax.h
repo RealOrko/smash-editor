@@ -56,6 +56,27 @@ typedef enum {
     LANG_HTML,          /* HTML/XML */
     LANG_TYPESCRIPT,    /* TypeScript */
     LANG_TERRAFORM,     /* Terraform/HCL */
+    LANG_PHP,           /* PHP */
+    LANG_KOTLIN,        /* Kotlin */
+    LANG_SWIFT,         /* Swift */
+    LANG_SCALA,         /* Scala */
+    LANG_ELIXIR,        /* Elixir */
+    LANG_ERLANG,        /* Erlang */
+    LANG_R,             /* R */
+    LANG_JULIA,         /* Julia */
+    LANG_ZIG,           /* Zig */
+    LANG_NIM,           /* Nim */
+    LANG_DART,          /* Dart */
+    LANG_OCAML,         /* OCaml */
+    LANG_FSHARP,        /* F# */
+    LANG_GROOVY,        /* Groovy */
+    LANG_PROLOG,        /* Prolog */
+    LANG_VERILOG,       /* Verilog */
+    LANG_VHDL,          /* VHDL */
+    LANG_LATEX,         /* LaTeX */
+    LANG_NGINX,         /* Nginx config */
+    LANG_APACHE,        /* Apache config */
+    LANG_INI,           /* INI files */
     LANG_MAX
 } LanguageType;
 
