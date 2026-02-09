@@ -592,17 +592,17 @@ static void input_handle_panel(Editor *ed, int key) {
                         } else {
                             snprintf(full_path, sizeof(full_path), "/%s", entry->name);
                         }
-                        int result_code;
+                        bool success;
                         if (entry->is_directory) {
-                            result_code = rmdir(full_path);
+                            success = delete_directory_recursive(full_path);
                         } else {
-                            result_code = remove(full_path);
+                            success = (remove(full_path) == 0);
                         }
-                        if (result_code == 0) {
+                        if (success) {
                             editor_panel_read_directory(ed);
                             editor_set_status_message(ed, entry->is_directory ? "Folder deleted" : "File deleted");
                         } else {
-                            editor_set_status_message(ed, entry->is_directory ? "Failed to delete folder (not empty?)" : "Failed to delete file");
+                            editor_set_status_message(ed, entry->is_directory ? "Failed to delete folder" : "Failed to delete file");
                         }
                     }
                 }

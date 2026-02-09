@@ -712,17 +712,17 @@ bool explorer_open(Editor *ed) {
                             } else {
                                 snprintf(full_path, sizeof(full_path), "/%s", entry->name);
                             }
-                            int del_result;
+                            bool success;
                             if (entry->is_directory) {
-                                del_result = rmdir(full_path);
+                                success = explorer_delete_directory_recursive(full_path);
                             } else {
-                                del_result = remove(full_path);
+                                success = (remove(full_path) == 0);
                             }
-                            if (del_result == 0) {
+                            if (success) {
                                 explorer_read_directory(&state);
                                 editor_set_status_message(ed, entry->is_directory ? "Folder deleted" : "File deleted");
                             } else {
-                                editor_set_status_message(ed, entry->is_directory ? "Failed to delete folder (not empty?)" : "Failed to delete file");
+                                editor_set_status_message(ed, entry->is_directory ? "Failed to delete folder" : "Failed to delete file");
                             }
                         }
                     }
