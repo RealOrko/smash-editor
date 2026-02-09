@@ -218,6 +218,9 @@ static void explorer_read_directory(ExplorerState *state) {
     DIR *dir = opendir(state->current_path);
     if (!dir) return;
 
+    /* Update process working directory to match explorer location */
+    chdir(state->current_path);
+
     state->entry_count = 0;
     struct dirent *entry;
 

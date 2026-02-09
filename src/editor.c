@@ -1575,6 +1575,9 @@ void editor_panel_read_directory(Editor *ed) {
     DIR *dir = opendir(state->current_path);
     if (!dir) return;
 
+    /* Update process working directory to match panel location */
+    chdir(state->current_path);
+
     state->entry_count = 0;
     struct dirent *entry;
 
