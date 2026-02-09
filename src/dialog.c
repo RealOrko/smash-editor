@@ -1,4 +1,5 @@
 #include "smashedit.h"
+#include "display.h"
 #include <wchar.h>
 
 static void draw_wchar_dialog(int y, int x, wchar_t wc) {
@@ -6,6 +7,15 @@ static void draw_wchar_dialog(int y, int x, wchar_t wc) {
     wchar_t wstr[2] = {wc, L'\0'};
     setcchar(&cc, wstr, A_NORMAL, 0, NULL);
     mvadd_wch(y, x, &cc);
+}
+
+/* Draw a box character - uses ACS or Unicode based on mode */
+static void draw_box_char_dialog(int y, int x, chtype acs_char, wchar_t unicode_char) {
+    if (display_get_acs_mode()) {
+        mvaddch(y, x, acs_char);
+    } else {
+        draw_wchar_dialog(y, x, unicode_char);
+    }
 }
 
 void dialog_draw_box(int y, int x, int height, int width, const char *title) {
@@ -19,20 +29,20 @@ void dialog_draw_box(int y, int x, int height, int width, const char *title) {
         }
     }
 
-    /* Draw border with double lines */
-    draw_wchar_dialog(y, x, DBOX_TL);
-    draw_wchar_dialog(y, x + width - 1, DBOX_TR);
-    draw_wchar_dialog(y + height - 1, x, DBOX_BL);
-    draw_wchar_dialog(y + height - 1, x + width - 1, DBOX_BR);
+    /* Draw border with double lines (ACS uses single-line equivalents) */
+    draw_box_char_dialog(y, x, ACS_ULCORNER, DBOX_TL);
+    draw_box_char_dialog(y, x + width - 1, ACS_URCORNER, DBOX_TR);
+    draw_box_char_dialog(y + height - 1, x, ACS_LLCORNER, DBOX_BL);
+    draw_box_char_dialog(y + height - 1, x + width - 1, ACS_LRCORNER, DBOX_BR);
 
     for (int i = 1; i < width - 1; i++) {
-        draw_wchar_dialog(y, x + i, DBOX_HORZ);
-        draw_wchar_dialog(y + height - 1, x + i, DBOX_HORZ);
+        draw_box_char_dialog(y, x + i, ACS_HLINE, DBOX_HORZ);
+        draw_box_char_dialog(y + height - 1, x + i, ACS_HLINE, DBOX_HORZ);
     }
 
     for (int i = 1; i < height - 1; i++) {
-        draw_wchar_dialog(y + i, x, DBOX_VERT);
-        draw_wchar_dialog(y + i, x + width - 1, DBOX_VERT);
+        draw_box_char_dialog(y + i, x, ACS_VLINE, DBOX_VERT);
+        draw_box_char_dialog(y + i, x + width - 1, ACS_VLINE, DBOX_VERT);
     }
 
     /* Draw title */

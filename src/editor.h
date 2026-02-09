@@ -73,6 +73,7 @@ typedef struct Editor {
     /* View options */
     bool show_line_numbers;
     bool show_status_bar;
+    bool use_acs_chars;         /* Use ACS instead of Unicode box-drawing */
 
     /* Editor state */
     EditorMode mode;

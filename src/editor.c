@@ -1,5 +1,6 @@
 #include "smashedit.h"
 #include "explorer.h"
+#include "display.h"
 #include <wctype.h>
 #include <strings.h>
 #include <signal.h>
@@ -135,6 +136,7 @@ Editor *editor_create(void) {
 
     ed->show_line_numbers = false;
     ed->show_status_bar = true;
+    ed->use_acs_chars = true;  /* Default to ACS for better terminal compatibility */
 
     ed->mode = MODE_NORMAL;
     ed->running = true;
@@ -205,14 +207,17 @@ void editor_init_screen(Editor *ed) {
     /* Syntax highlighting color pairs */
     init_pair(COLOR_SYN_KEYWORD, COLOR_YELLOW, COLOR_BLUE);
     init_pair(COLOR_SYN_TYPE, COLOR_GREEN, COLOR_BLUE);
-    init_pair(COLOR_SYN_STRING, COLOR_MAGENTA, COLOR_BLUE);
-    init_pair(COLOR_SYN_COMMENT, COLOR_CYAN, COLOR_BLUE);
-    init_pair(COLOR_SYN_PREPROC, COLOR_MAGENTA, COLOR_BLUE);
-    init_pair(COLOR_SYN_NUMBER, COLOR_CYAN, COLOR_BLUE);
+    init_pair(COLOR_SYN_STRING, COLOR_RED, COLOR_BLUE);
+    init_pair(COLOR_SYN_COMMENT, COLOR_WHITE, COLOR_BLUE);
+    init_pair(COLOR_SYN_PREPROC, COLOR_GREEN, COLOR_BLUE);
+    init_pair(COLOR_SYN_NUMBER, COLOR_RED, COLOR_BLUE);
     init_pair(COLOR_SYN_VARIABLE, COLOR_GREEN, COLOR_BLUE);
     init_pair(COLOR_SYN_HEADING, COLOR_YELLOW, COLOR_BLUE);
     init_pair(COLOR_SYN_EMPHASIS, COLOR_WHITE, COLOR_BLUE);
     init_pair(COLOR_SYN_CODE, COLOR_CYAN, COLOR_BLUE);
+
+    /* Set ACS mode based on editor setting */
+    display_set_acs_mode(ed->use_acs_chars);
 
     editor_update_dimensions(ed);
 }

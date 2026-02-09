@@ -1,4 +1,5 @@
 #include "smashedit.h"
+#include "display.h"
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -15,6 +16,15 @@ static void draw_wchar_explorer(int y, int x, wchar_t wc) {
     wchar_t wstr[2] = {wc, L'\0'};
     setcchar(&cc, wstr, A_NORMAL, 0, NULL);
     mvadd_wch(y, x, &cc);
+}
+
+/* Draw a box character - uses ACS or Unicode based on mode */
+static void draw_box_char_explorer(int y, int x, chtype acs_char, wchar_t unicode_char) {
+    if (display_get_acs_mode()) {
+        mvaddch(y, x, acs_char);
+    } else {
+        draw_wchar_explorer(y, x, unicode_char);
+    }
 }
 
 static int compare_entries(const void *a, const void *b) {
@@ -311,20 +321,20 @@ static void explorer_draw(ExplorerState *state, int rows, int cols) {
         }
     }
 
-    /* Draw border with double lines */
-    draw_wchar_explorer(box_y, box_x, DBOX_TL);
-    draw_wchar_explorer(box_y, box_x + box_width - 1, DBOX_TR);
-    draw_wchar_explorer(box_y + box_height - 1, box_x, DBOX_BL);
-    draw_wchar_explorer(box_y + box_height - 1, box_x + box_width - 1, DBOX_BR);
+    /* Draw border with double lines (ACS uses single-line equivalents) */
+    draw_box_char_explorer(box_y, box_x, ACS_ULCORNER, DBOX_TL);
+    draw_box_char_explorer(box_y, box_x + box_width - 1, ACS_URCORNER, DBOX_TR);
+    draw_box_char_explorer(box_y + box_height - 1, box_x, ACS_LLCORNER, DBOX_BL);
+    draw_box_char_explorer(box_y + box_height - 1, box_x + box_width - 1, ACS_LRCORNER, DBOX_BR);
 
     for (int i = 1; i < box_width - 1; i++) {
-        draw_wchar_explorer(box_y, box_x + i, DBOX_HORZ);
-        draw_wchar_explorer(box_y + box_height - 1, box_x + i, DBOX_HORZ);
+        draw_box_char_explorer(box_y, box_x + i, ACS_HLINE, DBOX_HORZ);
+        draw_box_char_explorer(box_y + box_height - 1, box_x + i, ACS_HLINE, DBOX_HORZ);
     }
 
     for (int i = 1; i < box_height - 1; i++) {
-        draw_wchar_explorer(box_y + i, box_x, DBOX_VERT);
-        draw_wchar_explorer(box_y + i, box_x + box_width - 1, DBOX_VERT);
+        draw_box_char_explorer(box_y + i, box_x, ACS_VLINE, DBOX_VERT);
+        draw_box_char_explorer(box_y + i, box_x + box_width - 1, ACS_VLINE, DBOX_VERT);
     }
 
     /* Draw title bar */
@@ -342,10 +352,10 @@ static void explorer_draw(ExplorerState *state, int rows, int cols) {
     mvprintw(box_y, title_x, "%s", title);
 
     /* Draw separator line after title */
-    draw_wchar_explorer(box_y + 1, box_x, DBOX_LTEE);
-    draw_wchar_explorer(box_y + 1, box_x + box_width - 1, DBOX_RTEE);
+    draw_box_char_explorer(box_y + 1, box_x, ACS_LTEE, DBOX_LTEE);
+    draw_box_char_explorer(box_y + 1, box_x + box_width - 1, ACS_RTEE, DBOX_RTEE);
     for (int i = 1; i < box_width - 1; i++) {
-        draw_wchar_explorer(box_y + 1, box_x + i, DBOX_HORZ);
+        draw_box_char_explorer(box_y + 1, box_x + i, ACS_HLINE, DBOX_HORZ);
     }
 
     /* Calculate visible area */

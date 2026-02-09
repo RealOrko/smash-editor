@@ -1132,6 +1132,10 @@ void input_handle(Editor *ed, MenuState *menu) {
                     ed->show_status_bar = !ed->show_status_bar;
                     editor_update_dimensions(ed);
                     break;
+                case ACTION_TOGGLE_ACS_CHARS:
+                    ed->use_acs_chars = !ed->use_acs_chars;
+                    display_set_acs_mode(ed->use_acs_chars);
+                    break;
                 case ACTION_HEX_MODE:
                     ed->hex_mode = !ed->hex_mode;
                     if (ed->hex_mode) {

@@ -3,6 +3,17 @@
 #include <time.h>
 #include <wctype.h>
 
+/* Global ACS mode flag - when true, use terminal-native box drawing */
+static bool g_use_acs_mode = false;
+
+void display_set_acs_mode(bool use_acs) {
+    g_use_acs_mode = use_acs;
+}
+
+bool display_get_acs_mode(void) {
+    return g_use_acs_mode;
+}
+
 /* Get the number of bytes in a UTF-8 character based on the first byte */
 static int utf8_char_length(unsigned char c) {
     if ((c & 0x80) == 0) return 1;        /* 0xxxxxxx - ASCII */
@@ -105,7 +116,17 @@ static void draw_wchar(int y, int x, wchar_t wc) {
     mvadd_wch(y, x, &cc);
 }
 
+/* Draw a box character - uses ACS or Unicode based on mode */
+static void draw_box_char(int y, int x, chtype acs_char, wchar_t unicode_char) {
+    if (g_use_acs_mode) {
+        mvaddch(y, x, acs_char);
+    } else {
+        draw_wchar(y, x, unicode_char);
+    }
+}
+
 void display_draw_box(int y, int x, int height, int width, bool double_line) {
+    /* Note: ACS doesn't have double-line variants, so we use single-line ACS regardless */
     wchar_t tl, tr, bl, br, horz, vert;
 
     if (double_line) {
@@ -117,35 +138,35 @@ void display_draw_box(int y, int x, int height, int width, bool double_line) {
     }
 
     /* Corners */
-    draw_wchar(y, x, tl);
-    draw_wchar(y, x + width - 1, tr);
-    draw_wchar(y + height - 1, x, bl);
-    draw_wchar(y + height - 1, x + width - 1, br);
+    draw_box_char(y, x, ACS_ULCORNER, tl);
+    draw_box_char(y, x + width - 1, ACS_URCORNER, tr);
+    draw_box_char(y + height - 1, x, ACS_LLCORNER, bl);
+    draw_box_char(y + height - 1, x + width - 1, ACS_LRCORNER, br);
 
     /* Horizontal lines */
     for (int i = 1; i < width - 1; i++) {
-        draw_wchar(y, x + i, horz);
-        draw_wchar(y + height - 1, x + i, horz);
+        draw_box_char(y, x + i, ACS_HLINE, horz);
+        draw_box_char(y + height - 1, x + i, ACS_HLINE, horz);
     }
 
     /* Vertical lines */
     for (int i = 1; i < height - 1; i++) {
-        draw_wchar(y + i, x, vert);
-        draw_wchar(y + i, x + width - 1, vert);
+        draw_box_char(y + i, x, ACS_VLINE, vert);
+        draw_box_char(y + i, x + width - 1, ACS_VLINE, vert);
     }
 }
 
 void display_draw_hline(int y, int x, int width, bool double_line) {
     wchar_t horz = double_line ? DBOX_HORZ : BOX_HORZ;
     for (int i = 0; i < width; i++) {
-        draw_wchar(y, x + i, horz);
+        draw_box_char(y, x + i, ACS_HLINE, horz);
     }
 }
 
 void display_draw_vline(int y, int x, int height, bool double_line) {
     wchar_t vert = double_line ? DBOX_VERT : BOX_VERT;
     for (int i = 0; i < height; i++) {
-        draw_wchar(y + i, x, vert);
+        draw_box_char(y + i, x, ACS_VLINE, vert);
     }
 }
 
@@ -166,23 +187,23 @@ void display_draw_border(Editor *ed) {
     int bottom_border_y = ed->show_status_bar ? ed->screen_rows - 2 : ed->screen_rows - 1;
 
     /* Top border */
-    draw_wchar(1, 0, DBOX_TL);
-    draw_wchar(1, ed->screen_cols - 1, DBOX_TR);
+    draw_box_char(1, 0, ACS_ULCORNER, DBOX_TL);
+    draw_box_char(1, ed->screen_cols - 1, ACS_URCORNER, DBOX_TR);
     for (int i = 1; i < ed->screen_cols - 1; i++) {
-        draw_wchar(1, i, DBOX_HORZ);
+        draw_box_char(1, i, ACS_HLINE, DBOX_HORZ);
     }
 
     /* Side borders */
     for (int y = 2; y < bottom_border_y; y++) {
-        draw_wchar(y, 0, DBOX_VERT);
-        draw_wchar(y, ed->screen_cols - 1, DBOX_VERT);
+        draw_box_char(y, 0, ACS_VLINE, DBOX_VERT);
+        draw_box_char(y, ed->screen_cols - 1, ACS_VLINE, DBOX_VERT);
     }
 
     /* Bottom border */
-    draw_wchar(bottom_border_y, 0, DBOX_BL);
-    draw_wchar(bottom_border_y, ed->screen_cols - 1, DBOX_BR);
+    draw_box_char(bottom_border_y, 0, ACS_LLCORNER, DBOX_BL);
+    draw_box_char(bottom_border_y, ed->screen_cols - 1, ACS_LRCORNER, DBOX_BR);
     for (int i = 1; i < ed->screen_cols - 1; i++) {
-        draw_wchar(bottom_border_y, i, DBOX_HORZ);
+        draw_box_char(bottom_border_y, i, ACS_HLINE, DBOX_HORZ);
     }
 
     attroff(COLOR_PAIR(COLOR_BORDER));
@@ -249,9 +270,9 @@ void display_draw_statusbar(Editor *ed) {
     int fname_x = (ed->screen_cols - fname_len) / 2;
     if (fname_x < 30) fname_x = 30;
 
-    draw_wchar(status_y, fname_x - 2, BOX_VERT);
+    draw_box_char(status_y, fname_x - 2, ACS_VLINE, BOX_VERT);
     mvprintw(status_y, fname_x, "%s", fname);
-    draw_wchar(status_y, fname_x + fname_len + 1, BOX_VERT);
+    draw_box_char(status_y, fname_x + fname_len + 1, ACS_VLINE, BOX_VERT);
 
     /* Status message or modified indicator on the right */
     time_t now = time(NULL);
@@ -638,10 +659,7 @@ static void display_draw_panel(Editor *ed) {
     /* Draw vertical separator between panel and editor */
     attron(COLOR_PAIR(COLOR_BORDER));
     for (int row = 0; row < panel_height; row++) {
-        cchar_t cc;
-        wchar_t wstr[2] = {BOX_VERT, L'\0'};
-        setcchar(&cc, wstr, A_NORMAL, 0, NULL);
-        mvadd_wch(panel_top + row, PANEL_WIDTH + 1, &cc);
+        draw_box_char(panel_top + row, PANEL_WIDTH + 1, ACS_VLINE, BOX_VERT);
     }
     attroff(COLOR_PAIR(COLOR_BORDER));
 

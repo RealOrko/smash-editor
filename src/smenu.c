@@ -1,4 +1,5 @@
 #include "smashedit.h"
+#include "display.h"
 #include <wchar.h>
 
 /* Menu item definitions */
@@ -36,6 +37,7 @@ static MenuItem view_items[] = {
     {"Line Numbers", "", ACTION_TOGGLE_LINE_NUMBERS, false, 0},  /* L */
     {"Status Bar",   "", ACTION_TOGGLE_STATUS_BAR, false, 0},    /* S */
     {"File Panel",   "Ctrl+Alt+E", ACTION_TOGGLE_PANEL, false, 0},  /* F */
+    {"ASCII Borders", "", ACTION_TOGGLE_ACS_CHARS, false, 0},    /* A */
     {"",             "", 0, true, -1},                           /* Separator */
     {"Hex Mode",     "Ctrl+Alt+H", ACTION_HEX_MODE, false, 0}     /* H */
 };
@@ -206,6 +208,15 @@ static void draw_wchar_menu(int y, int x, wchar_t wc) {
     mvadd_wch(y, x, &cc);
 }
 
+/* Draw a box character - uses ACS or Unicode based on mode */
+static void draw_box_char_menu(int y, int x, chtype acs_char, wchar_t unicode_char) {
+    if (display_get_acs_mode()) {
+        mvaddch(y, x, acs_char);
+    } else {
+        draw_wchar_menu(y, x, unicode_char);
+    }
+}
+
 void menu_draw(MenuState *state, Editor *ed) {
     if (!state || !state->active || state->current_menu < 0 || !ed) return;
 
@@ -243,19 +254,19 @@ void menu_draw(MenuState *state, Editor *ed) {
     }
 
     /* Draw dropdown border */
-    draw_wchar_menu(dropdown_y, dropdown_x, BOX_TL);
-    draw_wchar_menu(dropdown_y, dropdown_x + dropdown_width - 1, BOX_TR);
-    draw_wchar_menu(dropdown_y + dropdown_height - 1, dropdown_x, BOX_BL);
-    draw_wchar_menu(dropdown_y + dropdown_height - 1, dropdown_x + dropdown_width - 1, BOX_BR);
+    draw_box_char_menu(dropdown_y, dropdown_x, ACS_ULCORNER, BOX_TL);
+    draw_box_char_menu(dropdown_y, dropdown_x + dropdown_width - 1, ACS_URCORNER, BOX_TR);
+    draw_box_char_menu(dropdown_y + dropdown_height - 1, dropdown_x, ACS_LLCORNER, BOX_BL);
+    draw_box_char_menu(dropdown_y + dropdown_height - 1, dropdown_x + dropdown_width - 1, ACS_LRCORNER, BOX_BR);
 
     for (int x = 1; x < dropdown_width - 1; x++) {
-        draw_wchar_menu(dropdown_y, dropdown_x + x, BOX_HORZ);
-        draw_wchar_menu(dropdown_y + dropdown_height - 1, dropdown_x + x, BOX_HORZ);
+        draw_box_char_menu(dropdown_y, dropdown_x + x, ACS_HLINE, BOX_HORZ);
+        draw_box_char_menu(dropdown_y + dropdown_height - 1, dropdown_x + x, ACS_HLINE, BOX_HORZ);
     }
 
     for (int y = 1; y < dropdown_height - 1; y++) {
-        draw_wchar_menu(dropdown_y + y, dropdown_x, BOX_VERT);
-        draw_wchar_menu(dropdown_y + y, dropdown_x + dropdown_width - 1, BOX_VERT);
+        draw_box_char_menu(dropdown_y + y, dropdown_x, ACS_VLINE, BOX_VERT);
+        draw_box_char_menu(dropdown_y + y, dropdown_x + dropdown_width - 1, ACS_VLINE, BOX_VERT);
     }
 
     /* Draw menu items */
@@ -265,10 +276,10 @@ void menu_draw(MenuState *state, Editor *ed) {
         if (menu->items[i].separator) {
             /* Draw separator line */
             attron(COLOR_PAIR(COLOR_DIALOG));
-            draw_wchar_menu(item_y, dropdown_x, BOX_LTEE);
-            draw_wchar_menu(item_y, dropdown_x + dropdown_width - 1, BOX_RTEE);
+            draw_box_char_menu(item_y, dropdown_x, ACS_LTEE, BOX_LTEE);
+            draw_box_char_menu(item_y, dropdown_x + dropdown_width - 1, ACS_RTEE, BOX_RTEE);
             for (int x = 1; x < dropdown_width - 1; x++) {
-                draw_wchar_menu(item_y, dropdown_x + x, BOX_HORZ);
+                draw_box_char_menu(item_y, dropdown_x + x, ACS_HLINE, BOX_HORZ);
             }
         } else {
             if (i == state->current_item) {

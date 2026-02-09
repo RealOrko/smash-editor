@@ -47,16 +47,19 @@
 /* Syntax highlighting color pairs */
 #define COLOR_SYN_KEYWORD    9   /* Yellow on blue - keywords */
 #define COLOR_SYN_TYPE      10   /* Green on blue - types */
-#define COLOR_SYN_STRING    11   /* Magenta on blue - strings */
-#define COLOR_SYN_COMMENT   12   /* Cyan on blue - comments */
-#define COLOR_SYN_PREPROC   13   /* Magenta on blue - preprocessor */
-#define COLOR_SYN_NUMBER    14   /* Cyan on blue - numbers */
+#define COLOR_SYN_STRING    11   /* Red on blue - strings */
+#define COLOR_SYN_COMMENT   12   /* White on blue - comments */
+#define COLOR_SYN_PREPROC   13   /* Green on blue - preprocessor */
+#define COLOR_SYN_NUMBER    14   /* Red on blue - numbers */
 #define COLOR_SYN_VARIABLE  15   /* Green on blue - variables */
 #define COLOR_SYN_HEADING   16   /* Yellow on blue - markdown headings */
 #define COLOR_SYN_EMPHASIS  17   /* White bold on blue - emphasis */
 #define COLOR_SYN_CODE      18   /* Cyan on blue - code blocks */
 
-/* Box drawing characters (Unicode) */
+/* Box drawing characters (Unicode)
+ * Note: If Unicode box-drawing causes gaps in some terminals,
+ * use View > ASCII Borders to switch to terminal-native ACS characters.
+ */
 #define BOX_HORZ      L'─'
 #define BOX_VERT      L'│'
 #define BOX_TL        L'┌'
