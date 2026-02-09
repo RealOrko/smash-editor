@@ -35,6 +35,7 @@ static MenuItem search_items[] = {
 static MenuItem view_items[] = {
     {"Line Numbers", "", ACTION_TOGGLE_LINE_NUMBERS, false, 0},  /* L */
     {"Status Bar",   "", ACTION_TOGGLE_STATUS_BAR, false, 0},    /* S */
+    {"File Panel",   "F5", ACTION_TOGGLE_PANEL, false, 0},       /* F */
     {"",             "", 0, true, -1},                           /* Separator */
     {"Hex Mode",     "F4", ACTION_HEX_MODE, false, 0}            /* H */
 };

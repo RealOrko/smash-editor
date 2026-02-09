@@ -29,6 +29,7 @@
 #define MAX_LINE_LENGTH 16384
 #define MAX_FILENAME 4096
 #define TAB_WIDTH 2
+#define PANEL_WIDTH 30
 
 /* Undo stack size */
 #define MAX_UNDO_LEVELS 16384

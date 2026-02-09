@@ -1,6 +1,10 @@
 #include "smashedit.h"
+#include "explorer.h"
 #include <wctype.h>
+#include <strings.h>
 #include <signal.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #ifndef _WIN32
 #include <termios.h>
 #include <unistd.h>
@@ -232,6 +236,12 @@ void editor_update_dimensions(Editor *ed) {
     if (ed->show_line_numbers) {
         ed->edit_left += 6;  /* Line number width + space */
         ed->edit_width -= 6;
+    }
+
+    /* Adjust for file panel */
+    if (ed->panel_visible) {
+        ed->edit_left += PANEL_WIDTH + 1;  /* Panel width + border */
+        ed->edit_width -= PANEL_WIDTH + 1;
     }
 
     /* Ensure cursor is visible after resize */
@@ -1505,4 +1515,82 @@ void editor_hex_set_byte(Editor *ed, unsigned char value) {
     buffer_insert_string(ed->buffer, ed->cursor_pos, new_str, 1);
 
     ed->modified = true;
+}
+
+/* File panel helpers */
+
+static int panel_compare_entries(const void *a, const void *b) {
+    const ExplorerEntry *ea = (const ExplorerEntry *)a;
+    const ExplorerEntry *eb = (const ExplorerEntry *)b;
+
+    /* Directories come first */
+    if (ea->is_directory && !eb->is_directory) return -1;
+    if (!ea->is_directory && eb->is_directory) return 1;
+
+    /* ".." always comes first among directories */
+    if (ea->is_directory && eb->is_directory) {
+        if (strcmp(ea->name, "..") == 0) return -1;
+        if (strcmp(eb->name, "..") == 0) return 1;
+    }
+
+    /* Alphabetical (case-insensitive) */
+    return strcasecmp(ea->name, eb->name);
+}
+
+void editor_panel_init(Editor *ed) {
+    if (!ed) return;
+
+    if (!ed->panel_state) {
+        ed->panel_state = malloc(sizeof(ExplorerState));
+        if (!ed->panel_state) return;
+        memset(ed->panel_state, 0, sizeof(ExplorerState));
+    }
+
+    /* Initialize with current working directory */
+    if (getcwd(ed->panel_state->current_path, sizeof(ed->panel_state->current_path)) == NULL) {
+        strcpy(ed->panel_state->current_path, "/");
+    }
+
+    editor_panel_read_directory(ed);
+}
+
+void editor_panel_read_directory(Editor *ed) {
+    if (!ed || !ed->panel_state) return;
+
+    ExplorerState *state = ed->panel_state;
+    DIR *dir = opendir(state->current_path);
+    if (!dir) return;
+
+    state->entry_count = 0;
+    struct dirent *entry;
+
+    while ((entry = readdir(dir)) != NULL && state->entry_count < MAX_EXPLORER_ENTRIES) {
+        /* Skip "." but keep ".." */
+        if (strcmp(entry->d_name, ".") == 0) continue;
+
+        /* Build full path to check if directory */
+        char full_path[MAX_PATH_LENGTH];
+        snprintf(full_path, sizeof(full_path), "%s/%s", state->current_path, entry->d_name);
+
+        struct stat st;
+        bool is_dir = false;
+        if (stat(full_path, &st) == 0) {
+            is_dir = S_ISDIR(st.st_mode);
+        }
+
+        strncpy(state->entries[state->entry_count].name, entry->d_name,
+                sizeof(state->entries[state->entry_count].name) - 1);
+        state->entries[state->entry_count].name[sizeof(state->entries[state->entry_count].name) - 1] = '\0';
+        state->entries[state->entry_count].is_directory = is_dir;
+        state->entry_count++;
+    }
+
+    closedir(dir);
+
+    /* Sort entries: directories first, then files, alphabetically */
+    qsort(state->entries, state->entry_count, sizeof(ExplorerEntry), panel_compare_entries);
+
+    /* Reset selection and scroll */
+    state->selected_index = 0;
+    state->scroll_offset = 0;
 }

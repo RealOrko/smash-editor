@@ -1,5 +1,6 @@
 #include "smashedit.h"
 #include <stdarg.h>
+#include <strings.h>
 
 /* PDCurses extended key codes for Windows - from curses.h */
 #ifdef PDCURSES
@@ -143,6 +144,210 @@ bool input_is_alt_key(int *key) {
     return false;
 }
 
+/* Handle panel navigation and filter timeout */
+static void panel_check_filter_timeout(ExplorerState *state) {
+    if (state->filter_length > 0) {
+        time_t now = time(NULL);
+        if (now - state->filter_start_time >= FILTER_TIMEOUT_SECS) {
+            state->filter_buffer[0] = '\0';
+            state->filter_length = 0;
+        }
+    }
+}
+
+static void panel_filter_and_select(ExplorerState *state) {
+    if (state->filter_length == 0) return;
+    if (state->entry_count == 0) return;
+
+    size_t filter_len = (size_t)state->filter_length;
+
+    /* If continuing to type (not first char), stay on current if it still matches */
+    if (state->filter_length > 1 &&
+        strncasecmp(state->entries[state->selected_index].name,
+                    state->filter_buffer, filter_len) == 0) {
+        return;
+    }
+
+    /* First char or current doesn't match: find next match from selected_index + 1 */
+    for (int i = state->selected_index + 1; i < state->entry_count; i++) {
+        if (strncasecmp(state->entries[i].name, state->filter_buffer, filter_len) == 0) {
+            state->selected_index = i;
+            return;
+        }
+    }
+
+    /* Wrap around: search from beginning to selected_index */
+    for (int i = 0; i <= state->selected_index; i++) {
+        if (strncasecmp(state->entries[i].name, state->filter_buffer, filter_len) == 0) {
+            state->selected_index = i;
+            return;
+        }
+    }
+}
+
+/* Handle input when panel is focused */
+static void input_handle_panel(Editor *ed, int key) {
+    if (!ed || !ed->panel_state) return;
+
+    ExplorerState *state = ed->panel_state;
+
+    /* Check filter timeout */
+    panel_check_filter_timeout(state);
+
+    switch (key) {
+        case KEY_UP:
+            if (state->selected_index > 0) {
+                state->selected_index--;
+            }
+            state->filter_buffer[0] = '\0';
+            state->filter_length = 0;
+            break;
+
+        case KEY_DOWN:
+            if (state->selected_index < state->entry_count - 1) {
+                state->selected_index++;
+            }
+            state->filter_buffer[0] = '\0';
+            state->filter_length = 0;
+            break;
+
+        case KEY_PPAGE:  /* Page Up */
+            {
+                int page_size = ed->edit_height - 4;
+                if (page_size < 1) page_size = 1;
+                state->selected_index -= page_size;
+                if (state->selected_index < 0) state->selected_index = 0;
+                state->filter_buffer[0] = '\0';
+                state->filter_length = 0;
+            }
+            break;
+
+        case KEY_NPAGE:  /* Page Down */
+            {
+                int page_size = ed->edit_height - 4;
+                if (page_size < 1) page_size = 1;
+                state->selected_index += page_size;
+                if (state->selected_index >= state->entry_count) {
+                    state->selected_index = state->entry_count - 1;
+                }
+                state->filter_buffer[0] = '\0';
+                state->filter_length = 0;
+            }
+            break;
+
+        case KEY_HOME:
+            state->selected_index = 0;
+            state->filter_buffer[0] = '\0';
+            state->filter_length = 0;
+            break;
+
+        case KEY_END:
+            state->selected_index = state->entry_count - 1;
+            state->filter_buffer[0] = '\0';
+            state->filter_length = 0;
+            break;
+
+        case '\n':
+        case '\r':
+        case KEY_ENTER:
+            if (state->entry_count > 0 && state->selected_index < state->entry_count) {
+                ExplorerEntry *entry = &state->entries[state->selected_index];
+                if (entry->is_directory) {
+                    /* Enter directory */
+                    if (strcmp(entry->name, "..") == 0) {
+                        /* Go to parent */
+                        char *last_slash = strrchr(state->current_path, '/');
+                        if (last_slash && last_slash != state->current_path) {
+                            *last_slash = '\0';
+                        } else if (last_slash == state->current_path) {
+                            state->current_path[1] = '\0';
+                        }
+                    } else {
+                        /* Enter subdirectory */
+                        size_t path_len = strlen(state->current_path);
+                        if (path_len > 1) {
+                            strncat(state->current_path, "/", MAX_PATH_LENGTH - path_len - 1);
+                            path_len++;
+                        }
+                        strncat(state->current_path, entry->name, MAX_PATH_LENGTH - path_len - 1);
+                    }
+                    editor_panel_read_directory(ed);
+                    state->filter_buffer[0] = '\0';
+                    state->filter_length = 0;
+                } else {
+                    /* Open file */
+                    bool should_open = true;
+                    if (ed->modified) {
+                        DialogResult result = dialog_confirm(ed, "Open File",
+                                                             "Save changes to current file?");
+                        if (result == DIALOG_YES) {
+                            if (!file_save(ed)) {
+                                should_open = false;
+                            }
+                        } else if (result == DIALOG_CANCEL) {
+                            should_open = false;
+                        }
+                    }
+
+                    if (should_open) {
+                        char full_path[MAX_PATH_LENGTH];
+                        size_t path_len = strlen(state->current_path);
+                        if (path_len > 1) {
+                            snprintf(full_path, sizeof(full_path), "%s/%s",
+                                     state->current_path, entry->name);
+                        } else {
+                            snprintf(full_path, sizeof(full_path), "/%s", entry->name);
+                        }
+                        if (file_load(ed, full_path)) {
+                            ed->panel_focused = false;  /* Return focus to editor */
+                            editor_set_status_message(ed, "Opened file");
+                        }
+                    }
+                }
+            }
+            break;
+
+        case KEY_BACKSPACE:
+        case 127:
+        case 8:
+            /* Go to parent directory */
+            {
+                char *last_slash = strrchr(state->current_path, '/');
+                if (last_slash && last_slash != state->current_path) {
+                    *last_slash = '\0';
+                } else if (last_slash == state->current_path) {
+                    state->current_path[1] = '\0';
+                }
+                editor_panel_read_directory(ed);
+                state->filter_buffer[0] = '\0';
+                state->filter_length = 0;
+            }
+            break;
+
+        case 27:  /* Escape - return focus to editor */
+            ed->panel_focused = false;
+            state->filter_buffer[0] = '\0';
+            state->filter_length = 0;
+            break;
+
+        case KEY_BTAB:  /* Shift+Tab to switch focus back to editor */
+            ed->panel_focused = false;
+            break;
+
+        default:
+            /* Type-ahead filtering */
+            if (key >= 32 && key < 127) {
+                if (state->filter_length < FILTER_BUFFER_SIZE - 1) {
+                    state->filter_buffer[state->filter_length++] = (char)key;
+                    state->filter_buffer[state->filter_length] = '\0';
+                    state->filter_start_time = time(NULL);
+                    panel_filter_and_select(state);
+                }
+            }
+            break;
+    }
+}
+
 /* Handle input in hex editing mode */
 static void input_handle_hex(Editor *ed, int key) {
     size_t buf_len = buffer_get_length(ed->buffer);
@@ -257,6 +462,12 @@ static void input_handle_hex(Editor *ed, int key) {
             /* Toggle between hex and ASCII panels */
             ed->hex_cursor_in_ascii = !ed->hex_cursor_in_ascii;
             ed->hex_nibble = 0;
+            break;
+
+        case KEY_BTAB:  /* Shift+Tab to switch focus to panel */
+            if (ed->panel_visible) {
+                ed->panel_focused = !ed->panel_focused;
+            }
             break;
 
         /* Undo/Redo */
@@ -401,6 +612,18 @@ void input_handle(Editor *ed, MenuState *menu) {
                         editor_clear_selection(ed);
                     }
                     break;
+                case ACTION_TOGGLE_PANEL:
+                    ed->panel_visible = !ed->panel_visible;
+                    if (ed->panel_visible) {
+                        if (!ed->panel_state || ed->panel_state->entry_count == 0) {
+                            editor_panel_init(ed);
+                        }
+                        ed->panel_focused = true;  /* Focus panel when shown */
+                    } else {
+                        ed->panel_focused = false;  /* Focus editor when hidden */
+                    }
+                    editor_update_dimensions(ed);
+                    break;
                 case ACTION_ABOUT:
                     dialog_about(ed);
                     break;
@@ -447,6 +670,12 @@ void input_handle(Editor *ed, MenuState *menu) {
         }
     }
 #endif
+
+    /* Handle panel focused input - check before hex mode */
+    if (ed->panel_visible && ed->panel_focused) {
+        input_handle_panel(ed, key);
+        return;
+    }
 
     /* Handle hex mode input */
     if (ed->hex_mode) {
@@ -552,6 +781,13 @@ void input_handle(Editor *ed, MenuState *menu) {
             editor_insert_tab(ed);
             break;
 
+        /* Ctrl+Tab to switch focus to panel */
+        case KEY_BTAB:  /* Shift+Tab - use as fallback for Ctrl+Tab */
+            if (ed->panel_visible) {
+                ed->panel_focused = !ed->panel_focused;
+            }
+            break;
+
         /* Ctrl+key shortcuts */
         case KEY_CTRL('n'):  /* New */
             file_new(ed);
@@ -631,6 +867,19 @@ void input_handle(Editor *ed, MenuState *menu) {
                 ed->hex_scroll = (ed->cursor_pos / 16) * 16;
                 editor_clear_selection(ed);
             }
+            break;
+
+        case KEY_F(5):  /* Toggle file panel */
+            ed->panel_visible = !ed->panel_visible;
+            if (ed->panel_visible) {
+                if (!ed->panel_state || ed->panel_state->entry_count == 0) {
+                    editor_panel_init(ed);
+                }
+                ed->panel_focused = true;  /* Focus panel when shown */
+            } else {
+                ed->panel_focused = false;  /* Focus editor when hidden */
+            }
+            editor_update_dimensions(ed);
             break;
 
         /* Shift+Arrow for selection */

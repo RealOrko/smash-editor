@@ -617,6 +617,101 @@ void display_draw_editor(Editor *ed) {
     }
 }
 
+/* Draw file panel on left side */
+static void display_draw_panel(Editor *ed) {
+    if (!ed || !ed->panel_visible || !ed->panel_state) return;
+
+    ExplorerState *state = ed->panel_state;
+    int panel_top = 2;  /* Below menu bar and top border */
+    int bottom_border_y = ed->show_status_bar ? ed->screen_rows - 2 : ed->screen_rows - 1;
+    int panel_height = bottom_border_y - panel_top;  /* Extend to bottom border */
+
+    /* Fill panel background */
+    attron(COLOR_PAIR(COLOR_DIALOG));
+    for (int row = 0; row < panel_height; row++) {
+        move(panel_top + row, 1);
+        for (int col = 0; col < PANEL_WIDTH; col++) {
+            addch(' ');
+        }
+    }
+
+    /* Draw vertical separator between panel and editor */
+    attron(COLOR_PAIR(COLOR_BORDER));
+    for (int row = 0; row < panel_height; row++) {
+        cchar_t cc;
+        wchar_t wstr[2] = {BOX_VERT, L'\0'};
+        setcchar(&cc, wstr, A_NORMAL, 0, NULL);
+        mvadd_wch(panel_top + row, PANEL_WIDTH + 1, &cc);
+    }
+    attroff(COLOR_PAIR(COLOR_BORDER));
+
+    /* Calculate content area */
+    int content_top = panel_top;
+    int content_height = panel_height;  /* Use full height */
+    int content_width = PANEL_WIDTH - 2;
+
+    /* Adjust scroll offset to keep selection visible */
+    if (state->selected_index < state->scroll_offset) {
+        state->scroll_offset = state->selected_index;
+    }
+    if (state->selected_index >= state->scroll_offset + content_height) {
+        state->scroll_offset = state->selected_index - content_height + 1;
+    }
+
+    /* Draw entries */
+    for (int i = 0; i < content_height && (state->scroll_offset + i) < state->entry_count; i++) {
+        int entry_idx = state->scroll_offset + i;
+        ExplorerEntry *entry = &state->entries[entry_idx];
+        int y = content_top + i;
+
+        bool is_selected = (entry_idx == state->selected_index);
+
+        /* Use highlight if selected and panel has focus */
+        if (is_selected && ed->panel_focused) {
+            attron(COLOR_PAIR(COLOR_MENUSEL));
+        } else if (is_selected) {
+            attron(COLOR_PAIR(COLOR_HIGHLIGHT));
+        } else {
+            attron(COLOR_PAIR(COLOR_DIALOG));
+        }
+
+        /* Clear line */
+        move(y, 2);
+        for (int j = 0; j < content_width; j++) {
+            addch(' ');
+        }
+
+        /* Draw entry - truncate if needed */
+        char display_name[32];
+        if (entry->is_directory) {
+            int max_name = content_width - 7;  /* "[DIR] " + name */
+            if (max_name < 3) max_name = 3;
+            if ((int)strlen(entry->name) > max_name) {
+                snprintf(display_name, sizeof(display_name), "[DIR] %.*s..", max_name - 2, entry->name);
+            } else {
+                snprintf(display_name, sizeof(display_name), "[DIR] %s", entry->name);
+            }
+        } else {
+            int max_name = content_width;
+            if ((int)strlen(entry->name) > max_name) {
+                snprintf(display_name, sizeof(display_name), "%.*s..", max_name - 2, entry->name);
+            } else {
+                snprintf(display_name, sizeof(display_name), "%s", entry->name);
+            }
+        }
+        mvprintw(y, 2, "%s", display_name);
+
+        if (is_selected) {
+            attroff(COLOR_PAIR(COLOR_MENUSEL));
+            attroff(COLOR_PAIR(COLOR_HIGHLIGHT));
+        } else {
+            attroff(COLOR_PAIR(COLOR_DIALOG));
+        }
+    }
+
+    attroff(COLOR_PAIR(COLOR_DIALOG));
+}
+
 void display_refresh(Editor *ed) {
     if (!ed) return;
 
@@ -634,6 +729,7 @@ void display_refresh(Editor *ed) {
 
     display_draw_menubar(ed);
     display_draw_border(ed);
+    display_draw_panel(ed);
     display_draw_editor(ed);
     display_draw_statusbar(ed);
 

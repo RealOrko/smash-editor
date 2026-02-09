@@ -58,6 +58,7 @@ typedef enum {
     /* View menu */
     ACTION_TOGGLE_LINE_NUMBERS,
     ACTION_TOGGLE_STATUS_BAR,
+    ACTION_TOGGLE_PANEL,
     ACTION_HEX_MODE,
     /* Help menu */
     ACTION_ABOUT,

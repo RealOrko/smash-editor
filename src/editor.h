@@ -9,6 +9,7 @@
 typedef struct Buffer Buffer;
 typedef struct UndoStack UndoStack;
 typedef struct Clipboard Clipboard;
+typedef struct ExplorerState ExplorerState;
 
 /* Editor mode */
 typedef enum {
@@ -95,6 +96,11 @@ typedef struct Editor {
     int hex_nibble;             /* 0=high nibble, 1=low nibble */
     bool hex_cursor_in_ascii;   /* Cursor in ASCII panel */
     size_t hex_scroll;          /* Scroll offset in bytes (multiple of 16) */
+
+    /* File panel */
+    bool panel_visible;         /* Side panel shown */
+    bool panel_focused;         /* Panel has input focus */
+    ExplorerState *panel_state; /* Panel file browser state */
 } Editor;
 
 /* Editor lifecycle */
@@ -167,5 +173,9 @@ void editor_set_status_message(Editor *ed, const char *msg);
 /* Hex editing */
 void editor_hex_update_scroll(Editor *ed);
 void editor_hex_set_byte(Editor *ed, unsigned char value);
+
+/* File panel */
+void editor_panel_init(Editor *ed);
+void editor_panel_read_directory(Editor *ed);
 
 #endif /* EDITOR_H */
