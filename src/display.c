@@ -714,12 +714,11 @@ static void display_draw_panel(Editor *ed) {
         }
         mvprintw(y, 2, "%s", display_name);
 
-        if (is_selected) {
-            attroff(COLOR_PAIR(COLOR_MENUSEL));
-            attroff(COLOR_PAIR(COLOR_HIGHLIGHT));
-        } else {
-            attroff(COLOR_PAIR(COLOR_DIALOG));
-        }
+        /* Turn off all attributes used */
+        attroff(COLOR_PAIR(COLOR_MENUSEL));
+        attroff(COLOR_PAIR(COLOR_HIGHLIGHT));
+        attroff(COLOR_PAIR(COLOR_DIALOG));
+        attroff(A_DIM);
     }
 
     attroff(COLOR_PAIR(COLOR_DIALOG));
