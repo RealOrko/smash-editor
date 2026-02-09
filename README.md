@@ -4,7 +4,7 @@
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/your-repo/smashedit)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)]()
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS-lightgrey.svg)]()
 
 ---
 
@@ -46,16 +46,8 @@
 
 ### Quick Install (Recommended)
 
-#### Linux / macOS
-
 ```bash
 curl -fsSL https://raw.githubusercontent.com/RealOrko/smash-editor/main/scripts/install.sh | bash
-```
-
-#### Windows (PowerShell)
-
-```powershell
-irm https://raw.githubusercontent.com/RealOrko/smash-editor/main/scripts/install.ps1 | iex
 ```
 
 This will:
@@ -105,14 +97,6 @@ sudo pacman -S base-devel cmake ncurses
 
 ```bash
 brew install cmake ncurses
-```
-</details>
-
-<details>
-<summary>🪟 Windows (MSYS2)</summary>
-
-```bash
-pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake mingw-w64-x86_64-ncurses make
 ```
 </details>
 
