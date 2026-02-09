@@ -38,6 +38,15 @@ bool file_load(Editor *ed, const char *filename) {
         }
         first_chunk = false;
 
+        /* Strip Windows line endings (CR characters) */
+        size_t write_idx = 0;
+        for (size_t i = 0; i < len; i++) {
+            if (data[i] != '\r') {
+                data[write_idx++] = data[i];
+            }
+        }
+        len = write_idx;
+
         if (len > 0) {
             buffer_insert_string(ed->buffer, pos, data, len);
             pos += len;
