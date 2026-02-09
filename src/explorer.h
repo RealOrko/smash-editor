@@ -13,6 +13,7 @@ struct Editor;
 #define MAX_PATH_LENGTH 4096
 #define FILTER_BUFFER_SIZE 64
 #define FILTER_TIMEOUT_SECS 2
+#define MAX_CLIPBOARD_FILES 256
 
 /* Explorer entry */
 typedef struct ExplorerEntry {
@@ -25,6 +26,7 @@ typedef struct ExplorerState {
     ExplorerEntry entries[MAX_EXPLORER_ENTRIES];
     int entry_count;
     int selected_index;
+    int selection_anchor;   /* Anchor for multi-select (-1 = no multi-select) */
     int scroll_offset;
 
     char current_path[MAX_PATH_LENGTH];

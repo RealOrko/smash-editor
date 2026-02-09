@@ -103,9 +103,11 @@ typedef struct Editor {
     ExplorerState *panel_state; /* Panel file browser state */
 
     /* File clipboard for explorer operations */
-    char file_clipboard_path[4096];  /* Path of copied/cut file */
+    #define MAX_FILE_CLIPBOARD 256
+    char file_clipboard_paths[MAX_FILE_CLIPBOARD][4096];  /* Paths of copied/cut files */
+    bool file_clipboard_is_dirs[MAX_FILE_CLIPBOARD];      /* true if directory for each */
+    int file_clipboard_count;        /* Number of files in clipboard */
     bool file_clipboard_is_cut;      /* true = cut (move), false = copy */
-    bool file_clipboard_is_dir;      /* true if directory */
 } Editor;
 
 /* Editor lifecycle */

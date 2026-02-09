@@ -1557,6 +1557,7 @@ void editor_panel_init(Editor *ed) {
         ed->panel_state = malloc(sizeof(ExplorerState));
         if (!ed->panel_state) return;
         memset(ed->panel_state, 0, sizeof(ExplorerState));
+        ed->panel_state->selection_anchor = -1;
     }
 
     /* Initialize with current working directory */

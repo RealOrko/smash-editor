@@ -664,13 +664,26 @@ static void display_draw_panel(Editor *ed) {
         ExplorerEntry *entry = &state->entries[entry_idx];
         int y = content_top + i;
 
-        bool is_selected = (entry_idx == state->selected_index);
+        /* Check if entry is in selection range */
+        bool is_selected;
+        if (state->selection_anchor >= 0) {
+            int sel_start = state->selection_anchor < state->selected_index ?
+                            state->selection_anchor : state->selected_index;
+            int sel_end = state->selection_anchor > state->selected_index ?
+                          state->selection_anchor : state->selected_index;
+            is_selected = (entry_idx >= sel_start && entry_idx <= sel_end);
+        } else {
+            is_selected = (entry_idx == state->selected_index);
+        }
+        bool is_cursor = (entry_idx == state->selected_index);
 
-        /* Use highlight if selected and panel has focus */
-        if (is_selected && ed->panel_focused) {
+        /* Use highlight for selection and cursor */
+        if (is_cursor && ed->panel_focused) {
             attron(COLOR_PAIR(COLOR_MENUSEL));
-        } else if (is_selected) {
+        } else if (is_selected && ed->panel_focused) {
             attron(COLOR_PAIR(COLOR_HIGHLIGHT));
+        } else if (is_cursor || is_selected) {
+            attron(COLOR_PAIR(COLOR_HIGHLIGHT) | A_DIM);
         } else {
             attron(COLOR_PAIR(COLOR_DIALOG));
         }

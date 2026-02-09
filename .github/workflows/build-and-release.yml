@@ -102,83 +102,8 @@ jobs:
         name: smashedit-macos
         path: bin/smashedit
 
-  build-windows:
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        submodules: true
-        fetch-depth: 0
-
-    - name: Setup MSYS2
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: MINGW64
-        update: true
-        install: >-
-          mingw-w64-x86_64-gcc
-          mingw-w64-x86_64-cmake
-          make
-
-    - name: Get version
-      id: version
-      run: |
-        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-        VERSION=${LATEST_TAG#v}
-        MAJOR=$(echo $VERSION | cut -d. -f1)
-        MINOR=$(echo $VERSION | cut -d. -f2)
-        PATCH=$(echo $VERSION | cut -d. -f3)
-        PATCH=$((PATCH + 1))
-        if [ "$LATEST_TAG" = "v0.0.0" ]; then
-          NEW_VERSION="1.0.0"
-        else
-          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-        fi
-        echo "Building version: $NEW_VERSION"
-        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-
-    - name: Build PDCurses from source
-      run: |
-        cd external/PDCurses/wincon
-        make WIDE=Y
-        ls -la pdcurses.a
-
-    - name: Build
-      run: |
-        echo "Building SmashEdit v${{ steps.version.outputs.version }}"
-        cmake -B bin -S . -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DUSE_PDCURSES=ON -DSMASHEDIT_VERSION="${{ steps.version.outputs.version }}"
-        cmake --build bin
-
-    - name: Bundle with DLLs
-      run: |
-        mkdir -p dist
-        cp bin/smashedit.exe dist/
-
-        # Bundle required MinGW runtime DLLs for self-contained distribution
-        # PDCurses is statically linked, so we only need MinGW runtime
-        MINGW_BIN="/mingw64/bin"
-        for dll in libgcc_s_seh-1.dll libwinpthread-1.dll; do
-          if [ -f "$MINGW_BIN/$dll" ]; then
-            cp "$MINGW_BIN/$dll" dist/
-            echo "Bundled: $dll"
-          fi
-        done
-
-        echo "Contents of dist/:"
-        ls -la dist/
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: smashedit-windows
-        path: dist/
-
   release:
-    needs: [build-ubuntu, build-macos, build-windows]
+    needs: [build-ubuntu, build-macos]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
@@ -236,11 +161,6 @@ jobs:
         tar -czvf ../../releases/smashedit-macos-${{ steps.version.outputs.version }}.tar.gz smashedit
         cd ../..
 
-        # Windows zip (includes exe and DLLs)
-        cd artifacts/smashedit-windows
-        zip -r ../../releases/smashedit-windows-${{ steps.version.outputs.version }}.zip .
-        cd ../..
-
         ls -la releases/
 
     - name: Create Release
@@ -254,13 +174,11 @@ jobs:
           ### Downloads
           - **Linux**: `smashedit-linux-${{ steps.version.outputs.version }}.tar.gz`
           - **macOS**: `smashedit-macos-${{ steps.version.outputs.version }}.tar.gz`
-          - **Windows**: `smashedit-windows-${{ steps.version.outputs.version }}.zip`
 
           ### Installation
           Extract the archive and run the `smashedit` executable.
         files: |
           releases/smashedit-linux-${{ steps.version.outputs.version }}.tar.gz
           releases/smashedit-macos-${{ steps.version.outputs.version }}.tar.gz
-          releases/smashedit-windows-${{ steps.version.outputs.version }}.zip
         draft: false
         prerelease: false
