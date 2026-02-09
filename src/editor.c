@@ -204,17 +204,18 @@ void editor_init_screen(Editor *ed) {
     init_pair(COLOR_STATUS, COLOR_BLACK, COLOR_CYAN);
     init_pair(COLOR_BORDER, COLOR_WHITE, COLOR_BLUE);
 
-    /* Syntax highlighting color pairs */
-    init_pair(COLOR_SYN_KEYWORD, COLOR_YELLOW, COLOR_BLUE);
-    init_pair(COLOR_SYN_TYPE, COLOR_GREEN, COLOR_BLUE);
-    init_pair(COLOR_SYN_STRING, COLOR_RED, COLOR_BLUE);
+    /* Syntax highlighting color pairs - all white on blue for grayscale effect
+     * Differentiation comes from attributes (A_DIM, A_NORMAL, A_BOLD) */
+    init_pair(COLOR_SYN_KEYWORD, COLOR_WHITE, COLOR_BLUE);
+    init_pair(COLOR_SYN_TYPE, COLOR_WHITE, COLOR_BLUE);
+    init_pair(COLOR_SYN_STRING, COLOR_WHITE, COLOR_BLUE);
     init_pair(COLOR_SYN_COMMENT, COLOR_WHITE, COLOR_BLUE);
-    init_pair(COLOR_SYN_PREPROC, COLOR_GREEN, COLOR_BLUE);
-    init_pair(COLOR_SYN_NUMBER, COLOR_RED, COLOR_BLUE);
-    init_pair(COLOR_SYN_VARIABLE, COLOR_GREEN, COLOR_BLUE);
-    init_pair(COLOR_SYN_HEADING, COLOR_YELLOW, COLOR_BLUE);
+    init_pair(COLOR_SYN_PREPROC, COLOR_WHITE, COLOR_BLUE);
+    init_pair(COLOR_SYN_NUMBER, COLOR_WHITE, COLOR_BLUE);
+    init_pair(COLOR_SYN_VARIABLE, COLOR_WHITE, COLOR_BLUE);
+    init_pair(COLOR_SYN_HEADING, COLOR_WHITE, COLOR_BLUE);
     init_pair(COLOR_SYN_EMPHASIS, COLOR_WHITE, COLOR_BLUE);
-    init_pair(COLOR_SYN_CODE, COLOR_CYAN, COLOR_BLUE);
+    init_pair(COLOR_SYN_CODE, COLOR_WHITE, COLOR_BLUE);
 
     /* Set ACS mode based on editor setting */
     display_set_acs_mode(ed->use_acs_chars);

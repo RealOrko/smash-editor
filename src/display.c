@@ -566,14 +566,16 @@ void display_draw_editor(Editor *ed) {
                 break;
             }
 
-            /* Determine color for this character */
+            /* Determine color and attribute for this character */
             int char_color = COLOR_EDITOR;
+            int char_attr = A_NORMAL;
             if (has_sel && pos_in_selection(ed, pos)) {
                 char_color = COLOR_HIGHLIGHT;
             } else if (use_syntax && line_char_idx < MAX_LINE_LENGTH) {
                 char_color = syntax_token_to_color(line_tokens[line_char_idx]);
+                char_attr = syntax_token_to_attr(line_tokens[line_char_idx]);
             }
-            attron(COLOR_PAIR(char_color));
+            attron(COLOR_PAIR(char_color) | char_attr);
 
             /* Decode UTF-8 character */
             wchar_t wc;

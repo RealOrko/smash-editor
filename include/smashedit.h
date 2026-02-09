@@ -44,17 +44,18 @@
 #define COLOR_STATUS 7      /* Black on cyan - status bar */
 #define COLOR_BORDER 8      /* Bright white on blue - borders */
 
-/* Syntax highlighting color pairs */
-#define COLOR_SYN_KEYWORD    9   /* Yellow on blue - keywords */
-#define COLOR_SYN_TYPE      10   /* Green on blue - types */
-#define COLOR_SYN_STRING    11   /* Red on blue - strings */
-#define COLOR_SYN_COMMENT   12   /* White on blue - comments */
-#define COLOR_SYN_PREPROC   13   /* Green on blue - preprocessor */
-#define COLOR_SYN_NUMBER    14   /* Red on blue - numbers */
-#define COLOR_SYN_VARIABLE  15   /* Green on blue - variables */
-#define COLOR_SYN_HEADING   16   /* Yellow on blue - markdown headings */
-#define COLOR_SYN_EMPHASIS  17   /* White bold on blue - emphasis */
-#define COLOR_SYN_CODE      18   /* Cyan on blue - code blocks */
+/* Syntax highlighting color pairs - grayscale (white on blue)
+ * Differentiation via attributes: A_DIM (dim), A_NORMAL, A_BOLD (bright) */
+#define COLOR_SYN_KEYWORD    9   /* White+bold - keywords */
+#define COLOR_SYN_TYPE      10   /* White+bold - types */
+#define COLOR_SYN_STRING    11   /* White+bold - strings */
+#define COLOR_SYN_COMMENT   12   /* White+dim - comments */
+#define COLOR_SYN_PREPROC   13   /* White - preprocessor */
+#define COLOR_SYN_NUMBER    14   /* White+bold - numbers */
+#define COLOR_SYN_VARIABLE  15   /* White+bold - variables */
+#define COLOR_SYN_HEADING   16   /* White+bold - markdown headings */
+#define COLOR_SYN_EMPHASIS  17   /* White+bold - emphasis */
+#define COLOR_SYN_CODE      18   /* White - code blocks */
 
 /* Box drawing characters (Unicode)
  * Note: If Unicode box-drawing causes gaps in some terminals,

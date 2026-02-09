@@ -92,6 +92,7 @@ typedef enum {
 LanguageType syntax_detect_language(const char *filename);
 LanguageType syntax_detect_from_shebang(Buffer *buf);
 int syntax_token_to_color(TokenType token);
+int syntax_token_to_attr(TokenType token);
 void syntax_highlight_line(Buffer *buf, size_t line_start, size_t line_end,
                            LanguageType lang, HighlightState *state,
                            TokenType *out, size_t out_size);
