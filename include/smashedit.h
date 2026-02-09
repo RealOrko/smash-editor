@@ -47,15 +47,15 @@
 /* Syntax highlighting color pairs - grayscale (white on blue)
  * Differentiation via attributes: A_DIM (dim), A_NORMAL, A_BOLD (bright) */
 #define COLOR_SYN_KEYWORD    9   /* White+bold - keywords */
-#define COLOR_SYN_TYPE      10   /* White+bold - types */
-#define COLOR_SYN_STRING    11   /* White+bold - strings */
+#define COLOR_SYN_TYPE      10   /* White - types */
+#define COLOR_SYN_STRING    11   /* White - strings */
 #define COLOR_SYN_COMMENT   12   /* White+dim - comments */
-#define COLOR_SYN_PREPROC   13   /* White - preprocessor */
-#define COLOR_SYN_NUMBER    14   /* White+bold - numbers */
-#define COLOR_SYN_VARIABLE  15   /* White+bold - variables */
+#define COLOR_SYN_PREPROC   13   /* White+dim - preprocessor */
+#define COLOR_SYN_NUMBER    14   /* White - numbers */
+#define COLOR_SYN_VARIABLE  15   /* White - variables */
 #define COLOR_SYN_HEADING   16   /* White+bold - markdown headings */
 #define COLOR_SYN_EMPHASIS  17   /* White+bold - emphasis */
-#define COLOR_SYN_CODE      18   /* White - code blocks */
+#define COLOR_SYN_CODE      18   /* White+dim - code blocks */
 
 /* Box drawing characters (Unicode)
  * Note: If Unicode box-drawing causes gaps in some terminals,
