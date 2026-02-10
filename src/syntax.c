@@ -1840,16 +1840,16 @@ int syntax_token_to_color(TokenType token) {
 /* Map token type to text attribute for grayscale effect */
 int syntax_token_to_attr(TokenType token) {
     switch (token) {
-        case TOKEN_KEYWORD:     return A_BOLD;   /* Bright */
-        case TOKEN_TYPE:        return A_BOLD;   /* Bright */
+        case TOKEN_KEYWORD:     return A_BOLD;   /* Bright white */
+        case TOKEN_TYPE:        return A_BOLD;   /* Bright white */
         case TOKEN_STRING:
-        case TOKEN_CHAR:        return A_NORMAL; /* Normal */
-        case TOKEN_COMMENT:     return A_NORMAL; /* Normal */
+        case TOKEN_CHAR:        return A_NORMAL; /* Light gray (via 256-color) */
+        case TOKEN_COMMENT:     return A_NORMAL; /* Light gray (via 256-color) */
         case TOKEN_PREPROCESSOR: return A_NORMAL;/* Normal */
-        case TOKEN_NUMBER:      return A_BOLD;   /* Bright */
-        case TOKEN_VARIABLE:    return A_BOLD;   /* Bright */
-        case TOKEN_HEADING:     return A_BOLD;   /* Bright */
-        case TOKEN_EMPHASIS:    return A_BOLD;   /* Bright */
+        case TOKEN_NUMBER:      return A_BOLD;   /* Bright white */
+        case TOKEN_VARIABLE:    return A_BOLD;   /* Bright white */
+        case TOKEN_HEADING:     return A_BOLD;   /* Bright white */
+        case TOKEN_EMPHASIS:    return A_BOLD;   /* Bright white */
         case TOKEN_CODE:        return A_NORMAL; /* Normal */
         default:                return A_NORMAL; /* Normal - plain text */
     }
