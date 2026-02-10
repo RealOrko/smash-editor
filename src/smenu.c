@@ -36,9 +36,9 @@ static MenuItem search_items[] = {
 static MenuItem view_items[] = {
     {"Line Numbers", "", ACTION_TOGGLE_LINE_NUMBERS, false, 0},  /* L */
     {"Status Bar",   "", ACTION_TOGGLE_STATUS_BAR, false, 0},    /* S */
-    {"File Panel",   "Ctrl+Alt+E", ACTION_TOGGLE_PANEL, false, 0},  /* F */
     {"ASCII Borders", "", ACTION_TOGGLE_ACS_CHARS, false, 0},    /* A */
     {"",             "", 0, true, -1},                           /* Separator */
+    {"File Panel",   "Ctrl+Alt+E", ACTION_TOGGLE_PANEL, false, 0},  /* F */
     {"Hex Mode",     "Ctrl+Alt+H", ACTION_HEX_MODE, false, 0}     /* H */
 };
 
