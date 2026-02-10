@@ -136,7 +136,7 @@ Editor *editor_create(void) {
 
     ed->show_line_numbers = false;
     ed->show_status_bar = true;
-    ed->use_acs_chars = true;  /* Default to ACS for better terminal compatibility */
+    ed->use_acs_chars = false;  /* Default to Unicode box-drawing */
 
     ed->mode = MODE_NORMAL;
     ed->running = true;
