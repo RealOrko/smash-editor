@@ -52,6 +52,9 @@ void dialog_about(struct Editor *ed);
 /* Shortcuts dialog */
 void dialog_shortcuts(struct Editor *ed);
 
+/* Check for updates dialog */
+void dialog_check_updates(struct Editor *ed);
+
 /* Helper to draw a dialog box */
 void dialog_draw_box(int y, int x, int height, int width, const char *title);
 

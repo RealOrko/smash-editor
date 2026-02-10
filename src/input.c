@@ -1157,6 +1157,9 @@ void input_handle(Editor *ed, MenuState *menu) {
                     }
                     editor_update_dimensions(ed);
                     break;
+                case ACTION_CHECK_UPDATES:
+                    dialog_check_updates(ed);
+                    break;
                 case ACTION_ABOUT:
                     dialog_about(ed);
                     break;

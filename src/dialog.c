@@ -1,6 +1,9 @@
 #include "smashedit.h"
 #include "display.h"
 #include <wchar.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
 static void draw_wchar_dialog(int y, int x, wchar_t wc) {
     cchar_t cc;
@@ -628,6 +631,147 @@ void dialog_shortcuts(Editor *ed) {
             scroll_offset = 0;
         } else if (key == KEY_END) {
             scroll_offset = max_scroll;
+        }
+    }
+}
+
+/* Compare two version strings (e.g., "1.2.3" vs "1.2.4")
+ * Returns: -1 if v1 < v2, 0 if equal, 1 if v1 > v2 */
+static int compare_versions(const char *v1, const char *v2) {
+    int major1 = 0, minor1 = 0, patch1 = 0;
+    int major2 = 0, minor2 = 0, patch2 = 0;
+
+    sscanf(v1, "%d.%d.%d", &major1, &minor1, &patch1);
+    sscanf(v2, "%d.%d.%d", &major2, &minor2, &patch2);
+
+    if (major1 != major2) return major1 < major2 ? -1 : 1;
+    if (minor1 != minor2) return minor1 < minor2 ? -1 : 1;
+    if (patch1 != patch2) return patch1 < patch2 ? -1 : 1;
+    return 0;
+}
+
+/* Fetch latest version from GitHub API */
+static bool fetch_latest_version(char *version, size_t version_size) {
+    const char *cmd = "curl -s https://api.github.com/repos/RealOrko/smash-editor/releases/latest 2>/dev/null";
+    FILE *fp = popen(cmd, "r");
+    if (!fp) {
+        /* Try wget if curl fails */
+        cmd = "wget -qO- https://api.github.com/repos/RealOrko/smash-editor/releases/latest 2>/dev/null";
+        fp = popen(cmd, "r");
+        if (!fp) return false;
+    }
+
+    char buffer[4096];
+    size_t total = 0;
+    buffer[0] = '\0';
+
+    while (fgets(buffer + total, sizeof(buffer) - total, fp)) {
+        total = strlen(buffer);
+        if (total >= sizeof(buffer) - 1) break;
+    }
+    pclose(fp);
+
+    /* Parse tag_name from JSON response */
+    char *tag = strstr(buffer, "\"tag_name\"");
+    if (!tag) return false;
+
+    char *start = strchr(tag, ':');
+    if (!start) return false;
+
+    /* Skip to the version value */
+    start = strchr(start, '"');
+    if (!start) return false;
+    start++;  /* Skip opening quote */
+
+    /* Skip 'v' prefix if present */
+    if (*start == 'v') start++;
+
+    char *end = strchr(start, '"');
+    if (!end) return false;
+
+    size_t len = end - start;
+    if (len >= version_size) len = version_size - 1;
+
+    strncpy(version, start, len);
+    version[len] = '\0';
+
+    return true;
+}
+
+/* Run the update installer */
+static bool run_update_installer(void) {
+    /* Temporarily exit curses mode to show installer output */
+    endwin();
+
+    printf("\n");
+    printf("Downloading and installing latest SmashEdit...\n");
+    printf("----------------------------------------------\n\n");
+
+    int result = system("curl -fsSL https://raw.githubusercontent.com/RealOrko/smash-editor/main/scripts/install.sh | bash");
+
+    printf("\n");
+    if (result == 0) {
+        printf("Update complete! Press Enter to restart the editor...\n");
+    } else {
+        printf("Update failed. Press Enter to continue...\n");
+    }
+
+    /* Wait for Enter key */
+    getchar();
+
+    /* Restart curses */
+    refresh();
+
+    return result == 0;
+}
+
+void dialog_check_updates(Editor *ed) {
+    if (!ed) return;
+
+    int rows, cols;
+    getmaxyx(stdscr, rows, cols);
+
+    int dialog_width = 50;
+    int dialog_height = 5;
+    int dialog_x = (cols - dialog_width) / 2;
+    int dialog_y = (rows - dialog_height) / 2;
+
+    curs_set(0);
+
+    /* Show "checking" message */
+    dialog_draw_box(dialog_y, dialog_x, dialog_height, dialog_width, "Check for Updates");
+    attron(COLOR_PAIR(COLOR_DIALOG));
+    mvprintw(dialog_y + 2, dialog_x + (dialog_width - 24) / 2, "Checking for updates...");
+    attroff(COLOR_PAIR(COLOR_DIALOG));
+    refresh();
+
+    /* Fetch latest version */
+    char latest_version[32] = "";
+    if (!fetch_latest_version(latest_version, sizeof(latest_version))) {
+        dialog_message(ed, "Error", "Could not check for updates. Check your internet connection.");
+        return;
+    }
+
+    /* Compare versions */
+    int cmp = compare_versions(SMASHEDIT_VERSION, latest_version);
+
+    if (cmp >= 0) {
+        /* Current version is up to date or newer */
+        char msg[128];
+        snprintf(msg, sizeof(msg), "You are using the latest version (v%s)", SMASHEDIT_VERSION);
+        dialog_message(ed, "Up to Date", msg);
+    } else {
+        /* Newer version available */
+        char msg[128];
+        snprintf(msg, sizeof(msg), "Version v%s is available (you have v%s). Update?",
+                 latest_version, SMASHEDIT_VERSION);
+
+        DialogResult result = dialog_confirm(ed, "Update Available", msg);
+
+        if (result == DIALOG_YES) {
+            if (run_update_installer()) {
+                dialog_message(ed, "Success", "Update complete! Please restart SmashEdit.");
+            }
         }
     }
 }

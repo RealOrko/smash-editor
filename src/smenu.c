@@ -45,6 +45,7 @@ static MenuItem view_items[] = {
 static MenuItem help_items[] = {
     {"Keyboard Shortcuts", "", ACTION_SHORTCUTS, false, 0},  /* K */
     {"",                   "", 0, true, -1},                 /* Separator */
+    {"Check for Updates",  "", ACTION_CHECK_UPDATES, false, 0},  /* C */
     {"About SmashEdit",    "", ACTION_ABOUT, false, 0}       /* A */
 };
 

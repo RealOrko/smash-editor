@@ -208,8 +208,8 @@ void editor_init_screen(Editor *ed) {
      * Use 256-color mode for actual light gray (color 250) */
     init_pair(COLOR_SYN_KEYWORD, COLOR_WHITE, COLOR_BLUE);
     init_pair(COLOR_SYN_TYPE, COLOR_WHITE, COLOR_BLUE);
-    init_pair(COLOR_SYN_STRING, 247, COLOR_BLUE);   /* Gray (256-color) */
-    init_pair(COLOR_SYN_COMMENT, 247, COLOR_BLUE);  /* Gray (256-color) */
+    init_pair(COLOR_SYN_STRING, 248, COLOR_BLUE);   /* Gray (256-color) */
+    init_pair(COLOR_SYN_COMMENT, 248, COLOR_BLUE);  /* Gray (256-color) */
     init_pair(COLOR_SYN_PREPROC, COLOR_WHITE, COLOR_BLUE);
     init_pair(COLOR_SYN_NUMBER, COLOR_WHITE, COLOR_BLUE);
     init_pair(COLOR_SYN_VARIABLE, COLOR_WHITE, COLOR_BLUE);

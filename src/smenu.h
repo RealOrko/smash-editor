@@ -62,6 +62,7 @@ typedef enum {
     ACTION_TOGGLE_ACS_CHARS,
     ACTION_HEX_MODE,
     /* Help menu */
+    ACTION_CHECK_UPDATES,
     ACTION_ABOUT,
     ACTION_SHORTCUTS
 } MenuAction;
