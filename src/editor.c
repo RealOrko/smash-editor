@@ -1582,7 +1582,7 @@ void editor_panel_read_directory(Editor *ed) {
     if (!dir) return;
 
     /* Update process working directory to match panel location */
-    chdir(state->current_path);
+    if (chdir(state->current_path) != 0) { /* ignore error */ }
 
     state->entry_count = 0;
     struct dirent *entry;
@@ -1593,7 +1593,10 @@ void editor_panel_read_directory(Editor *ed) {
 
         /* Build full path to check if directory */
         char full_path[MAX_PATH_LENGTH];
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation"
         snprintf(full_path, sizeof(full_path), "%s/%s", state->current_path, entry->d_name);
+#pragma GCC diagnostic pop
 
         struct stat st;
         bool is_dir = false;
@@ -1601,9 +1604,8 @@ void editor_panel_read_directory(Editor *ed) {
             is_dir = S_ISDIR(st.st_mode);
         }
 
-        strncpy(state->entries[state->entry_count].name, entry->d_name,
-                sizeof(state->entries[state->entry_count].name) - 1);
-        state->entries[state->entry_count].name[sizeof(state->entries[state->entry_count].name) - 1] = '\0';
+        snprintf(state->entries[state->entry_count].name,
+                 sizeof(state->entries[state->entry_count].name), "%s", entry->d_name);
         state->entries[state->entry_count].is_directory = is_dir;
         state->entry_count++;
     }

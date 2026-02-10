@@ -583,7 +583,7 @@ void display_draw_editor(Editor *ed) {
             /* Decode UTF-8 character */
             wchar_t wc;
             int char_bytes = utf8_decode(ed->buffer, pos, buf_len, &wc);
-            int char_width = (c == '\t') ? (TAB_WIDTH - ((visual_col - 1) % TAB_WIDTH)) : wchar_width(wc);
+            int char_width = (c == '\t') ? (int)(TAB_WIDTH - ((visual_col - 1) % TAB_WIDTH)) : wchar_width(wc);
 
             /* Handle horizontal scroll */
             if (visual_col > ed->scroll_col) {

@@ -483,10 +483,10 @@ static void input_handle_panel(Editor *ed, int key) {
                         /* Enter subdirectory */
                         size_t path_len = strlen(state->current_path);
                         if (path_len > 1) {
-                            strncat(state->current_path, "/", MAX_PATH_LENGTH - path_len - 1);
-                            path_len++;
+                            snprintf(state->current_path + path_len, MAX_PATH_LENGTH - path_len, "/%s", entry->name);
+                        } else {
+                            snprintf(state->current_path + path_len, MAX_PATH_LENGTH - path_len, "%s", entry->name);
                         }
-                        strncat(state->current_path, entry->name, MAX_PATH_LENGTH - path_len - 1);
                     }
                     editor_panel_read_directory(ed);
                     state->filter_buffer[0] = '\0';
@@ -597,7 +597,7 @@ static void input_handle_panel(Editor *ed, int key) {
 
                 if (delete_count > 0) {
                     char msg[300];
-                    const char *title;
+                    const char *title = "Delete";
                     if (delete_count == 1) {
                         /* Find the single item */
                         for (int i = sel_start; i <= sel_end; i++) {

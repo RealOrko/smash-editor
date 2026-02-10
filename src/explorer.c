@@ -229,7 +229,7 @@ static void explorer_read_directory(ExplorerState *state) {
     if (!dir) return;
 
     /* Update process working directory to match explorer location */
-    chdir(state->current_path);
+    if (chdir(state->current_path) != 0) { /* ignore error */ }
 
     state->entry_count = 0;
     struct dirent *entry;
@@ -240,7 +240,10 @@ static void explorer_read_directory(ExplorerState *state) {
 
         /* Build full path to check if directory */
         char full_path[MAX_PATH_LENGTH];
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation"
         snprintf(full_path, sizeof(full_path), "%s/%s", state->current_path, entry->d_name);
+#pragma GCC diagnostic pop
 
         struct stat st;
         bool is_dir = false;
@@ -248,9 +251,8 @@ static void explorer_read_directory(ExplorerState *state) {
             is_dir = S_ISDIR(st.st_mode);
         }
 
-        strncpy(state->entries[state->entry_count].name, entry->d_name,
-                sizeof(state->entries[state->entry_count].name) - 1);
-        state->entries[state->entry_count].name[sizeof(state->entries[state->entry_count].name) - 1] = '\0';
+        snprintf(state->entries[state->entry_count].name,
+                 sizeof(state->entries[state->entry_count].name), "%s", entry->d_name);
         state->entries[state->entry_count].is_directory = is_dir;
         state->entry_count++;
     }
@@ -462,10 +464,10 @@ static void explorer_enter_directory(ExplorerState *state, const char *dirname) 
     /* Append directory to path */
     size_t path_len = strlen(state->current_path);
     if (path_len > 1) {  /* Not at root */
-        strncat(state->current_path, "/", MAX_PATH_LENGTH - path_len - 1);
-        path_len++;
+        snprintf(state->current_path + path_len, MAX_PATH_LENGTH - path_len, "/%s", dirname);
+    } else {
+        snprintf(state->current_path + path_len, MAX_PATH_LENGTH - path_len, "%s", dirname);
     }
-    strncat(state->current_path, dirname, MAX_PATH_LENGTH - path_len - 1);
 
     explorer_read_directory(state);
 }
@@ -479,8 +481,7 @@ bool explorer_open(Editor *ed) {
 
     /* Use remembered path if available, otherwise get current working directory */
     if (last_explorer_path[0] != '\0') {
-        strncpy(state.current_path, last_explorer_path, sizeof(state.current_path) - 1);
-        state.current_path[sizeof(state.current_path) - 1] = '\0';
+        snprintf(state.current_path, sizeof(state.current_path), "%s", last_explorer_path);
     } else if (getcwd(state.current_path, sizeof(state.current_path)) == NULL) {
         strcpy(state.current_path, "/");
     }
@@ -730,7 +731,7 @@ bool explorer_open(Editor *ed) {
 
                     if (delete_count > 0) {
                         char msg[300];
-                        const char *title;
+                        const char *title = "Delete";
                         if (delete_count == 1) {
                             /* Find the single item */
                             for (int i = sel_start; i <= sel_end; i++) {
