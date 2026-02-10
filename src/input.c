@@ -1302,6 +1302,7 @@ void input_handle(Editor *ed, MenuState *menu) {
 
         /* Ctrl+Left / Ctrl+Right */
         case 545:  /* Ctrl+Left xterm */
+        case 546:  /* Ctrl+Left Windows Terminal */
         case 554:
 #ifdef PDCURSES
         case CTL_LEFT:
@@ -1310,6 +1311,7 @@ void input_handle(Editor *ed, MenuState *menu) {
             editor_move_word_left(ed);
             break;
         case 560:  /* Ctrl+Right xterm */
+        case 561:  /* Ctrl+Right Windows Terminal */
         case 569:
 #ifdef PDCURSES
         case CTL_RIGHT:
@@ -1463,8 +1465,7 @@ void input_handle(Editor *ed, MenuState *menu) {
 
         /* Ctrl+Shift+Arrow for word/line selection (xterm codes - not on PDCurses) */
 #ifndef PDCURSES
-        case 546:  /* Ctrl+Shift+Left */
-        case 547:  /* conflicts with KEY_SUP on PDCurses */
+        case 547:  /* Ctrl+Shift+Left */
         case 555:
         case 1039:
             if (!ed->selection.active) {
@@ -1472,8 +1473,7 @@ void input_handle(Editor *ed, MenuState *menu) {
             }
             editor_move_word_left(ed);
             break;
-        case 561:  /* Ctrl+Shift+Right */
-        case 562:
+        case 562:  /* Ctrl+Shift+Right */
         case 570:
         case 1054:
             if (!ed->selection.active) {
