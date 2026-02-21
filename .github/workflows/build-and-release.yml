@@ -7,8 +7,15 @@ on:
     branches: [ main ]
 
 jobs:
-  build-ubuntu:
-    runs-on: ubuntu-latest
+  build-linux:
+    strategy:
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -53,11 +60,18 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: smashedit-linux
+        name: smashedit-linux-${{ matrix.arch }}
         path: bin/smashedit
 
-  build-macos:
-    runs-on: macos-latest
+  build-darwin:
+    strategy:
+      matrix:
+        include:
+          - arch: x64
+            runner: macos-15
+          - arch: arm64
+            runner: macos-latest
+    runs-on: ${{ matrix.runner }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -99,11 +113,11 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: smashedit-macos
+        name: smashedit-macos-${{ matrix.arch }}
         path: bin/smashedit
 
   release:
-    needs: [build-ubuntu, build-macos]
+    needs: [build-linux, build-darwin]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
@@ -149,16 +163,28 @@ jobs:
       run: |
         mkdir -p releases
 
-        # Linux tar.gz
-        cd artifacts/smashedit-linux
+        # Linux x64
+        cd artifacts/smashedit-linux-x64
         chmod +x smashedit
-        tar -czvf ../../releases/smashedit-linux-${{ steps.version.outputs.version }}.tar.gz smashedit
+        tar -czvf ../../releases/smashedit-linux-x64-${{ steps.version.outputs.version }}.tar.gz smashedit
         cd ../..
 
-        # macOS tar.gz
-        cd artifacts/smashedit-macos
+        # Linux arm64
+        cd artifacts/smashedit-linux-arm64
         chmod +x smashedit
-        tar -czvf ../../releases/smashedit-macos-${{ steps.version.outputs.version }}.tar.gz smashedit
+        tar -czvf ../../releases/smashedit-linux-arm64-${{ steps.version.outputs.version }}.tar.gz smashedit
+        cd ../..
+
+        # macOS x64
+        cd artifacts/smashedit-macos-x64
+        chmod +x smashedit
+        tar -czvf ../../releases/smashedit-macos-x64-${{ steps.version.outputs.version }}.tar.gz smashedit
+        cd ../..
+
+        # macOS arm64
+        cd artifacts/smashedit-macos-arm64
+        chmod +x smashedit
+        tar -czvf ../../releases/smashedit-macos-arm64-${{ steps.version.outputs.version }}.tar.gz smashedit
         cd ../..
 
         ls -la releases/
@@ -172,13 +198,17 @@ jobs:
           ## Smash Editor ${{ steps.version.outputs.version }}
 
           ### Downloads
-          - **Linux**: `smashedit-linux-${{ steps.version.outputs.version }}.tar.gz`
-          - **macOS**: `smashedit-macos-${{ steps.version.outputs.version }}.tar.gz`
+          - **Linux x64**: `smashedit-linux-x64-${{ steps.version.outputs.version }}.tar.gz`
+          - **Linux arm64**: `smashedit-linux-arm64-${{ steps.version.outputs.version }}.tar.gz`
+          - **macOS x64**: `smashedit-macos-x64-${{ steps.version.outputs.version }}.tar.gz`
+          - **macOS arm64**: `smashedit-macos-arm64-${{ steps.version.outputs.version }}.tar.gz`
 
           ### Installation
           Extract the archive and run the `smashedit` executable.
         files: |
-          releases/smashedit-linux-${{ steps.version.outputs.version }}.tar.gz
-          releases/smashedit-macos-${{ steps.version.outputs.version }}.tar.gz
+          releases/smashedit-linux-x64-${{ steps.version.outputs.version }}.tar.gz
+          releases/smashedit-linux-arm64-${{ steps.version.outputs.version }}.tar.gz
+          releases/smashedit-macos-x64-${{ steps.version.outputs.version }}.tar.gz
+          releases/smashedit-macos-arm64-${{ steps.version.outputs.version }}.tar.gz
         draft: false
         prerelease: false

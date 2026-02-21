@@ -107,9 +107,9 @@ if(STATIC_BUILD AND NOT WIN32 AND NOT MINGW)
         # Linux: link statically
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
         find_library(CURSES_STATIC NAMES libncursesw.a libncurses.a
-            PATHS /usr/lib/x86_64-linux-gnu /usr/lib /usr/local/lib)
+            PATHS /usr/lib/x86_64-linux-gnu /usr/lib/aarch64-linux-gnu /usr/lib /usr/local/lib)
         find_library(TINFO_STATIC NAMES libtinfo.a
-            PATHS /usr/lib/x86_64-linux-gnu /usr/lib /usr/local/lib)
+            PATHS /usr/lib/x86_64-linux-gnu /usr/lib/aarch64-linux-gnu /usr/lib /usr/local/lib)
         if(CURSES_STATIC)
             target_link_libraries(smashedit ${CURSES_STATIC})
             if(TINFO_STATIC)

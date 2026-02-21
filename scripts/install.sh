@@ -43,6 +43,16 @@ detect_platform() {
     esac
 }
 
+# Detect architecture
+detect_arch() {
+    local arch=$(uname -m)
+    case "$arch" in
+        x86_64|amd64) echo "x64" ;;
+        aarch64|arm64) echo "arm64" ;;
+        *) error "Unsupported architecture: $arch" ;;
+    esac
+}
+
 # Get latest release version from GitHub API
 get_latest_version() {
     local version
@@ -113,9 +123,10 @@ main() {
     echo "  ╚═══════════════════════════════════════╝"
     echo ""
 
-    # Detect platform
+    # Detect platform and architecture
     local platform=$(detect_platform)
-    info "Detected platform: $platform"
+    local arch=$(detect_arch)
+    info "Detected platform: $platform ($arch)"
 
     # Get latest version
     local version=$(get_latest_version)
@@ -126,7 +137,7 @@ main() {
     info "Install directory: $INSTALL_DIR"
 
     # Download URL
-    local archive_name="smashedit-${platform}-${version}.tar.gz"
+    local archive_name="smashedit-${platform}-${arch}-${version}.tar.gz"
     local download_url="https://github.com/$REPO/releases/download/${version}/${archive_name}"
 
     # Create temp directory
